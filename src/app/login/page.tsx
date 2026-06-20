@@ -80,13 +80,10 @@ export default function LoginPage() {
           className="relative z-10 flex items-center justify-between mb-12"
         >
           <div className="flex items-center gap-3">
-            <div className="h-10 bg-white/95 rounded-xl px-3 flex items-center justify-center">
-              <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-8 w-auto object-contain" />
+            <div className="bg-white/95 rounded-xl p-2 flex items-center justify-center">
+              <img src="/wsalhali-icon.png" alt="Wsalhali" className="h-8 w-auto object-contain" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">{dict.common.appName}</h1>
-              <p className="text-xs text-white/70">{L.brandTagline}</p>
-            </div>
+            <p className="text-xs text-white/70">{L.brandTagline}</p>
           </div>
           <LanguageToggle />
         </motion.div>

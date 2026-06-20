@@ -71,8 +71,8 @@ export default function HomePage() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2.5">
-            <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-9 w-auto object-contain" />
+          <a href="/" className="flex items-center">
+            <img src="/wsalhali-icon.png" alt="Wsalhali" className="h-9 w-auto object-contain" />
           </a>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -573,7 +573,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-9 w-auto mb-4 object-contain" />
+              <img src="/wsalhali-icon.png" alt="Wsalhali" className="h-9 w-auto mb-4 object-contain" />
               <p className="text-sm text-muted-foreground">
                 {L.footer.description}
               </p>

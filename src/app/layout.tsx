@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   keywords: ["Wsalhali", "shipping", "logistics", "COD", "delivery", "courier", "Egypt"],
   authors: [{ name: "Wsalhali" }],
   icons: {
-    icon: "/wsalhali-logo.png",
+    icon: "/wsalhali-icon.png",
   },
   openGraph: {
     title: "Wsalhali — Premium Shipping & Logistics",
