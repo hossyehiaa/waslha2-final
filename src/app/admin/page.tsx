@@ -20,13 +20,16 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
+import { useLanguage } from '@/components/language-provider'
 
 const PIE_COLORS = ['#0d9488', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#ef4444']
 
 export default function AdminDashboard() {
   const router = useRouter()
+  const { dict, locale, isRTL } = useLanguage()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const L = dict.dashboard.admin
 
   useEffect(() => {
     fetch('/api/admin/dashboard')
@@ -38,7 +41,7 @@ export default function AdminDashboard() {
   if (loading || !data) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Dashboard" subtitle="Welcome back to your control center" icon={Activity} />
+        <PageHeader title={L.title} subtitle={L.subtitle} icon={Activity} />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
@@ -51,29 +54,29 @@ export default function AdminDashboard() {
   }
 
   const stats: Stat[] = [
-    { label: "Today's Shipments", value: data.stats.todayShipments, icon: Package, color: 'bg-emerald-100 text-emerald-700', trend: '+12%', link: '/admin/shipments' },
-    { label: 'Ready to Collect', value: data.stats.pendingCod.toLocaleString('en-US', { maximumFractionDigits: 0 }), icon: Wallet, color: 'bg-amber-100 text-amber-700', trend: '+5.2%', link: '/admin/finance' },
-    { label: 'Active Drivers', value: data.stats.activeDrivers, icon: Truck, color: 'bg-cyan-100 text-cyan-700', link: '/admin/drivers' },
-    { label: 'Total Clients', value: data.stats.totalClients, icon: Users, color: 'bg-purple-100 text-purple-700', link: '/admin/clients' },
+    { label: L.todaysShipments, value: data.stats.todayShipments, icon: Package, color: 'bg-emerald-100 text-emerald-700', trend: '+12%', link: '/admin/shipments' },
+    { label: L.readyToCollect, value: data.stats.pendingCod.toLocaleString('en-US', { maximumFractionDigits: 0 }), icon: Wallet, color: 'bg-amber-100 text-amber-700', trend: '+5.2%', link: '/admin/finance' },
+    { label: L.activeDrivers, value: data.stats.activeDrivers, icon: Truck, color: 'bg-cyan-100 text-cyan-700', link: '/admin/drivers' },
+    { label: L.totalClients, value: data.stats.totalClients, icon: Users, color: 'bg-purple-100 text-purple-700', link: '/admin/clients' },
   ]
 
   const secondaryStats: Stat[] = [
-    { label: 'Pending Pickups', value: data.stats.pendingPickups, icon: PackageCheck, color: 'bg-amber-100 text-amber-700', link: '/admin/pickups' },
-    { label: 'Pending Transfers', value: data.stats.pendingTransfers, icon: ArrowLeftRight, color: 'bg-blue-100 text-blue-700', link: '/admin/transfers' },
-    { label: 'Payout Requests', value: data.stats.payoutRequests, icon: Wallet, color: 'bg-rose-100 text-rose-700', link: '/admin/finance/payouts' },
-    { label: 'Total Branches', value: data.stats.totalBranches, icon: Building2, color: 'bg-teal-100 text-teal-700', link: '/admin/branches' },
+    { label: L.pendingPickups, value: data.stats.pendingPickups, icon: PackageCheck, color: 'bg-amber-100 text-amber-700', link: '/admin/pickups' },
+    { label: L.pendingTransfers, value: data.stats.pendingTransfers, icon: ArrowLeftRight, color: 'bg-blue-100 text-blue-700', link: '/admin/transfers' },
+    { label: L.payoutRequests, value: data.stats.payoutRequests, icon: Wallet, color: 'bg-rose-100 text-rose-700', link: '/admin/finance/payouts' },
+    { label: L.totalBranches, value: data.stats.totalBranches, icon: Building2, color: 'bg-teal-100 text-teal-700', link: '/admin/branches' },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
-        subtitle="Real-time overview of your shipping operations"
+        title={L.title}
+        subtitle={L.subtitle}
         icon={Activity}
         actions={
           <Button onClick={() => router.push('/admin/shipments/new')} className="shadow-premium">
             <Package className="w-4 h-4 mr-2" />
-            New Shipment
+            {L.newShipment}
           </Button>
         }
       />
@@ -87,17 +90,17 @@ export default function AdminDashboard() {
         <Card className="lg:col-span-2 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold">Shipment Movement</h3>
-              <p className="text-sm text-muted-foreground">Last 7 days activity</p>
+              <h3 className="text-lg font-semibold">{L.shipmentMovement}</h3>
+              <p className="text-sm text-muted-foreground">{L.last7Days}</p>
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-                Created
+                {L.created}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                Delivered
+                {L.delivered}
               </span>
             </div>
           </div>
@@ -114,8 +117,8 @@ export default function AdminDashboard() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
-              <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+              <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} reversed={isRTL} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} orientation={isRTL ? 'right' : 'left'} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
@@ -133,8 +136,8 @@ export default function AdminDashboard() {
         {/* Status Distribution */}
         <Card className="p-6">
           <div className="mb-6">
-            <h3 className="text-lg font-semibold">Status Distribution</h3>
-            <p className="text-sm text-muted-foreground">Current shipment states</p>
+            <h3 className="text-lg font-semibold">{L.statusDistribution}</h3>
+            <p className="text-sm text-muted-foreground">{L.currentShipmentStates}</p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
@@ -179,15 +182,15 @@ export default function AdminDashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold">COD Overview</h3>
-              <p className="text-sm text-muted-foreground">Cash on delivery status</p>
+              <h3 className="text-lg font-semibold">{L.codOverview}</h3>
+              <p className="text-sm text-muted-foreground">{L.cashOnDeliveryStatus}</p>
             </div>
             <Wallet className="w-5 h-5 text-muted-foreground" />
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30">
               <div>
-                <div className="text-xs text-muted-foreground">Paid</div>
+                <div className="text-xs text-muted-foreground">{L.paid}</div>
                 <div className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(data.stats.paidCod)}</div>
               </div>
               <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
@@ -196,7 +199,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30">
               <div>
-                <div className="text-xs text-muted-foreground">Ready to Pay</div>
+                <div className="text-xs text-muted-foreground">{L.readyToPay}</div>
                 <div className="text-xl font-bold text-amber-700 dark:text-amber-400">{formatCurrency(data.stats.readyToPay)}</div>
               </div>
               <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
@@ -205,7 +208,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30">
               <div>
-                <div className="text-xs text-muted-foreground">Pending Collection</div>
+                <div className="text-xs text-muted-foreground">{L.pendingCollection}</div>
                 <div className="text-xl font-bold text-rose-700 dark:text-rose-400">{formatCurrency(data.stats.pendingCod)}</div>
               </div>
               <div className="w-10 h-10 rounded-lg bg-rose-100 dark:bg-rose-900 flex items-center justify-center">
@@ -218,12 +221,12 @@ export default function AdminDashboard() {
         <Card className="lg:col-span-2 p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold">Top Clients</h3>
-              <p className="text-sm text-muted-foreground">Most active merchants</p>
+              <h3 className="text-lg font-semibold">{L.topClients}</h3>
+              <p className="text-sm text-muted-foreground">{L.mostActiveMerchants}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => router.push('/admin/clients')}>
-              View all
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              {dict.common.viewAll}
+              <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
             </Button>
           </div>
           <div className="space-y-3">
@@ -236,12 +239,12 @@ export default function AdminDashboard() {
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/40 transition-colors cursor-pointer"
                 onClick={() => router.push('/admin/clients')}
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center font-bold text-sm">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center font-bold text-sm shrink-0">
                   {c.companyName[0]}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{c.companyName}</div>
-                  <div className="text-xs text-muted-foreground">{c.totalShipments} shipments</div>
+                  <div className="text-xs text-muted-foreground">{c.totalShipments} {dict.nav.shipments}</div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-sm">{formatCurrency(c.codCollected)}</div>
@@ -260,24 +263,24 @@ export default function AdminDashboard() {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">Recent Shipments</h3>
-            <p className="text-sm text-muted-foreground">Latest shipment activity</p>
+            <h3 className="text-lg font-semibold">{L.recentShipments}</h3>
+            <p className="text-sm text-muted-foreground">{L.latestShipmentActivity}</p>
           </div>
           <Button variant="ghost" size="sm" onClick={() => router.push('/admin/shipments')}>
-            View all
-            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            {dict.common.viewAll}
+            <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
           </Button>
         </div>
         <div className="overflow-x-auto scrollbar-premium">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-xs text-muted-foreground">
-                <th className="text-left py-2 px-3 font-medium">Tracking #</th>
-                <th className="text-left py-2 px-3 font-medium">Client</th>
-                <th className="text-left py-2 px-3 font-medium hidden md:table-cell">Route</th>
-                <th className="text-left py-2 px-3 font-medium">Status</th>
-                <th className="text-right py-2 px-3 font-medium">COD</th>
-                <th className="text-right py-2 px-3 font-medium hidden md:table-cell">Created</th>
+                <th className="text-left py-2 px-3 font-medium">{L.tracking}</th>
+                <th className="text-left py-2 px-3 font-medium">{L.client}</th>
+                <th className="text-left py-2 px-3 font-medium hidden md:table-cell">{L.route}</th>
+                <th className="text-left py-2 px-3 font-medium">{dict.common.status}</th>
+                <th className="text-right py-2 px-3 font-medium">{L.cod}</th>
+                <th className="text-right py-2 px-3 font-medium hidden md:table-cell">{L.created2}</th>
               </tr>
             </thead>
             <tbody>

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatTimeAgo } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Notification = {
   id: string
@@ -28,6 +29,8 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default function AdminNotificationsPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.notifications
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -46,19 +49,19 @@ export default function AdminNotificationsPage() {
         body: JSON.stringify({ action: 'mark_all_read' }),
       })
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
-      toast.success('All notifications marked as read')
+      toast.success(L.markAllRead)
     } catch {
-      toast.error('Failed to update notifications')
+      toast.error(dict.common.noData)
     }
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Notifications"
-        subtitle={`${notifications.filter(n => !n.isRead).length} unread`}
+        title={dict.common.notifications}
+        subtitle={`${notifications.filter(n => !n.isRead).length} ${L.unread}`}
         icon={Bell}
-        actions={<Button variant="outline" onClick={markAllRead}><CheckCheck className="w-4 h-4 mr-2" />Mark all read</Button>}
+        actions={<Button variant="outline" onClick={markAllRead}><CheckCheck className="w-4 h-4 mr-2" />{L.markAllRead}</Button>}
       />
       <Card className="divide-y">
         {loading ? (
@@ -74,7 +77,7 @@ export default function AdminNotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
             <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No notifications yet</p>
+            <p>{L.noNotifications}</p>
           </div>
         ) : (
           notifications.map((n) => (
@@ -90,7 +93,7 @@ export default function AdminNotificationsPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
                 <span className="text-xs text-muted-foreground mt-1 inline-block">{formatTimeAgo(n.createdAt)}</span>
               </div>
-              {n.link && <Button variant="ghost" size="sm" asChild><a href={n.link}>View</a></Button>}
+              {n.link && <Button variant="ghost" size="sm" asChild><a href={n.link}>{dict.common.view}</a></Button>}
             </div>
           ))
         )}

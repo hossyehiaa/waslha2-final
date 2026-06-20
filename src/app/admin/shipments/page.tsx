@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Shipment = {
   id: string
@@ -33,19 +34,10 @@ type Shipment = {
   deliveredAt: string | null
 }
 
-const STATUS_OPTIONS = [
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'Picked Up', value: 'PICKED_UP' },
-  { label: 'In Transit', value: 'IN_TRANSIT' },
-  { label: 'Out for Delivery', value: 'OUT_FOR_DELIVERY' },
-  { label: 'Delivered', value: 'DELIVERED' },
-  { label: 'Returned', value: 'RETURNED' },
-  { label: 'Failed', value: 'FAILED' },
-  { label: 'Cancelled', value: 'CANCELLED' },
-]
-
 export default function AdminShipmentsPage() {
   const router = useRouter()
+  const { dict } = useLanguage()
+  const L = dict.pages.shipments
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -54,32 +46,32 @@ export default function AdminShipmentsPage() {
     fetch(`/api/shipments?status=${statusFilter}`)
       .then(r => r.json())
       .then(d => setShipments(d.shipments || []))
-      .catch(() => toast.error('Failed to load shipments'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [statusFilter])
+  }, [statusFilter, dict])
 
   const columns: Column<Shipment>[] = [
     {
       key: 'trackingNumber',
-      header: 'Tracking #',
+      header: L.tracking || 'Tracking #',
       sortable: true,
       cell: (s) => <span className="font-mono font-medium text-xs">{s.trackingNumber}</span>,
     },
     {
       key: 'client',
-      header: 'Client',
+      header: L.client || 'Client',
       sortable: true,
       cell: (s) => <span className="font-medium">{s.client}</span>,
     },
     {
       key: 'route',
-      header: 'Route',
+      header: L.route || 'Route',
       hideOnMobile: true,
       cell: (s) => <span className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</span>,
     },
     {
       key: 'recipient',
-      header: 'Recipient',
+      header: L.recipient || 'Recipient',
       hideOnMobile: true,
       cell: (s) => (
         <div>
@@ -90,24 +82,24 @@ export default function AdminShipmentsPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: dict.common.status,
       cell: (s) => <StatusBadge status={s.status} />,
     },
     {
       key: 'paymentStatus',
-      header: 'Payment',
+      header: dict.pages.shipments.paymentStatus,
       hideOnMobile: true,
       cell: (s) => <StatusBadge status={s.paymentStatus} />,
     },
     {
       key: 'codAmount',
-      header: 'COD',
+      header: L.cod || 'COD',
       sortable: true,
       cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.codAmount)}</span>,
     },
     {
       key: 'createdAt',
-      header: 'Created',
+      header: L.created || 'Created',
       sortable: true,
       hideOnMobile: true,
       cell: (s) => <span className="text-xs text-muted-foreground">{formatTimeAgo(s.createdAt)}</span>,
@@ -117,18 +109,18 @@ export default function AdminShipmentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Shipments"
-        subtitle={`${shipments.length} shipments in the system`}
+        title={dict.nav.shipments}
+        subtitle={`${shipments.length} ${L.listSubtitle}`}
         icon={Package}
         actions={
           <>
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
-              Export
+              {dict.common.export}
             </Button>
             <Button onClick={() => router.push('/admin/shipments/new')} className="shadow-premium">
               <Plus className="w-4 h-4 mr-2" />
-              New Shipment
+              {L.newShipment}
             </Button>
           </>
         }
@@ -137,13 +129,22 @@ export default function AdminShipmentsPage() {
         data={shipments}
         columns={columns}
         loading={loading}
-        searchPlaceholder="Search by tracking #, recipient name, phone..."
+        searchPlaceholder={L.searchPlaceholder}
         searchKeys={['trackingNumber', 'recipientName', 'recipientPhone']}
         filters={[
           {
-            label: 'Status',
+            label: dict.common.status,
             value: statusFilter,
-            options: STATUS_OPTIONS,
+            options: [
+              { label: dict.statuses.PENDING, value: 'PENDING' },
+              { label: dict.statuses.PICKED_UP, value: 'PICKED_UP' },
+              { label: dict.statuses.IN_TRANSIT, value: 'IN_TRANSIT' },
+              { label: dict.statuses.OUT_FOR_DELIVERY, value: 'OUT_FOR_DELIVERY' },
+              { label: dict.statuses.DELIVERED, value: 'DELIVERED' },
+              { label: dict.statuses.RETURNED, value: 'RETURNED' },
+              { label: dict.statuses.FAILED, value: 'FAILED' },
+              { label: dict.statuses.CANCELLED, value: 'CANCELLED' },
+            ],
             onChange: (v) => setStatusFilter(v),
           },
         ]}

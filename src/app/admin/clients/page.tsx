@@ -1,15 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Users, Plus, Star, Wallet, Package } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { formatCurrency, formatTimeAgo } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
+import { useRouter } from 'next/navigation'
 
 type Client = {
   id: string
@@ -34,6 +35,8 @@ type Client = {
 
 export default function AdminClientsPage() {
   const router = useRouter()
+  const { dict } = useLanguage()
+  const L = dict.pages.clients
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -41,18 +44,14 @@ export default function AdminClientsPage() {
     fetch('/api/admin/clients')
       .then(r => r.json())
       .then(d => setClients(d.clients || []))
-      .catch(() => toast.error('Failed to load clients'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [])
-
-  const totalCod = clients.reduce((s, c) => s + c.codPending, 0)
-  const totalCollected = clients.reduce((s, c) => s + c.codCollected, 0)
-  const totalShipments = clients.reduce((s, c) => s + c.totalShipments, 0)
+  }, [dict])
 
   const columns: Column<Client>[] = [
     {
       key: 'companyName',
-      header: 'Client',
+      header: L.client || 'Client',
       sortable: true,
       cell: (c) => (
         <div className="flex items-center gap-3">
@@ -68,7 +67,7 @@ export default function AdminClientsPage() {
     },
     {
       key: 'contact',
-      header: 'Contact',
+      header: L.contact,
       hideOnMobile: true,
       cell: (c) => (
         <div>
@@ -79,30 +78,30 @@ export default function AdminClientsPage() {
     },
     {
       key: 'city',
-      header: 'Location',
+      header: L.location,
       hideOnMobile: true,
       cell: (c) => <span className="text-xs">{c.city ? `${c.city}${c.branch ? ` / ${c.branch}` : ''}` : '-'}</span>,
     },
     {
       key: 'totalShipments',
-      header: 'Shipments',
+      header: L.shipments,
       sortable: true,
       cell: (c) => <span className="font-medium">{c.totalShipments}</span>,
     },
     {
       key: 'codPending',
-      header: 'COD Balance',
+      header: L.codBalance,
       sortable: true,
       cell: (c) => (
         <div>
           <div className="font-medium text-xs">{formatCurrency(c.codPending)}</div>
-          <div className="text-xs text-muted-foreground">{formatCurrency(c.codCollected)} collected</div>
+          <div className="text-xs text-muted-foreground">{formatCurrency(c.codCollected)} {L.collected}</div>
         </div>
       ),
     },
     {
       key: 'rating',
-      header: 'Rating',
+      header: L.rating,
       sortable: true,
       hideOnMobile: true,
       cell: (c) => (
@@ -114,7 +113,7 @@ export default function AdminClientsPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: dict.common.status,
       cell: (c) => <StatusBadge status={c.status} />,
     },
   ]
@@ -122,24 +121,22 @@ export default function AdminClientsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Clients"
-        subtitle={`${clients.length} merchants on the platform`}
+        title={dict.nav.clients}
+        subtitle={`${clients.length} ${L.subtitle}`}
         icon={Users}
         actions={
           <Button onClick={() => router.push('/admin/clients/new')} className="shadow-premium">
             <Plus className="w-4 h-4 mr-2" />
-            New Client
+            {L.newClient}
           </Button>
         }
       />
-
-      {/* Quick stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Clients', value: clients.length, icon: Users, color: 'bg-purple-100 text-purple-700' },
-          { label: 'Total Shipments', value: totalShipments, icon: Package, color: 'bg-emerald-100 text-emerald-700' },
-          { label: 'COD Pending', value: formatCurrency(totalCod), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
-          { label: 'COD Collected', value: formatCurrency(totalCollected), icon: Wallet, color: 'bg-teal-100 text-teal-700' },
+          { label: L.totalClients, value: clients.length, icon: Users, color: 'bg-purple-100 text-purple-700' },
+          { label: L.totalShipments, value: clients.reduce((s, c) => s + c.totalShipments, 0), icon: Package, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.codPending, value: formatCurrency(clients.reduce((s, c) => s + c.codPending, 0)), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
+          { label: L.codCollected, value: formatCurrency(clients.reduce((s, c) => s + c.codCollected, 0)), icon: Wallet, color: 'bg-teal-100 text-teal-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
@@ -150,12 +147,11 @@ export default function AdminClientsPage() {
           </Card>
         ))}
       </div>
-
       <DataTable
         data={clients}
         columns={columns}
         loading={loading}
-        searchPlaceholder="Search clients by name, username, email..."
+        searchPlaceholder={`${dict.common.search}...`}
         searchKeys={['companyName', 'username', 'email']}
         onRowClick={(c) => router.push(`/admin/clients/${c.id}`)}
         pageSize={10}

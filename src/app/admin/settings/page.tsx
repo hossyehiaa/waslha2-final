@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 export default function AdminSettingsPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.settings
   const [settings, setSettings] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -34,12 +37,12 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({ settings }),
       })
       if (!res.ok) {
-        toast.error('Failed to save settings')
+        toast.error(dict.common.noData)
         return
       }
-      toast.success('Settings saved successfully')
+      toast.success(L.settingsSaved)
     } catch {
-      toast.error('Network error')
+      toast.error(dict.common.networkError)
     } finally {
       setSaving(false)
     }
@@ -48,10 +51,10 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <PageHeader
-        title="System Settings"
-        subtitle="Configure your shipping platform"
+        title={L.title}
+        subtitle={L.subtitle}
         icon={Settings}
-        actions={<Button onClick={handleSave} disabled={saving} className="shadow-premium"><Save className="w-4 h-4 mr-2" />{saving ? 'Saving...' : 'Save Changes'}</Button>}
+        actions={<Button onClick={handleSave} disabled={saving} className="shadow-premium"><Save className="w-4 h-4 mr-2" />{saving ? L.saving : L.saveChanges}</Button>}
       />
 
       {loading ? (
@@ -64,21 +67,21 @@ export default function AdminSettingsPage() {
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">General Settings</h3>
-                <p className="text-sm text-muted-foreground">Company information and preferences</p>
+                <h3 className="text-lg font-semibold">{L.general}</h3>
+                <p className="text-sm text-muted-foreground">{L.generalDesc}</p>
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Company Name</Label>
+                <Label>{L.companyName}</Label>
                 <Input value={settings.company_name || ''} onChange={(e) => setSettings({ ...settings, company_name: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Currency</Label>
+                <Label>{L.currency}</Label>
                 <Input value={settings.currency || ''} onChange={(e) => setSettings({ ...settings, currency: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Timezone</Label>
+                <Label>{L.timezone}</Label>
                 <Input value={settings.timezone || ''} onChange={(e) => setSettings({ ...settings, timezone: e.target.value })} />
               </div>
             </div>
@@ -90,25 +93,25 @@ export default function AdminSettingsPage() {
                 <DollarSign className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Pricing Configuration</h3>
-                <p className="text-sm text-muted-foreground">Default fees and limits</p>
+                <h3 className="text-lg font-semibold">{L.pricingConfig}</h3>
+                <p className="text-sm text-muted-foreground">{L.pricingDesc}</p>
               </div>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>COD Fee (%)</Label>
+                <Label>{L.codFeePercent}</Label>
                 <Input type="number" value={settings.cod_fee_percent || ''} onChange={(e) => setSettings({ ...settings, cod_fee_percent: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Insurance Fee (%)</Label>
+                <Label>{L.insuranceFeePercent}</Label>
                 <Input type="number" value={settings.insurance_fee_percent || ''} onChange={(e) => setSettings({ ...settings, insurance_fee_percent: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Max COD Amount</Label>
+                <Label>{L.maxCodAmount}</Label>
                 <Input type="number" value={settings.max_cod_amount || ''} onChange={(e) => setSettings({ ...settings, max_cod_amount: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Min COD Amount</Label>
+                <Label>{L.minCodAmount}</Label>
                 <Input type="number" value={settings.min_cod_amount || ''} onChange={(e) => setSettings({ ...settings, min_cod_amount: e.target.value })} />
               </div>
             </div>
@@ -120,31 +123,31 @@ export default function AdminSettingsPage() {
                 <Shield className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Security</h3>
-                <p className="text-sm text-muted-foreground">Authentication and access control</p>
+                <h3 className="text-lg font-semibold">{L.security}</h3>
+                <p className="text-sm text-muted-foreground">{L.securityDesc}</p>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                 <div>
-                  <div className="text-sm font-medium">Two-Factor Authentication</div>
-                  <div className="text-xs text-muted-foreground">Require 2FA for admin accounts</div>
+                  <div className="text-sm font-medium">{L.twoFactor}</div>
+                  <div className="text-xs text-muted-foreground">{L.twoFactorDesc}</div>
                 </div>
-                <Button variant="outline" size="sm">Enable</Button>
+                <Button variant="outline" size="sm">{L.enable}</Button>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                 <div>
-                  <div className="text-sm font-medium">Session Timeout</div>
-                  <div className="text-xs text-muted-foreground">7 days (current setting)</div>
+                  <div className="text-sm font-medium">{L.sessionTimeout}</div>
+                  <div className="text-xs text-muted-foreground">{L.sessionTimeoutDesc}</div>
                 </div>
-                <Button variant="outline" size="sm">Configure</Button>
+                <Button variant="outline" size="sm">{L.configure}</Button>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                 <div>
-                  <div className="text-sm font-medium">IP Whitelist</div>
-                  <div className="text-xs text-muted-foreground">Restrict admin access by IP</div>
+                  <div className="text-sm font-medium">{L.ipWhitelist}</div>
+                  <div className="text-xs text-muted-foreground">{L.ipWhitelistDesc}</div>
                 </div>
-                <Button variant="outline" size="sm">Configure</Button>
+                <Button variant="outline" size="sm">{L.configure}</Button>
               </div>
             </div>
           </Card>

@@ -9,14 +9,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
+import { LanguageToggle } from '@/components/language-toggle'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { dict, locale, isRTL } = useLanguage()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
+
+  const L = dict.login
+  const A = dict.auth
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => {
@@ -29,7 +35,7 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!username || !password) {
-      toast.error('Please fill in all fields')
+      toast.error(A.fillAllFields)
       return
     }
     setLoading(true)
@@ -41,22 +47,22 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || 'Login failed')
+        toast.error(data.error || A.loginFailed)
         return
       }
-      toast.success(`Welcome back, ${data.user.fullName}!`)
+      toast.success(`${A.welcomeBack}, ${data.user.fullName}!`)
       router.push(data.redirect)
       router.refresh()
     } catch {
-      toast.error('Network error. Try again.')
+      toast.error(A.networkError)
     } finally {
       setLoading(false)
     }
   }
 
   const demoAccounts = [
-    { role: 'Admin', username: 'admin', password: 'admin123', desc: 'Full platform control' },
-    { role: 'Client', username: 'braa', password: 'client123', desc: 'Merchant dashboard' },
+    { role: L.admin, username: 'admin', password: 'admin123', desc: L.adminDesc },
+    { role: L.client, username: 'braa', password: 'client123', desc: L.clientDesc },
   ]
 
   return (
@@ -71,15 +77,18 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10 flex items-center gap-3 mb-12"
+          className="relative z-10 flex items-center justify-between mb-12"
         >
-          <div className="w-12 h-12 rounded-2xl glass flex items-center justify-center overflow-hidden">
-            <img src="/wsalhali-logo.png" alt="Wsalhali" className="w-full h-full object-cover" />
+          <div className="flex items-center gap-3">
+            <div className="h-10 bg-white/95 rounded-xl px-3 flex items-center justify-center">
+              <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-8 w-auto object-contain" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">{dict.common.appName}</h1>
+              <p className="text-xs text-white/70">{L.brandTagline}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Wsalhali</h1>
-            <p className="text-xs text-white/70">Premium Shipping Platform</p>
-          </div>
+          <LanguageToggle />
         </motion.div>
 
         <div className="relative z-10 flex-1 flex flex-col justify-center max-w-md">
@@ -90,13 +99,13 @@ export default function LoginPage() {
           >
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-medium mb-6">
               <Sparkles className="w-3 h-3" />
-              Next-gen logistics platform
+              {L.badge}
             </span>
             <h2 className="text-4xl lg:text-5xl font-bold mb-4 leading-tight">
-              Ship smarter.<br />Deliver faster.
+              {L.title1}<br />{L.title2}
             </h2>
             <p className="text-white/80 text-lg mb-8">
-              Complete COD management, real-time tracking, and powerful analytics — all in one beautifully crafted dashboard.
+              {L.subtitle}
             </p>
           </motion.div>
 
@@ -107,9 +116,9 @@ export default function LoginPage() {
             className="grid grid-cols-3 gap-4"
           >
             {[
-              { label: 'Shipments', value: '32K+' },
-              { label: 'Cities', value: '27' },
-              { label: 'On-time', value: '98.4%' },
+              { label: L.statShipments, value: '32K+' },
+              { label: L.statCities, value: '27' },
+              { label: L.statOnTime, value: '98.4%' },
             ].map((s) => (
               <div key={s.label} className="glass rounded-2xl p-4">
                 <div className="text-2xl font-bold">{s.value}</div>
@@ -120,7 +129,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 text-xs text-white/60 mt-8">
-          © 2026 Wsalhali. All rights reserved.
+          © 2026 {dict.common.appName}. {dict.landing.footer.rights}
         </div>
       </div>
 
@@ -133,22 +142,22 @@ export default function LoginPage() {
           className="w-full max-w-md"
         >
           <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight mb-2">Welcome back</h2>
-            <p className="text-muted-foreground">Sign in to access your dashboard</p>
+            <h2 className="text-3xl font-bold tracking-tight mb-2">{L.welcome}</h2>
+            <p className="text-muted-foreground">{L.subtitle2}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium">Username or Email</Label>
+              <Label htmlFor="username" className="text-sm font-medium">{L.username}</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <User className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                 <Input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className="pl-10 h-12 rounded-xl"
+                  placeholder={L.usernamePlaceholder}
+                  className={`h-12 rounded-xl ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
                   autoComplete="username"
                   required
                 />
@@ -157,27 +166,27 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">{L.password}</Label>
                 <button type="button" className="text-xs text-primary hover:underline">
-                  Forgot password?
+                  {L.forgotPassword}
                 </button>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Lock className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="pl-10 pr-10 h-12 rounded-xl"
+                  placeholder={L.passwordPlaceholder}
+                  className={`h-12 rounded-xl ${isRTL ? 'pr-10 pl-10' : 'pl-10 pr-10'}`}
                   autoComplete="current-password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${isRTL ? 'left-3' : 'right-3'}`}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -188,7 +197,7 @@ export default function LoginPage() {
               <div className="flex items-center gap-2">
                 <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(!!v)} />
                 <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                  Remember me for 7 days
+                  {L.rememberMe}
                 </Label>
               </div>
             </div>
@@ -201,12 +210,12 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Signing in...
+                  {L.signingIn}
                 </>
               ) : (
                 <>
-                  Sign in
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {L.signIn}
+                  <ArrowRight className={`w-4 h-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
                 </>
               )}
             </Button>
@@ -215,7 +224,7 @@ export default function LoginPage() {
           <div className="mt-8 pt-6 border-t">
             <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-2">
               <Shield className="w-3 h-3" />
-              Demo accounts — click to autofill
+              {L.demoAccounts}
             </p>
             <div className="grid grid-cols-2 gap-3">
               {demoAccounts.map((acc) => (
@@ -238,7 +247,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <a href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              ← Back to homepage
+              {isRTL ? '→' : '←'} {L.backHome}
             </a>
           </div>
         </motion.div>

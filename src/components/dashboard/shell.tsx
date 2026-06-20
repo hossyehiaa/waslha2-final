@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -21,6 +21,9 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/components/language-provider'
+import { LanguageToggle } from '@/components/language-toggle'
+import { Dict } from '@/lib/i18n'
 
 type NavItem = {
   label: string
@@ -30,59 +33,63 @@ type NavItem = {
   children?: { label: string; href: string }[]
 }
 
-const ADMIN_NAV: NavItem[] = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Shipments', href: '/admin/shipments', icon: Package, badge: 'New' },
-  { label: 'Add Shipment', href: '/admin/shipments/new', icon: PackageCheck },
-  { label: 'Tracking', href: '/admin/tracking', icon: MapPin },
-  {
-    label: 'Clients', href: '/admin/clients', icon: Users,
-    children: [
-      { label: 'All Clients', href: '/admin/clients' },
-      { label: 'Client Requests', href: '/admin/clients/requests' },
-    ],
-  },
-  { label: 'Employees', href: '/admin/employees', icon: UserCog },
-  { label: 'Drivers', href: '/admin/drivers', icon: Truck },
-  { label: 'Branches', href: '/admin/branches', icon: Building2 },
-  { label: 'Warehouses', href: '/admin/warehouses', icon: Boxes },
-  { label: 'Pickup Requests', href: '/admin/pickups', icon: PackageCheck },
-  {
-    label: 'Delivery', href: '/admin/delivery', icon: Truck,
-    children: [
-      { label: 'Delivery Management', href: '/admin/delivery' },
-      { label: 'Returns', href: '/admin/returns' },
-      { label: 'Branch Transfers', href: '/admin/transfers' },
-    ],
-  },
-  { label: 'Print Labels', href: '/admin/print', icon: Receipt },
-  {
-    label: 'Finance', href: '/admin/finance', icon: Wallet,
-    children: [
-      { label: 'COD Settlements', href: '/admin/finance' },
-      { label: 'Payout Requests', href: '/admin/finance/payouts' },
-      { label: 'Invoices', href: '/admin/finance/invoices' },
-      { label: 'Expenses', href: '/admin/finance/expenses' },
-    ],
-  },
-  { label: 'Pricing', href: '/admin/pricing', icon: CreditCard },
-  { label: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { label: 'Notifications', href: '/admin/notifications', icon: Bell },
-  { label: 'Settings', href: '/admin/settings', icon: Settings },
-]
+function buildAdminNav(dict: Dict): NavItem[] {
+  return [
+    { label: dict.nav.dashboard, href: '/admin', icon: LayoutDashboard },
+    { label: dict.nav.shipments, href: '/admin/shipments', icon: Package },
+    { label: dict.nav.addShipment, href: '/admin/shipments/new', icon: PackageCheck },
+    { label: dict.nav.tracking, href: '/admin/tracking', icon: MapPin },
+    {
+      label: dict.nav.clients, href: '/admin/clients', icon: Users,
+      children: [
+        { label: dict.nav.clients, href: '/admin/clients' },
+        { label: dict.nav.clientRequests, href: '/admin/clients/requests' },
+      ],
+    },
+    { label: dict.nav.employees, href: '/admin/employees', icon: UserCog },
+    { label: dict.nav.drivers, href: '/admin/drivers', icon: Truck },
+    { label: dict.nav.branches, href: '/admin/branches', icon: Building2 },
+    { label: dict.nav.warehouses, href: '/admin/warehouses', icon: Boxes },
+    { label: dict.nav.pickups, href: '/admin/pickups', icon: PackageCheck },
+    {
+      label: dict.nav.delivery, href: '/admin/delivery', icon: Truck,
+      children: [
+        { label: dict.nav.delivery, href: '/admin/delivery' },
+        { label: dict.nav.returns, href: '/admin/returns' },
+        { label: dict.nav.transfers, href: '/admin/transfers' },
+      ],
+    },
+    { label: dict.nav.printLabels, href: '/admin/print', icon: Receipt },
+    {
+      label: dict.nav.finance, href: '/admin/finance', icon: Wallet,
+      children: [
+        { label: dict.nav.codSettlements, href: '/admin/finance' },
+        { label: dict.nav.payouts, href: '/admin/finance/payouts' },
+        { label: dict.nav.invoices, href: '/admin/finance/invoices' },
+        { label: dict.nav.expenses, href: '/admin/finance/expenses' },
+      ],
+    },
+    { label: dict.nav.pricing, href: '/admin/pricing', icon: CreditCard },
+    { label: dict.nav.reports, href: '/admin/reports', icon: BarChart3 },
+    { label: dict.nav.notifications, href: '/admin/notifications', icon: Bell },
+    { label: dict.nav.settings, href: '/admin/settings', icon: Settings },
+  ]
+}
 
-const CLIENT_NAV: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'My Shipments', href: '/dashboard/shipments', icon: Package },
-  { label: 'Create Shipment', href: '/dashboard/shipments/new', icon: PackageCheck },
-  { label: 'Track Shipment', href: '/dashboard/tracking', icon: MapPin },
-  { label: 'Pickup Requests', href: '/dashboard/pickups', icon: Truck },
-  { label: 'COD Settlements', href: '/dashboard/cod', icon: Wallet },
-  { label: 'Invoices', href: '/dashboard/invoices', icon: Receipt },
-  { label: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
-  { label: 'Notifications', href: '/dashboard/notifications', icon: Bell },
-  { label: 'Profile', href: '/dashboard/profile', icon: User },
-]
+function buildClientNav(dict: Dict): NavItem[] {
+  return [
+    { label: dict.nav.dashboard, href: '/dashboard', icon: LayoutDashboard },
+    { label: dict.nav.myShipments, href: '/dashboard/shipments', icon: Package },
+    { label: dict.nav.createShipment, href: '/dashboard/shipments/new', icon: PackageCheck },
+    { label: dict.nav.trackShipment, href: '/dashboard/tracking', icon: MapPin },
+    { label: dict.nav.pickups, href: '/dashboard/pickups', icon: Truck },
+    { label: dict.nav.cod, href: '/dashboard/cod', icon: Wallet },
+    { label: dict.nav.invoices, href: '/dashboard/invoices', icon: Receipt },
+    { label: dict.nav.addresses, href: '/dashboard/addresses', icon: MapPin },
+    { label: dict.nav.notifications, href: '/dashboard/notifications', icon: Bell },
+    { label: dict.nav.profile, href: '/dashboard/profile', icon: User },
+  ]
+}
 
 export function DashboardShell({
   children,
@@ -95,9 +102,13 @@ export function DashboardShell({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { dict, isRTL } = useLanguage()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
-  const nav = variant === 'admin' ? ADMIN_NAV : CLIENT_NAV
+  const nav = useMemo(
+    () => (variant === 'admin' ? buildAdminNav(dict) : buildClientNav(dict)),
+    [variant, dict]
+  )
 
   useEffect(() => {
     fetch('/api/notifications').then(r => r.json()).then(d => {
@@ -122,13 +133,11 @@ export function DashboardShell({
     <div className="flex flex-col h-full">
       <div className="h-16 flex items-center px-5 border-b border-sidebar-border shrink-0">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
-            <img src="/wsalhali-logo.png" alt="Wsalhali" className="w-full h-full object-cover" />
-          </div>
-          <div className="min-w-0">
-            <div className="font-bold tracking-tight leading-none">Wsalhali</div>
+          <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-8 w-auto object-contain shrink-0" />
+          <div className="min-w-0 hidden sm:block">
+            <div className="font-bold tracking-tight leading-none text-sm">{dict.common.appName}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
-              {variant === 'admin' ? 'Admin Console' : 'Client Portal'}
+              {variant === 'admin' ? dict.nav.adminConsole : dict.nav.clientPortal}
             </div>
           </div>
         </Link>
@@ -157,7 +166,7 @@ export function DashboardShell({
                 )}
               </Link>
               {item.children && active && (
-                <div className="ml-4 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
+                <div className={`mt-1 space-y-0.5 border-l border-sidebar-border pl-3 ${isRTL ? 'mr-4 border-r border-l-0 pr-3 pl-0' : 'ml-4'}`}>
                   {item.children.map((child) => (
                     <Link
                       key={child.href}
@@ -181,7 +190,7 @@ export function DashboardShell({
 
       <div className="p-3 border-t border-sidebar-border shrink-0">
         <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-sidebar-accent transition-colors">
-          <Avatar className="w-9 h-9">
+          <Avatar className="w-9 h-9 shrink-0">
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
               {initials}
             </AvatarFallback>
@@ -193,9 +202,9 @@ export function DashboardShell({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
             onClick={handleLogout}
-            title="Sign out"
+            title={dict.common.signOut}
           >
             <LogOut className="w-4 h-4" />
           </Button>
@@ -213,7 +222,7 @@ export function DashboardShell({
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-72 p-0">
+        <SheetContent side={isRTL ? 'right' : 'left'} className="w-72 p-0">
           {sidebar}
         </SheetContent>
       </Sheet>
@@ -234,19 +243,19 @@ export function DashboardShell({
 
             <div className="hidden md:flex items-center flex-1 max-w-md">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                 <Input
                   type="text"
-                  placeholder="Search shipments, clients, tracking numbers..."
-                  className="pl-10 h-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                  placeholder={dict.common.search + '...'}
+                  className={`h-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
                 />
-                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-muted-foreground bg-background px-1.5 py-0.5 rounded border">
-                  ⌘K
-                </kbd>
               </div>
             </div>
 
             <div className="flex-1 md:hidden" />
+
+            {/* Language Toggle */}
+            <LanguageToggle />
 
             {/* Notifications */}
             <DropdownMenu>
@@ -260,13 +269,13 @@ export function DashboardShell({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
                 <DropdownMenuLabel className="flex items-center justify-between">
-                  <span>Notifications</span>
-                  <Badge variant="secondary" className="text-xs">{notifications.length} new</Badge>
+                  <span>{dict.common.notifications}</span>
+                  <Badge variant="secondary" className="text-xs">{notifications.length} {dict.pages.notifications.unread}</Badge>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {notifications.length === 0 ? (
                   <div className="py-8 text-center text-sm text-muted-foreground">
-                    No new notifications
+                    {dict.pages.notifications.noNotifications}
                   </div>
                 ) : (
                   notifications.map((n) => (
@@ -282,7 +291,7 @@ export function DashboardShell({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={variant === 'admin' ? '/admin/notifications' : '/dashboard/notifications'} className="text-center justify-center text-sm text-primary">
-                    View all notifications
+                    {dict.common.viewAll}
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -311,19 +320,19 @@ export function DashboardShell({
                 <DropdownMenuItem asChild>
                   <Link href={variant === 'admin' ? '/admin/settings' : '/dashboard/profile'}>
                     <User className="w-4 h-4 mr-2" />
-                    Profile
+                    {dict.common.profile}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href={variant === 'admin' ? '/admin/settings' : '/dashboard/profile'}>
                     <Settings className="w-4 h-4 mr-2" />
-                    Settings
+                    {dict.common.settings}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
-                  Sign out
+                  {dict.common.signOut}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

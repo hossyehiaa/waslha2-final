@@ -12,9 +12,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
+import { LanguageToggle } from '@/components/language-toggle'
 
 export default function HomePage() {
   const router = useRouter()
+  const { t, dict, locale, isRTL } = useLanguage()
   const [trackingNumber, setTrackingNumber] = useState('')
   const [trackingResult, setTrackingResult] = useState<any>(null)
   const [tracking, setTracking] = useState(false)
@@ -33,7 +36,7 @@ export default function HomePage() {
   async function handleTrack(e: React.FormEvent) {
     e.preventDefault()
     if (!trackingNumber.trim()) {
-      toast.error('Enter a tracking number')
+      toast.error(locale === 'ar' ? 'أدخل رقم التتبع' : 'Enter a tracking number')
       return
     }
     setTracking(true)
@@ -42,17 +45,19 @@ export default function HomePage() {
       const res = await fetch(`/api/track?q=${encodeURIComponent(trackingNumber.trim())}`)
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || 'Tracking number not found')
+        toast.error(data.error || (locale === 'ar' ? 'رقم التتبع غير موجود' : 'Tracking number not found'))
         setTrackingResult(null)
       } else {
         setTrackingResult(data)
       }
     } catch {
-      toast.error('Failed to fetch tracking')
+      toast.error(locale === 'ar' ? 'فشل التتبع' : 'Failed to fetch tracking')
     } finally {
       setTracking(false)
     }
   }
+
+  const L = dict.landing
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,17 +72,14 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center">
-              <img src="/wsalhali-logo.png" alt="Wsalhali" className="w-full h-full object-cover" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">Wsalhali</span>
+            <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-9 w-auto object-contain" />
           </a>
 
           <nav className="hidden md:flex items-center gap-1">
-            {['Services', 'Pricing', 'Coverage', 'About'].map((item) => (
+            {[L.nav.services, L.nav.pricing, L.nav.coverage, L.nav.about].map((item) => (
               <a
                 key={item}
-                href={`#${item.toLowerCase()}`}
+                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
                 className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
               >
                 {item}
@@ -86,21 +88,22 @@ export default function HomePage() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <Button
               variant="ghost"
               size="sm"
               className="hidden md:flex"
               onClick={() => router.push('/login')}
             >
-              Sign in
+              {L.nav.signIn}
             </Button>
             <Button
               size="sm"
               className="hidden md:flex shadow-premium"
               onClick={() => router.push('/login')}
             >
-              Get Started
-              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+              {L.nav.getStarted}
+              <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'mr-1.5 rotate-180' : 'ml-1.5'}`} />
             </Button>
             <Button
               variant="ghost"
@@ -122,10 +125,10 @@ export default function HomePage() {
               className="md:hidden glass border-t border-border overflow-hidden"
             >
               <div className="p-4 space-y-2">
-                {['Services', 'Pricing', 'Coverage', 'About'].map((item) => (
+                {[L.nav.services, L.nav.pricing, L.nav.coverage, L.nav.about].map((item) => (
                   <a
                     key={item}
-                    href={`#${item.toLowerCase()}`}
+                    href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
                     className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg"
                     onClick={() => setMobileMenu(false)}
                   >
@@ -137,7 +140,7 @@ export default function HomePage() {
                   onClick={() => router.push('/login')}
                 >
                   <LogIn className="w-4 h-4 mr-2" />
-                  Sign in
+                  {L.nav.signIn}
                 </Button>
               </div>
             </motion.div>
@@ -162,7 +165,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-border mb-8"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-sm font-medium">Now serving 27+ cities across Egypt</span>
+            <span className="text-sm font-medium">{L.hero.badge}</span>
           </motion.div>
 
           <motion.h1
@@ -171,8 +174,8 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.05]"
           >
-            Shipping that <br />
-            <span className="gradient-text">moves at light speed</span>
+            {L.hero.title1}<br />
+            <span className="gradient-text">{L.hero.title2}</span>
           </motion.h1>
 
           <motion.p
@@ -181,8 +184,7 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
           >
-            Wsalhali is the premium COD shipping platform built for modern Egyptian commerce.
-            Real-time tracking, instant settlements, and a dashboard that feels like the future.
+            {L.hero.subtitle}
           </motion.p>
 
           {/* Tracking Widget */}
@@ -194,18 +196,18 @@ export default function HomePage() {
           >
             <form onSubmit={handleTrack} className="glass-card rounded-2xl p-2 shadow-premium flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-4' : 'left-4'}`} />
                 <Input
                   type="text"
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="Enter tracking number (e.g., WSL...)"
-                  className="border-0 pl-11 h-12 bg-transparent focus-visible:ring-0 text-base"
+                  placeholder={L.hero.trackPlaceholder}
+                  className={`border-0 h-12 bg-transparent focus-visible:ring-0 text-base ${isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'}`}
                 />
               </div>
               <Button type="submit" disabled={tracking} className="h-12 px-6 rounded-xl">
-                {tracking ? 'Tracking...' : 'Track'}
-                {!tracking && <ArrowRight className="w-4 h-4 ml-2" />}
+                {tracking ? L.hero.tracking : L.hero.track}
+                {!tracking && <ArrowRight className={`w-4 h-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />}
               </Button>
             </form>
 
@@ -219,7 +221,7 @@ export default function HomePage() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <div className="text-xs text-muted-foreground">Tracking Number</div>
+                      <div className="text-xs text-muted-foreground">{L.hero.trackingNumber}</div>
                       <div className="font-mono font-bold text-lg">{trackingResult.trackingNumber}</div>
                     </div>
                     <Badge className={
@@ -227,7 +229,7 @@ export default function HomePage() {
                       trackingResult.status === 'IN_TRANSIT' ? 'status-in-transit' :
                       trackingResult.status === 'PENDING' ? 'status-pending' : 'status-failed'
                     }>
-                      {trackingResult.status.replace(/_/g, ' ')}
+                      {dict.statuses[trackingResult.status as keyof typeof dict.statuses] || trackingResult.status.replace(/_/g, ' ')}
                     </Badge>
                   </div>
                   <div className="space-y-3">
@@ -235,9 +237,9 @@ export default function HomePage() {
                       <div key={i} className="flex gap-3">
                         <div className={`w-2 h-2 rounded-full mt-2 ${i === 0 ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
                         <div className="flex-1">
-                          <div className="text-sm font-medium">{h.status.replace(/_/g, ' ')}</div>
+                          <div className="text-sm font-medium">{dict.statuses[h.status as keyof typeof dict.statuses] || h.status.replace(/_/g, ' ')}</div>
                           <div className="text-xs text-muted-foreground">
-                            {new Date(h.createdAt).toLocaleString()}
+                            {new Date(h.createdAt).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US')}
                             {h.note && ` • ${h.note}`}
                           </div>
                         </div>
@@ -260,8 +262,8 @@ export default function HomePage() {
               className="h-14 px-8 text-base shadow-premium"
               onClick={() => router.push('/login')}
             >
-              Start shipping
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {L.hero.startShipping}
+              <ArrowRight className={`w-4 h-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
             </Button>
             <Button
               size="lg"
@@ -269,8 +271,8 @@ export default function HomePage() {
               className="h-14 px-8 text-base"
               onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              Explore features
-              <ChevronDown className="w-4 h-4 ml-2" />
+              {L.hero.exploreFeatures}
+              <ChevronDown className={`w-4 h-4 ${isRTL ? 'mr-2' : 'ml-2'}`} />
             </Button>
           </motion.div>
         </motion.div>
@@ -281,10 +283,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { icon: Package, label: 'Shipments delivered', value: '32,487', trend: '+12.4%' },
-              { icon: Clock, label: 'Avg. delivery time', value: '1.8 days', trend: '-8.2%' },
-              { icon: Globe, label: 'Cities covered', value: '27', trend: '+3 new' },
-              { icon: Star, label: 'Customer rating', value: '4.9/5', trend: 'Top tier' },
+              { icon: Package, label: L.stats.shipmentsDelivered, value: '32,487', trend: '+12.4%' },
+              { icon: Clock, label: L.stats.avgDeliveryTime, value: locale === 'ar' ? '1.8 يوم' : '1.8 days', trend: '-8.2%' },
+              { icon: Globe, label: L.stats.citiesCovered, value: '27', trend: locale === 'ar' ? '+3 جديد' : '+3 new' },
+              { icon: Star, label: L.stats.customerRating, value: '4.9/5', trend: locale === 'ar' ? 'الفئة العليا' : 'Top tier' },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -312,53 +314,23 @@ export default function HomePage() {
       <section id="services" className="py-24 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <Badge variant="secondary" className="mb-4">Platform Features</Badge>
+            <Badge variant="secondary" className="mb-4">{L.services.badge}</Badge>
             <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-              Everything you need to ship at scale
+              {L.services.title}
             </h2>
             <p className="text-lg text-muted-foreground">
-              From the first pickup to the final COD settlement, Wsalhali handles every step with precision and care.
+              {L.services.subtitle}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              {
-                icon: Package,
-                title: 'Smart Shipment Management',
-                desc: 'Create, track, and manage shipments with bulk operations, priority flags, and custom workflows.',
-                color: 'from-emerald-500 to-teal-600',
-              },
-              {
-                icon: Truck,
-                title: 'Live Driver Tracking',
-                desc: 'Real-time driver location, assignment optimization, and delivery confirmation with proof of delivery.',
-                color: 'from-amber-500 to-orange-600',
-              },
-              {
-                icon: Wallet,
-                title: 'COD Settlements',
-                desc: 'Automatic COD collection tracking, transparent fee breakdowns, and instant payout processing.',
-                color: 'from-purple-500 to-pink-600',
-              },
-              {
-                icon: BarChart3,
-                title: 'Advanced Analytics',
-                desc: 'Beautiful dashboards with shipment trends, profit margins, driver performance, and client insights.',
-                color: 'from-rose-500 to-red-600',
-              },
-              {
-                icon: Shield,
-                title: 'Role-Based Access',
-                desc: 'Granular permissions for admins, employees, drivers, and clients. Every action is audit-logged.',
-                color: 'from-cyan-500 to-blue-600',
-              },
-              {
-                icon: MapPin,
-                title: 'Branch Network',
-                desc: 'Multi-branch operations with cross-branch transfers, warehouse management, and zone routing.',
-                color: 'from-lime-500 to-green-600',
-              },
+              { icon: Package, ...L.services.items.smartShipment, color: 'from-emerald-500 to-teal-600' },
+              { icon: Truck, ...L.services.items.liveTracking, color: 'from-amber-500 to-orange-600' },
+              { icon: Wallet, ...L.services.items.codSettlements, color: 'from-purple-500 to-pink-600' },
+              { icon: BarChart3, ...L.services.items.analytics, color: 'from-rose-500 to-red-600' },
+              { icon: Shield, ...L.services.items.roleAccess, color: 'from-cyan-500 to-blue-600' },
+              { icon: MapPin, ...L.services.items.branchNetwork, color: 'from-lime-500 to-green-600' },
             ].map((feature, i) => (
               <motion.div
                 key={feature.title}
@@ -374,9 +346,9 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
-                <div className="mt-4 flex items-center text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  Learn more
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                <div className={`mt-4 flex items-center text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  {L.services.learnMore}
+                  <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'mr-1 rotate-180' : 'ml-1'}`} />
                 </div>
               </motion.div>
             ))}
@@ -388,18 +360,18 @@ export default function HomePage() {
       <section className="py-24 bg-card/30 backdrop-blur-sm border-y">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <Badge variant="secondary" className="mb-4">How it works</Badge>
+            <Badge variant="secondary" className="mb-4">{L.howItWorks.badge}</Badge>
             <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-              Ship in four simple steps
+              {L.howItWorks.title}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { step: '01', title: 'Create shipment', desc: 'Enter recipient details and select service type', icon: Package },
-              { step: '02', title: 'Schedule pickup', desc: 'Driver assigned and pickup confirmed in minutes', icon: Truck },
-              { step: '03', title: 'Live tracking', desc: 'Follow every step until final delivery', icon: MapPin },
-              { step: '04', title: 'Get paid', desc: 'COD collected and settled to your wallet', icon: Wallet },
+              { step: '01', ...L.howItWorks.steps.create, icon: Package },
+              { step: '02', ...L.howItWorks.steps.schedule, icon: Truck },
+              { step: '03', ...L.howItWorks.steps.track, icon: MapPin },
+              { step: '04', ...L.howItWorks.steps.paid, icon: Wallet },
             ].map((s, i) => (
               <motion.div
                 key={s.step}
@@ -432,41 +404,20 @@ export default function HomePage() {
       <section id="pricing" className="py-24 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <Badge variant="secondary" className="mb-4">Pricing</Badge>
+            <Badge variant="secondary" className="mb-4">{L.pricing.badge}</Badge>
             <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-              Simple, transparent pricing
+              {L.pricing.title}
             </h2>
             <p className="text-lg text-muted-foreground">
-              Pay only for what you ship. No subscriptions, no hidden fees.
+              {L.pricing.subtitle}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              {
-                name: 'Standard',
-                price: '25 EGP',
-                desc: 'For everyday shipments',
-                features: ['1-3 day delivery', 'Up to 3 kg', '2% COD fee', 'Basic tracking', 'Email support'],
-                cta: 'Start shipping',
-                popular: false,
-              },
-              {
-                name: 'Express',
-                price: '50 EGP',
-                desc: 'For urgent deliveries',
-                features: ['Same-day delivery', 'Up to 5 kg', '2% COD fee', 'Live GPS tracking', 'Priority support', 'Insurance included'],
-                cta: 'Get Express',
-                popular: true,
-              },
-              {
-                name: 'Enterprise',
-                price: 'Custom',
-                desc: 'For high-volume merchants',
-                features: ['Volume discounts', 'Custom integrations', 'Dedicated account manager', 'API access', '24/7 phone support', 'SLA guarantees'],
-                cta: 'Contact sales',
-                popular: false,
-              },
+              { ...L.pricing.plans.standard, popular: false },
+              { ...L.pricing.plans.express, popular: true },
+              { ...L.pricing.plans.enterprise, popular: false },
             ].map((plan, i) => (
               <motion.div
                 key={plan.name}
@@ -482,7 +433,7 @@ export default function HomePage() {
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                    Most popular
+                    {L.pricing.mostPopular}
                   </div>
                 )}
                 <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
@@ -491,8 +442,8 @@ export default function HomePage() {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      {f}
+                      <CheckCircle2 className={`w-4 h-4 text-emerald-500 shrink-0 ${isRTL ? 'order-2' : ''}`} />
+                      <span className={isRTL ? 'order-1' : ''}>{f}</span>
                     </li>
                   ))}
                 </ul>
@@ -514,19 +465,19 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <Badge variant="secondary" className="mb-4">Coverage</Badge>
+              <Badge variant="secondary" className="mb-4">{L.coverage.badge}</Badge>
               <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-                Reaching every corner of Egypt
+                {L.coverage.title}
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
-                From Cairo to Aswan, our network of branches and drivers covers all major Egyptian cities and is constantly expanding.
+                {L.coverage.subtitle}
               </p>
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
-                  { label: 'Active branches', value: '12+' },
-                  { label: 'Cities served', value: '27' },
-                  { label: 'Active drivers', value: '450+' },
-                  { label: 'Warehouses', value: '8' },
+                  { label: L.coverage.activeBranches, value: '12+' },
+                  { label: L.coverage.citiesServed, value: '27' },
+                  { label: L.coverage.activeDrivers, value: '450+' },
+                  { label: L.coverage.warehouses, value: '8' },
                 ].map((s) => (
                   <div key={s.label} className="p-4 rounded-xl border border-border bg-background">
                     <div className="text-2xl font-bold text-primary">{s.value}</div>
@@ -535,8 +486,8 @@ export default function HomePage() {
                 ))}
               </div>
               <Button variant="outline" onClick={() => router.push('/login')}>
-                View full coverage
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {L.coverage.viewFull}
+                <ArrowRight className={`w-4 h-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
               </Button>
             </div>
 
@@ -554,17 +505,15 @@ export default function HomePage() {
               <div className="absolute inset-16 rounded-full glass-card flex items-center justify-center">
                 <div className="text-center">
                   <Globe className="w-16 h-16 text-primary mx-auto mb-3" />
-                  <div className="text-2xl font-bold">Egypt</div>
-                  <div className="text-sm text-muted-foreground">27 cities covered</div>
+                  <div className="text-2xl font-bold">{L.coverage.egypt}</div>
+                  <div className="text-sm text-muted-foreground">27 {L.coverage.citiesCovered}</div>
                 </div>
               </div>
               {[0, 60, 120, 180, 240, 300].map((angle) => (
                 <motion.div
                   key={angle}
                   className="absolute top-1/2 left-1/2 w-3 h-3 rounded-full bg-primary shadow-glow"
-                  style={{
-                    transform: `rotate(${angle}deg) translateY(-200px)`,
-                  }}
+                  style={{ transform: `rotate(${angle}deg) translateY(-200px)` }}
                   animate={{ scale: [1, 1.5, 1] }}
                   transition={{ duration: 2, repeat: Infinity, delay: angle / 60 }}
                 />
@@ -590,10 +539,10 @@ export default function HomePage() {
             <div className="relative z-10">
               <TrendingUp className="w-12 h-12 mx-auto mb-6 opacity-80" />
               <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-                Ready to ship smarter?
+                {L.cta.title}
               </h2>
               <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
-                Join thousands of Egyptian merchants who trust Wsalhali for their daily shipping and COD operations.
+                {L.cta.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
@@ -602,8 +551,8 @@ export default function HomePage() {
                   className="h-14 px-8 text-base"
                   onClick={() => router.push('/login')}
                 >
-                  Get started today
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {L.cta.getStarted}
+                  <ArrowRight className={`w-4 h-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
                 </Button>
                 <Button
                   size="lg"
@@ -611,7 +560,7 @@ export default function HomePage() {
                   className="h-14 px-8 text-base border-white/30 text-white hover:bg-white/10 hover:text-white"
                   onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  Learn more
+                  {L.cta.learnMore}
                 </Button>
               </div>
             </div>
@@ -624,20 +573,15 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-9 h-9 rounded-xl overflow-hidden bg-primary/10">
-                  <img src="/wsalhali-logo.png" alt="Wsalhali" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-lg font-bold">Wsalhali</span>
-              </div>
+              <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-9 w-auto mb-4 object-contain" />
               <p className="text-sm text-muted-foreground">
-                The premium shipping and logistics platform built for modern Egyptian commerce.
+                {L.footer.description}
               </p>
             </div>
             {[
-              { title: 'Platform', links: ['Features', 'Pricing', 'Coverage', 'API Docs'] },
-              { title: 'Company', links: ['About', 'Careers', 'Press', 'Contact'] },
-              { title: 'Legal', links: ['Privacy', 'Terms', 'Security', 'Compliance'] },
+              { title: L.footer.platform, links: [L.footer.features, L.footer.pricing, L.footer.coverage, L.footer.apiDocs] },
+              { title: L.footer.company, links: [L.footer.about, L.footer.careers, L.footer.press, L.footer.contact] },
+              { title: L.footer.legal, links: [L.footer.privacy, L.footer.terms, L.footer.security, L.footer.compliance] },
             ].map((col) => (
               <div key={col.title}>
                 <h4 className="font-semibold mb-3">{col.title}</h4>
@@ -655,11 +599,11 @@ export default function HomePage() {
           </div>
           <div className="pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © 2026 Wsalhali. All rights reserved.
+              © 2026 {dict.common.appName}. {L.footer.rights}
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              All systems operational
+              {L.footer.systemsOperational}
             </div>
           </div>
         </div>

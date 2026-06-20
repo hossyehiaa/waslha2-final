@@ -26,7 +26,7 @@ export function PageHeader({
     >
       <div className="space-y-1">
         {breadcrumb && (
-          <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
             {breadcrumb.map((b, i) => (
               <span key={i} className="flex items-center gap-1.5">
                 {i > 0 && <span className="text-muted-foreground/50">/</span>}
@@ -41,7 +41,7 @@ export function PageHeader({
         )}
         <div className="flex items-center gap-3">
           {Icon && (
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Icon className="w-5 h-5" />
             </div>
           )}
@@ -51,7 +51,7 @@ export function PageHeader({
           </div>
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
     </motion.div>
   )
 }

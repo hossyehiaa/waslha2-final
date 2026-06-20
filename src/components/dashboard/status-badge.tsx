@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { useLanguage } from '@/components/language-provider'
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
@@ -29,8 +30,9 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export function StatusBadge({ status, size = 'sm' }: { status: string; size?: 'sm' | 'md' }) {
+  const { dict } = useLanguage()
   const cls = STATUS_STYLES[status] || 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-  const text = status.replace(/_/g, ' ')
+  const text = dict.statuses[status as keyof typeof dict.statuses] || status.replace(/_/g, ' ')
   return (
     <Badge
       variant="secondary"

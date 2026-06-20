@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDateTime } from '@/lib/format'
+import { useLanguage } from '@/components/language-provider'
 
 type TrackResult = {
   trackingNumber: string
@@ -25,6 +26,8 @@ type TrackResult = {
 }
 
 export default function ClientTrackingPage() {
+  const { dict, isRTL } = useLanguage()
+  const L = dict.pages.tracking
   const [query, setQuery] = useState('')
   const [result, setResult] = useState<TrackResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -40,12 +43,12 @@ export default function ClientTrackingPage() {
       const res = await fetch(`/api/track?q=${encodeURIComponent(query.trim())}`)
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Not found')
+        setError(data.error || L.notFound)
       } else {
         setResult(data)
       }
     } catch {
-      setError('Network error')
+      setError(dict.common.networkError)
     } finally {
       setLoading(false)
     }
@@ -53,14 +56,14 @@ export default function ClientTrackingPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Track Shipment" subtitle="Track any shipment by tracking number" icon={MapPin} />
+      <PageHeader title={L.title} subtitle={L.subtitle} icon={MapPin} />
       <Card className="p-6">
         <form onSubmit={handleSearch} className="flex gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Enter tracking number" className="pl-10 h-12" />
+            <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={L.placeholder} className={`h-12 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} />
           </div>
-          <Button type="submit" disabled={loading} className="h-12 px-6 shadow-premium">{loading ? 'Searching...' : 'Track'}</Button>
+          <Button type="submit" disabled={loading} className="h-12 px-6 shadow-premium">{loading ? L.searching : L.track}</Button>
         </form>
       </Card>
 
@@ -77,7 +80,7 @@ export default function ClientTrackingPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-12 text-center">
               <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-semibold mb-1">No shipment found</h3>
+              <h3 className="text-lg font-semibold mb-1">{L.notFound}</h3>
               <p className="text-sm text-muted-foreground">{error}</p>
             </Card>
           </motion.div>
@@ -87,7 +90,7 @@ export default function ClientTrackingPage() {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <div className="text-xs text-muted-foreground">Tracking Number</div>
+                  <div className="text-xs text-muted-foreground">{L.trackingNumber}</div>
                   <div className="font-mono font-bold text-xl">{result.trackingNumber}</div>
                 </div>
                 <StatusBadge status={result.status} size="md" />
@@ -107,10 +110,10 @@ export default function ClientTrackingPage() {
                 ))}
               </div>
               <div className="mt-6 pt-6 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div><div className="text-xs text-muted-foreground">From</div><div className="font-medium">{result.from}</div></div>
-                <div><div className="text-xs text-muted-foreground">To</div><div className="font-medium">{result.to}</div></div>
-                <div><div className="text-xs text-muted-foreground">Weight</div><div className="font-medium">{result.weight} kg</div></div>
-                <div><div className="text-xs text-muted-foreground">Pieces</div><div className="font-medium">{result.pieces}</div></div>
+                <div><div className="text-xs text-muted-foreground">{L.from}</div><div className="font-medium">{result.from}</div></div>
+                <div><div className="text-xs text-muted-foreground">{L.to}</div><div className="font-medium">{result.to}</div></div>
+                <div><div className="text-xs text-muted-foreground">{L.weight}</div><div className="font-medium">{result.weight} kg</div></div>
+                <div><div className="text-xs text-muted-foreground">{L.pieces}</div><div className="font-medium">{result.pieces}</div></div>
               </div>
             </Card>
           </motion.div>

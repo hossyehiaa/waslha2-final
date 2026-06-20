@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Employee = {
   id: string
@@ -25,14 +26,9 @@ type Employee = {
   lastLoginAt: string | null
 }
 
-const POSITIONS: Record<string, string> = {
-  MANAGER: 'Manager',
-  SUPERVISOR: 'Supervisor',
-  CLERK: 'Clerk',
-  AGENT: 'Agent',
-}
-
 export default function AdminEmployeesPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.employees
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -40,14 +36,14 @@ export default function AdminEmployeesPage() {
     fetch('/api/admin/employees')
       .then(r => r.json())
       .then(d => setEmployees(d.employees || []))
-      .catch(() => toast.error('Failed to load employees'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [])
+  }, [dict])
 
   const columns: Column<Employee>[] = [
     {
       key: 'fullName',
-      header: 'Employee',
+      header: L.employee,
       sortable: true,
       cell: (e) => (
         <div className="flex items-center gap-3">
@@ -63,13 +59,13 @@ export default function AdminEmployeesPage() {
     },
     {
       key: 'position',
-      header: 'Position',
+      header: L.position,
       sortable: true,
-      cell: (e) => <span className="text-xs px-2 py-1 rounded bg-muted font-medium">{POSITIONS[e.position] || e.position}</span>,
+      cell: (e) => <span className="text-xs px-2 py-1 rounded bg-muted font-medium">{dict.positions[e.position as keyof typeof dict.positions] || e.position}</span>,
     },
     {
       key: 'contact',
-      header: 'Contact',
+      header: L.contact,
       hideOnMobile: true,
       cell: (e) => (
         <div>
@@ -80,43 +76,43 @@ export default function AdminEmployeesPage() {
     },
     {
       key: 'branch',
-      header: 'Branch',
+      header: L.branch,
       hideOnMobile: true,
       cell: (e) => <span className="text-xs">{e.branch || '-'}</span>,
     },
     {
       key: 'salary',
-      header: 'Salary',
+      header: L.salary,
       sortable: true,
       cell: (e) => <span className="font-medium text-xs">{formatCurrency(e.salary)}</span>,
     },
     {
       key: 'status',
-      header: 'Status',
+      header: dict.common.status,
       cell: (e) => <StatusBadge status={e.status} />,
     },
     {
       key: 'lastLoginAt',
-      header: 'Last Active',
+      header: L.lastActive,
       hideOnMobile: true,
-      cell: (e) => <span className="text-xs text-muted-foreground">{e.lastLoginAt ? formatTimeAgo(e.lastLoginAt) : 'Never'}</span>,
+      cell: (e) => <span className="text-xs text-muted-foreground">{e.lastLoginAt ? formatTimeAgo(e.lastLoginAt) : '-'}</span>,
     },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Employees"
-        subtitle={`${employees.length} staff members`}
+        title={dict.nav.employees}
+        subtitle={`${employees.length} ${L.subtitle}`}
         icon={UserCog}
-        actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />New Employee</Button>}
+        actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />{L.newEmployee}</Button>}
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Employees', value: employees.length, icon: UserCog, color: 'bg-emerald-100 text-emerald-700' },
-          { label: 'Managers', value: employees.filter(e => e.position === 'MANAGER').length, icon: Briefcase, color: 'bg-purple-100 text-purple-700' },
-          { label: 'Total Salaries', value: formatCurrency(employees.reduce((s, e) => s + e.salary, 0)), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
-          { label: 'Active', value: employees.filter(e => e.status === 'ACTIVE').length, icon: Star, color: 'bg-teal-100 text-teal-700' },
+          { label: L.totalEmployees, value: employees.length, icon: UserCog, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.managers, value: employees.filter(e => e.position === 'MANAGER').length, icon: Briefcase, color: 'bg-purple-100 text-purple-700' },
+          { label: L.totalSalaries, value: formatCurrency(employees.reduce((s, e) => s + e.salary, 0)), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
+          { label: L.active, value: employees.filter(e => e.status === 'ACTIVE').length, icon: Star, color: 'bg-teal-100 text-teal-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
@@ -131,7 +127,7 @@ export default function AdminEmployeesPage() {
         data={employees}
         columns={columns}
         loading={loading}
-        searchPlaceholder="Search by name, code, username..."
+        searchPlaceholder={`${dict.common.search}...`}
         searchKeys={['fullName', 'username', 'employeeCode']}
         pageSize={10}
       />
