@@ -240,7 +240,7 @@ export default function AdminDashboard() {
                 onClick={() => router.push('/admin/clients')}
               >
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center font-bold text-sm shrink-0">
-                  {c.companyName[0]}
+                  {(c.companyName || '?')[0]}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{c.companyName}</div>

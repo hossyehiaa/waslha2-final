@@ -48,10 +48,10 @@ export default function AdminEmployeesPage() {
       cell: (e) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center font-bold text-sm shrink-0">
-            {e.fullName.split(' ').map(w => w[0]).slice(0, 2).join('')}
+            {(e.fullName || '?').split(' ').map(w => w[0]).slice(0, 2).join('')}
           </div>
           <div>
-            <div className="font-medium">{e.fullName}</div>
+            <div className="font-medium">{e.fullName || '-'}</div>
             <div className="text-xs text-muted-foreground font-mono">{e.employeeCode}</div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatTimeAgo } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Notification = {
   id: string
@@ -28,6 +29,8 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default function ClientNotificationsPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.notifications
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -46,19 +49,19 @@ export default function ClientNotificationsPage() {
         body: JSON.stringify({ action: 'mark_all_read' }),
       })
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
-      toast.success('All marked as read')
+      toast.success(L.markAllRead)
     } catch {
-      toast.error('Failed')
+      toast.error(dict.common.noData)
     }
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Notifications"
-        subtitle={`${notifications.filter(n => !n.isRead).length} unread`}
+        title={dict.common.notifications}
+        subtitle={`${notifications.filter(n => !n.isRead).length} ${L.unread}`}
         icon={Bell}
-        actions={<Button variant="outline" onClick={markAllRead}><CheckCheck className="w-4 h-4 mr-2" />Mark all read</Button>}
+        actions={<Button variant="outline" onClick={markAllRead}><CheckCheck className="w-4 h-4 mr-2" />{L.markAllRead}</Button>}
       />
       <Card className="divide-y">
         {loading ? (
@@ -71,7 +74,7 @@ export default function ClientNotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
             <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No notifications</p>
+            <p>{L.noNotifications}</p>
           </div>
         ) : (
           notifications.map((n) => (

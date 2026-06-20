@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { formatCurrency } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Pricing = {
   id: string
@@ -22,6 +23,8 @@ type Pricing = {
 }
 
 export default function AdminPricingPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.pricing
   const [rules, setRules] = useState<Pricing[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -29,13 +32,13 @@ export default function AdminPricingPage() {
     fetch('/api/admin/pricing')
       .then(r => r.json())
       .then(d => setRules(d.rules || []))
-      .catch(() => toast.error('Failed to load pricing'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [])
+  }, [dict])
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pricing Rules" subtitle="Shipping rates and COD fees" icon={CreditCard} actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />New Rule</Button>} />
+      <PageHeader title={L.title} subtitle={L.subtitle} icon={CreditCard} actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />{L.newRule}</Button>} />
       <div className="grid md:grid-cols-2 gap-4">
         {(loading ? [...Array(2)] : rules).map((r, i) => (
           <Card key={r?.id || i} className="p-6">
@@ -55,24 +58,24 @@ export default function AdminPricingPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-xs text-muted-foreground">Base Price</div>
+                    <div className="text-xs text-muted-foreground">{L.basePrice}</div>
                     <div className="font-bold text-lg">{formatCurrency(r.basePrice)}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{r.baseWeight} kg included</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{r.baseWeight} {L.kgIncluded}</div>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-xs text-muted-foreground">Per kg</div>
+                    <div className="text-xs text-muted-foreground">{L.perKg}</div>
                     <div className="font-bold text-lg">{formatCurrency(r.perKgPrice)}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Additional weight</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{L.additionalWeight}</div>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-xs text-muted-foreground">COD Fee</div>
+                    <div className="text-xs text-muted-foreground">{L.codFee}</div>
                     <div className="font-bold text-lg">{r.codFeePercent}%</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">of COD amount</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{L.ofCodAmount}</div>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-xs text-muted-foreground">Insurance</div>
+                    <div className="text-xs text-muted-foreground">{L.insurance}</div>
                     <div className="font-bold text-lg">{r.insuranceFeePercent}%</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">optional</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{L.optional}</div>
                   </div>
                 </div>
               </>

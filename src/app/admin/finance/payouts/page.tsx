@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Payout = {
   id: string
@@ -22,6 +23,8 @@ type Payout = {
 }
 
 export default function AdminPayoutsPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.payouts
   const [payouts, setPayouts] = useState<Payout[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -29,9 +32,9 @@ export default function AdminPayoutsPage() {
     fetch('/api/admin/payouts')
       .then(r => r.json())
       .then(d => setPayouts(d.payouts || []))
-      .catch(() => toast.error('Failed to load payouts'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [])
+  }, [dict])
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     try {
@@ -42,32 +45,32 @@ export default function AdminPayoutsPage() {
       })
       if (!res.ok) {
         const d = await res.json()
-        toast.error(d.error || 'Action failed')
+        toast.error(d.error || dict.common.noData)
         return
       }
-      toast.success(action === 'approve' ? 'Payout approved' : 'Payout rejected')
+      toast.success(action === 'approve' ? dict.common.approve : dict.common.reject)
       setPayouts(prev => prev.map(p => p.id === id ? { ...p, status: action === 'approve' ? 'APPROVED' : 'REJECTED' } : p))
     } catch {
-      toast.error('Network error')
+      toast.error(dict.common.networkError)
     }
   }
 
   const columns: Column<Payout>[] = [
-    { key: 'client', header: 'Client', sortable: true, cell: (p) => <span className="font-medium">{p.client}</span> },
-    { key: 'amount', header: 'Amount', sortable: true, cell: (p) => <span className="font-bold">{formatCurrency(p.amount)}</span> },
-    { key: 'method', header: 'Method', hideOnMobile: true, cell: (p) => <span className="text-xs">{p.method.replace(/_/g, ' ')}</span> },
-    { key: 'bankAccount', header: 'Account', hideOnMobile: true, cell: (p) => <span className="text-xs font-mono">{p.bankAccount || '-'}</span> },
-    { key: 'createdAt', header: 'Requested', sortable: true, hideOnMobile: true, cell: (p) => <span className="text-xs text-muted-foreground">{formatTimeAgo(p.createdAt)}</span> },
-    { key: 'status', header: 'Status', cell: (p) => <StatusBadge status={p.status} /> },
+    { key: 'client', header: L.client, sortable: true, cell: (p) => <span className="font-medium">{p.client}</span> },
+    { key: 'amount', header: L.amount, sortable: true, cell: (p) => <span className="font-bold">{formatCurrency(p.amount)}</span> },
+    { key: 'method', header: L.method, hideOnMobile: true, cell: (p) => <span className="text-xs">{p.method.replace(/_/g, ' ')}</span> },
+    { key: 'bankAccount', header: L.account, hideOnMobile: true, cell: (p) => <span className="text-xs font-mono">{p.bankAccount || '-'}</span> },
+    { key: 'createdAt', header: L.requested, sortable: true, hideOnMobile: true, cell: (p) => <span className="text-xs text-muted-foreground">{formatTimeAgo(p.createdAt)}</span> },
+    { key: 'status', header: dict.common.status, cell: (p) => <StatusBadge status={p.status} /> },
     {
-      key: 'actions', header: 'Actions',
+      key: 'actions', header: dict.common.actions,
       cell: (p) => p.status === 'PENDING' ? (
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleAction(p.id, 'approve') }}>
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />Approve
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />{dict.common.approve}
           </Button>
           <Button size="sm" variant="outline" className="text-destructive" onClick={(e) => { e.stopPropagation(); handleAction(p.id, 'reject') }}>
-            <X className="w-3.5 h-3.5 mr-1" />Reject
+            <X className="w-3.5 h-3.5 mr-1" />{dict.common.reject}
           </Button>
         </div>
       ) : <span className="text-xs text-muted-foreground">—</span>,
@@ -76,12 +79,12 @@ export default function AdminPayoutsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Payout Requests" subtitle="Client withdrawal requests" icon={Wallet} />
+      <PageHeader title={L.title} subtitle={L.subtitle} icon={Wallet} />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
-          { label: 'Pending Requests', value: payouts.filter(p => p.status === 'PENDING').length, icon: Clock, color: 'bg-amber-100 text-amber-700' },
-          { label: 'Total Pending Value', value: formatCurrency(payouts.filter(p => p.status === 'PENDING').reduce((s, p) => s + p.amount, 0)), icon: Wallet, color: 'bg-purple-100 text-purple-700' },
-          { label: 'Approved', value: payouts.filter(p => p.status === 'APPROVED').length, icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.pendingRequests, value: payouts.filter(p => p.status === 'PENDING').length, icon: Clock, color: 'bg-amber-100 text-amber-700' },
+          { label: L.totalPendingValue, value: formatCurrency(payouts.filter(p => p.status === 'PENDING').reduce((s, p) => s + p.amount, 0)), icon: Wallet, color: 'bg-purple-100 text-purple-700' },
+          { label: L.approved, value: payouts.filter(p => p.status === 'APPROVED').length, icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
@@ -92,7 +95,7 @@ export default function AdminPayoutsPage() {
           </Card>
         ))}
       </div>
-      <DataTable data={payouts} columns={columns} loading={loading} searchPlaceholder="Search payouts..." searchKeys={['client', 'bankAccount']} pageSize={10} />
+      <DataTable data={payouts} columns={columns} loading={loading} searchPlaceholder={`${dict.common.search}...`} searchKeys={['client', 'bankAccount']} pageSize={10} />
     </div>
   )
 }

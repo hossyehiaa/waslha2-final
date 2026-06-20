@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Warehouse = {
   id: string
@@ -21,6 +22,8 @@ type Warehouse = {
 }
 
 export default function AdminWarehousesPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.warehouses
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -28,17 +31,17 @@ export default function AdminWarehousesPage() {
     fetch('/api/admin/warehouses')
       .then(r => r.json())
       .then(d => setWarehouses(d.warehouses || []))
-      .catch(() => toast.error('Failed to load warehouses'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [])
+  }, [dict])
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Warehouses"
-        subtitle={`${warehouses.length} storage facilities`}
+        title={dict.nav.warehouses}
+        subtitle={`${warehouses.length} ${L.subtitle}`}
         icon={Boxes}
-        actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />New Warehouse</Button>}
+        actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />{L.newWarehouse}</Button>}
       />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(loading ? [...Array(4)] : warehouses).map((w, i) => (
@@ -60,7 +63,7 @@ export default function AdminWarehousesPage() {
                 <div className="space-y-3">
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="text-muted-foreground">Capacity Used</span>
+                      <span className="text-muted-foreground">{L.capacityUsed}</span>
                       <span className="font-medium">{w.currentLoad} / {w.capacity}</span>
                     </div>
                     <Progress value={(w.currentLoad / w.capacity) * 100} className="h-2" />

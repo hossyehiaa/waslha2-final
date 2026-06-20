@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Pickup = {
   id: string
@@ -25,6 +26,8 @@ type Pickup = {
 }
 
 export default function AdminPickupsPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.pickups
   const [pickups, setPickups] = useState<Pickup[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -32,23 +35,23 @@ export default function AdminPickupsPage() {
     fetch('/api/admin/pickups')
       .then(r => r.json())
       .then(d => setPickups(d.pickups || []))
-      .catch(() => toast.error('Failed to load pickups'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [])
+  }, [dict])
 
   const columns: Column<Pickup>[] = [
-    { key: 'clientName', header: 'Client', sortable: true, cell: (p) => <span className="font-medium">{p.clientName}</span> },
-    { key: 'pickupAddress', header: 'Address', hideOnMobile: true, cell: (p) => <span className="text-xs text-muted-foreground">{p.pickupAddress}</span> },
-    { key: 'packagesCount', header: 'Packages', sortable: true, cell: (p) => <span className="font-medium">{p.packagesCount}</span> },
-    { key: 'totalWeight', header: 'Weight', hideOnMobile: true, cell: (p) => <span className="text-xs">{p.totalWeight} kg</span> },
-    { key: 'requestedDate', header: 'Requested', sortable: true, cell: (p) => <span className="text-xs text-muted-foreground">{formatDateTime(p.requestedDate)}</span> },
-    { key: 'status', header: 'Status', cell: (p) => <StatusBadge status={p.status} /> },
+    { key: 'clientName', header: L.client, sortable: true, cell: (p) => <span className="font-medium">{p.clientName}</span> },
+    { key: 'pickupAddress', header: L.address, hideOnMobile: true, cell: (p) => <span className="text-xs text-muted-foreground">{p.pickupAddress}</span> },
+    { key: 'packagesCount', header: L.packages, sortable: true, cell: (p) => <span className="font-medium">{p.packagesCount}</span> },
+    { key: 'totalWeight', header: L.weight, hideOnMobile: true, cell: (p) => <span className="text-xs">{p.totalWeight} kg</span> },
+    { key: 'requestedDate', header: L.requested, sortable: true, cell: (p) => <span className="text-xs text-muted-foreground">{formatDateTime(p.requestedDate)}</span> },
+    { key: 'status', header: dict.common.status, cell: (p) => <StatusBadge status={p.status} /> },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pickup Requests" subtitle={`${pickups.length} pickup requests`} icon={PackageCheck} actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />New Pickup</Button>} />
-      <DataTable data={pickups} columns={columns} loading={loading} searchPlaceholder="Search pickups..." searchKeys={['clientName', 'pickupAddress']} pageSize={10} />
+      <PageHeader title={dict.nav.pickups} subtitle={`${pickups.length} ${L.subtitle}`} icon={PackageCheck} actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />{L.newPickup}</Button>} />
+      <DataTable data={pickups} columns={columns} loading={loading} searchPlaceholder={`${dict.common.search}...`} searchKeys={['clientName', 'pickupAddress']} pageSize={10} />
     </div>
   )
 }

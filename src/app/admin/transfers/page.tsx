@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Card } from '@/components/ui/card'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Transfer = {
   id: string
@@ -22,6 +23,8 @@ type Transfer = {
 }
 
 export default function AdminTransfersPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.transfers
   const [transfers, setTransfers] = useState<Transfer[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -29,29 +32,29 @@ export default function AdminTransfersPage() {
     fetch('/api/admin/transfers')
       .then(r => r.json())
       .then(d => setTransfers(d.transfers || []))
-      .catch(() => toast.error('Failed to load transfers'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [])
+  }, [dict])
 
   const columns: Column<Transfer>[] = [
-    { key: 'reference', header: 'Reference', sortable: true, cell: (t) => <span className="font-mono font-medium text-xs">{t.reference}</span> },
-    { key: 'fromBranch', header: 'From', cell: (t) => <span className="text-xs">{t.fromBranch}</span> },
-    { key: 'toBranch', header: 'To', cell: (t) => <span className="text-xs">{t.toBranch}</span> },
-    { key: 'shipmentCount', header: 'Shipments', sortable: true, cell: (t) => <span className="font-medium">{t.shipmentCount}</span> },
-    { key: 'totalValue', header: 'Value', sortable: true, cell: (t) => <span className="font-medium text-xs">{formatCurrency(t.totalValue)}</span> },
-    { key: 'sentAt', header: 'Sent', sortable: true, hideOnMobile: true, cell: (t) => <span className="text-xs text-muted-foreground">{formatDateTime(t.sentAt)}</span> },
-    { key: 'status', header: 'Status', cell: (t) => <StatusBadge status={t.status} /> },
+    { key: 'reference', header: L.reference, sortable: true, cell: (t) => <span className="font-mono font-medium text-xs">{t.reference}</span> },
+    { key: 'fromBranch', header: L.from, cell: (t) => <span className="text-xs">{t.fromBranch}</span> },
+    { key: 'toBranch', header: L.to, cell: (t) => <span className="text-xs">{t.toBranch}</span> },
+    { key: 'shipmentCount', header: L.shipments, sortable: true, cell: (t) => <span className="font-medium">{t.shipmentCount}</span> },
+    { key: 'totalValue', header: L.value, sortable: true, cell: (t) => <span className="font-medium text-xs">{formatCurrency(t.totalValue)}</span> },
+    { key: 'sentAt', header: L.sent, sortable: true, hideOnMobile: true, cell: (t) => <span className="text-xs text-muted-foreground">{formatDateTime(t.sentAt)}</span> },
+    { key: 'status', header: dict.common.status, cell: (t) => <StatusBadge status={t.status} /> },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Branch Transfers" subtitle={`${transfers.length} transfers between branches`} icon={ArrowLeftRight} />
+      <PageHeader title={L.title} subtitle={`${transfers.length} ${L.subtitle}`} icon={ArrowLeftRight} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Transfers', value: transfers.length, color: 'bg-blue-100 text-blue-700' },
-          { label: 'Pending', value: transfers.filter(t => t.status === 'PENDING_RECEIPT').length, color: 'bg-amber-100 text-amber-700' },
-          { label: 'Received', value: transfers.filter(t => t.status === 'RECEIVED').length, color: 'bg-emerald-100 text-emerald-700' },
-          { label: 'Total Value', value: formatCurrency(transfers.reduce((s, t) => s + t.totalValue, 0)), color: 'bg-purple-100 text-purple-700' },
+          { label: L.totalTransfers, value: transfers.length, color: 'bg-blue-100 text-blue-700' },
+          { label: L.pending, value: transfers.filter(t => t.status === 'PENDING_RECEIPT').length, color: 'bg-amber-100 text-amber-700' },
+          { label: L.received, value: transfers.filter(t => t.status === 'RECEIVED').length, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.totalValue, value: formatCurrency(transfers.reduce((s, t) => s + t.totalValue, 0)), color: 'bg-purple-100 text-purple-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
@@ -62,7 +65,7 @@ export default function AdminTransfersPage() {
           </Card>
         ))}
       </div>
-      <DataTable data={transfers} columns={columns} loading={loading} searchPlaceholder="Search transfers..." searchKeys={['reference', 'fromBranch', 'toBranch']} pageSize={10} />
+      <DataTable data={transfers} columns={columns} loading={loading} searchPlaceholder={`${dict.common.search}...`} searchKeys={['reference', 'fromBranch', 'toBranch']} pageSize={10} />
     </div>
   )
 }

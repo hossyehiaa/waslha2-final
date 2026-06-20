@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Shipment = {
   id: string
@@ -23,6 +24,8 @@ type Shipment = {
 
 export default function ClientShipmentsPage() {
   const router = useRouter()
+  const { dict } = useLanguage()
+  const L = dict.pages.shipments
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -31,41 +34,41 @@ export default function ClientShipmentsPage() {
     fetch(`/api/shipments?status=${statusFilter}`)
       .then(r => r.json())
       .then(d => setShipments(d.shipments || []))
-      .catch(() => toast.error('Failed to load shipments'))
+      .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [statusFilter])
+  }, [statusFilter, dict])
 
   const columns: Column<Shipment>[] = [
-    { key: 'trackingNumber', header: 'Tracking #', sortable: true, cell: (s) => <span className="font-mono font-medium text-xs">{s.trackingNumber}</span> },
-    { key: 'route', header: 'Route', hideOnMobile: true, cell: (s) => <span className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</span> },
-    { key: 'recipientName', header: 'Recipient', cell: (s) => <span className="text-sm">{s.recipientName}</span> },
-    { key: 'status', header: 'Status', cell: (s) => <StatusBadge status={s.status} /> },
-    { key: 'codAmount', header: 'COD', sortable: true, cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.codAmount)}</span> },
-    { key: 'createdAt', header: 'Created', sortable: true, hideOnMobile: true, cell: (s) => <span className="text-xs text-muted-foreground">{formatTimeAgo(s.createdAt)}</span> },
+    { key: 'trackingNumber', header: dict.dashboard.admin.tracking, sortable: true, cell: (s) => <span className="font-mono font-medium text-xs">{s.trackingNumber}</span> },
+    { key: 'route', header: dict.dashboard.admin.route, hideOnMobile: true, cell: (s) => <span className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</span> },
+    { key: 'recipientName', header: L.recipient, cell: (s) => <span className="text-sm">{s.recipientName}</span> },
+    { key: 'status', header: dict.common.status, cell: (s) => <StatusBadge status={s.status} /> },
+    { key: 'codAmount', header: dict.dashboard.admin.cod, sortable: true, cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.codAmount)}</span> },
+    { key: 'createdAt', header: dict.dashboard.admin.created2, sortable: true, hideOnMobile: true, cell: (s) => <span className="text-xs text-muted-foreground">{formatTimeAgo(s.createdAt)}</span> },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="My Shipments"
-        subtitle={`${shipments.length} shipments`}
+        title={dict.nav.myShipments}
+        subtitle={`${shipments.length} ${dict.nav.shipments}`}
         icon={Package}
-        actions={<Button onClick={() => router.push('/dashboard/shipments/new')} className="shadow-premium"><Plus className="w-4 h-4 mr-2" />New Shipment</Button>}
+        actions={<Button onClick={() => router.push('/dashboard/shipments/new')} className="shadow-premium"><Plus className="w-4 h-4 mr-2" />{L.newShipment}</Button>}
       />
       <DataTable
         data={shipments}
         columns={columns}
         loading={loading}
-        searchPlaceholder="Search by tracking # or recipient..."
+        searchPlaceholder={`${dict.common.search}...`}
         searchKeys={['trackingNumber', 'recipientName']}
         filters={[{
-          label: 'Status',
+          label: dict.common.status,
           value: statusFilter,
           options: [
-            { label: 'Pending', value: 'PENDING' },
-            { label: 'In Transit', value: 'IN_TRANSIT' },
-            { label: 'Delivered', value: 'DELIVERED' },
-            { label: 'Returned', value: 'RETURNED' },
+            { label: dict.statuses.PENDING, value: 'PENDING' },
+            { label: dict.statuses.IN_TRANSIT, value: 'IN_TRANSIT' },
+            { label: dict.statuses.DELIVERED, value: 'DELIVERED' },
+            { label: dict.statuses.RETURNED, value: 'RETURNED' },
           ],
           onChange: (v) => setStatusFilter(v),
         }]}

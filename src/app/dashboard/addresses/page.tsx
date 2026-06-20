@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Address = {
   id: string
@@ -25,6 +26,8 @@ type Address = {
 }
 
 export default function ClientAddressesPage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.addresses
   const [addresses, setAddresses] = useState<Address[]>([])
   const [cities, setCities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,7 +46,7 @@ export default function ClientAddressesPage() {
       const data = await res.json()
       setAddresses(data.addresses || [])
     } catch {
-      toast.error('Failed to load addresses')
+      toast.error(dict.common.noData)
     } finally {
       setLoading(false)
     }
@@ -52,7 +55,7 @@ export default function ClientAddressesPage() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!form.label || !form.contactName || !form.phone || !form.cityId || !form.address) {
-      toast.error('Please fill all fields')
+      toast.error(dict.common.required)
       return
     }
     try {
@@ -63,73 +66,73 @@ export default function ClientAddressesPage() {
       })
       if (!res.ok) {
         const d = await res.json()
-        toast.error(d.error || 'Failed to add address')
+        toast.error(d.error || dict.common.noData)
         return
       }
-      toast.success('Address added')
+      toast.success(L.saveAddress)
       setForm({ label: '', contactName: '', phone: '', cityId: '', address: '', isDefault: false })
       setOpen(false)
       load()
     } catch {
-      toast.error('Network error')
+      toast.error(dict.common.networkError)
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this address?')) return
+    if (!confirm(dict.common.confirm)) return
     try {
       await fetch(`/api/client/addresses?id=${id}`, { method: 'DELETE' })
-      toast.success('Address deleted')
+      toast.success(dict.common.delete)
       load()
     } catch {
-      toast.error('Failed to delete')
+      toast.error(dict.common.noData)
     }
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="My Addresses"
-        subtitle={`${addresses.length} saved addresses`}
+        title={L.title}
+        subtitle={`${addresses.length} ${L.subtitle}`}
         icon={MapPin}
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />Add Address</Button>
+              <Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />{L.addAddress}</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add New Address</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{L.addNew}</DialogTitle></DialogHeader>
               <form onSubmit={handleAdd} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Label</Label>
-                  <Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="e.g., Office, Warehouse" required />
+                  <Label>{L.label}</Label>
+                  <Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Contact Name</Label>
+                  <Label>{L.contactName}</Label>
                   <Input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Phone</Label>
+                  <Label>{L.phone}</Label>
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>City</Label>
+                  <Label>{L.city}</Label>
                   <Select value={form.cityId} onValueChange={(v) => setForm({ ...form, cityId: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={L.selectCity} /></SelectTrigger>
                     <SelectContent>
                       {cities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Address</Label>
+                  <Label>{L.address}</Label>
                   <Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} rows={2} required />
                 </div>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input type="checkbox" checked={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.checked })} className="rounded" />
-                  Set as default address
+                  {L.setAsDefault}
                 </label>
-                <Button type="submit" className="w-full">Save Address</Button>
+                <Button type="submit" className="w-full">{L.saveAddress}</Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -141,7 +144,7 @@ export default function ClientAddressesPage() {
         ) : addresses.length === 0 ? (
           <Card className="p-12 text-center md:col-span-2 lg:col-span-3">
             <MapPin className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No saved addresses yet</p>
+            <p className="text-sm text-muted-foreground">{L.noSavedAddresses}</p>
           </Card>
         ) : (
           addresses.map((a, i) => (
@@ -157,7 +160,7 @@ export default function ClientAddressesPage() {
                       {a.isDefault && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 inline-flex items-center gap-1">
                           <Star className="w-2.5 h-2.5 fill-amber-500" />
-                          DEFAULT
+                          {L.default}
                         </span>
                       )}
                     </div>

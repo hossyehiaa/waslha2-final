@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const employees = await db.employee.findMany({
       where,
       include: {
-        user: { select: { id: true, username: true, email: true, phone: true, status: true, lastLoginAt: true } },
+        user: { select: { id: true, username: true, fullName: true, email: true, phone: true, status: true, lastLoginAt: true } },
         branch: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },

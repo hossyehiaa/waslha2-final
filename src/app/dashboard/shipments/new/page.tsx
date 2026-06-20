@@ -12,10 +12,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/auth-context'
+import { useLanguage } from '@/components/language-provider'
 
 export default function ClientNewShipmentPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { dict, isRTL } = useLanguage()
+  const L = dict.pages.shipments.new
   const [loading, setLoading] = useState(false)
   const [cities, setCities] = useState<any[]>([])
   const [addresses, setAddresses] = useState<any[]>([])
@@ -34,16 +37,9 @@ export default function ClientNewShipmentPage() {
     ]).then(([c, a]) => {
       setCities(c.cities || [])
       setAddresses(a.addresses || [])
-      // Auto-fill sender from default address
       const def = (a.addresses || []).find((x: any) => x.isDefault) || (a.addresses || [])[0]
       if (def) {
-        setForm(prev => ({
-          ...prev,
-          senderName: def.contactName,
-          senderPhone: def.phone,
-          senderAddress: def.address,
-          senderCityId: def.cityId,
-        }))
+        setForm(prev => ({ ...prev, senderName: def.contactName, senderPhone: def.phone, senderAddress: def.address, senderCityId: def.cityId }))
       }
     })
   }, [])
@@ -57,7 +53,7 @@ export default function ClientNewShipmentPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.recipientName || !form.recipientPhone || !form.recipientAddress || !form.recipientCityId) {
-      toast.error('Please fill all recipient fields')
+      toast.error(L.fillAllRequired)
       return
     }
     setLoading(true)
@@ -69,13 +65,13 @@ export default function ClientNewShipmentPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        toast.error(data.error || 'Failed to create shipment')
+        toast.error(data.error || dict.common.noData)
         return
       }
-      toast.success(`Shipment created: ${data.trackingNumber}`)
+      toast.success(`${L.createShipment}: ${data.trackingNumber}`)
       router.push('/dashboard/shipments')
     } catch {
-      toast.error('Network error')
+      toast.error(dict.common.networkError)
     } finally {
       setLoading(false)
     }
@@ -84,44 +80,44 @@ export default function ClientNewShipmentPage() {
   return (
     <div className="space-y-6 max-w-5xl">
       <PageHeader
-        title="Create Shipment"
-        subtitle="Ship a package to your customer"
+        title={L.title}
+        subtitle={L.subtitle}
         icon={PackageCheck}
-        breadcrumb={[{ label: 'Shipments', href: '/dashboard/shipments' }, { label: 'New' }]}
+        breadcrumb={[{ label: dict.nav.myShipments, href: '/dashboard/shipments' }, { label: dict.common.new }]}
       />
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Service Options</h3>
+          <h3 className="text-lg font-semibold mb-4">{L.serviceOptions}</h3>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Service Type</Label>
+              <Label>{L.serviceType}</Label>
               <Select value={form.serviceType} onValueChange={(v) => set('serviceType', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="STANDARD">Standard (1-3 days) - 25 EGP</SelectItem>
-                  <SelectItem value="EXPRESS">Express (Same day) - 50 EGP</SelectItem>
+                  <SelectItem value="STANDARD">{L.standard}</SelectItem>
+                  <SelectItem value="EXPRESS">{L.express}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label>{L.priority}</Label>
               <Select value={form.priority} onValueChange={(v) => set('priority', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NORMAL">Normal</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
-                  <SelectItem value="URGENT">Urgent</SelectItem>
+                  <SelectItem value="NORMAL">{L.normal}</SelectItem>
+                  <SelectItem value="HIGH">{L.high}</SelectItem>
+                  <SelectItem value="URGENT">{L.urgent}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{L.shipmentType}</Label>
               <Select value={form.type} onValueChange={(v) => set('type', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="DELIVERY">Delivery</SelectItem>
-                  <SelectItem value="RETURN">Return</SelectItem>
-                  <SelectItem value="EXCHANGE">Exchange</SelectItem>
+                  <SelectItem value="DELIVERY">{L.delivery}</SelectItem>
+                  <SelectItem value="RETURN">{L.return}</SelectItem>
+                  <SelectItem value="EXCHANGE">{L.exchange}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -131,18 +127,18 @@ export default function ClientNewShipmentPage() {
         <div className="grid lg:grid-cols-2 gap-6">
           <Card className="p-6">
             <div className="mb-5">
-              <h3 className="text-lg font-semibold">Pickup (Sender)</h3>
-              <p className="text-sm text-muted-foreground">Where to pick up the package</p>
+              <h3 className="text-lg font-semibold">{L.pickup}</h3>
+              <p className="text-sm text-muted-foreground">{L.pickupDesc}</p>
             </div>
             <div className="space-y-4">
               {addresses.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Use saved address</Label>
+                  <Label>{L.useSavedAddress}</Label>
                   <Select onValueChange={(v) => {
                     const a = addresses.find(x => x.id === v)
                     if (a) setForm(prev => ({ ...prev, senderName: a.contactName, senderPhone: a.phone, senderAddress: a.address, senderCityId: a.cityId }))
                   }}>
-                    <SelectTrigger><SelectValue placeholder="Select saved address" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={L.selectSavedAddress} /></SelectTrigger>
                     <SelectContent>
                       {addresses.map((a) => <SelectItem key={a.id} value={a.id}>{a.label} - {a.address}</SelectItem>)}
                     </SelectContent>
@@ -150,24 +146,24 @@ export default function ClientNewShipmentPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Sender Name *</Label>
+                <Label>{L.senderName} *</Label>
                 <Input value={form.senderName} onChange={(e) => set('senderName', e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label>Sender Phone *</Label>
+                <Label>{L.senderPhone} *</Label>
                 <Input value={form.senderPhone} onChange={(e) => set('senderPhone', e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label>Sender City *</Label>
+                <Label>{L.senderCity} *</Label>
                 <Select value={form.senderCityId} onValueChange={(v) => set('senderCityId', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={dict.pages.addresses.selectCity} /></SelectTrigger>
                   <SelectContent>
                     {cities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Sender Address</Label>
+                <Label>{L.senderAddress}</Label>
                 <Textarea value={form.senderAddress} onChange={(e) => set('senderAddress', e.target.value)} rows={2} />
               </div>
             </div>
@@ -175,73 +171,73 @@ export default function ClientNewShipmentPage() {
 
           <Card className="p-6">
             <div className="mb-5">
-              <h3 className="text-lg font-semibold">Delivery (Recipient)</h3>
-              <p className="text-sm text-muted-foreground">Where to deliver the package</p>
+              <h3 className="text-lg font-semibold">{L.delivery2}</h3>
+              <p className="text-sm text-muted-foreground">{L.deliveryDesc}</p>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Recipient Name *</Label>
-                <Input value={form.recipientName} onChange={(e) => set('recipientName', e.target.value)} placeholder="Customer name" required />
+                <Label>{L.recipientName} *</Label>
+                <Input value={form.recipientName} onChange={(e) => set('recipientName', e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label>Recipient Phone *</Label>
+                <Label>{L.recipientPhone} *</Label>
                 <Input value={form.recipientPhone} onChange={(e) => set('recipientPhone', e.target.value)} placeholder="+20 1XX XXX XXXX" required />
               </div>
               <div className="space-y-2">
-                <Label>Recipient City *</Label>
+                <Label>{L.recipientCity} *</Label>
                 <Select value={form.recipientCityId} onValueChange={(v) => set('recipientCityId', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={dict.pages.addresses.selectCity} /></SelectTrigger>
                   <SelectContent>
                     {cities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Recipient Address *</Label>
-                <Textarea value={form.recipientAddress} onChange={(e) => set('recipientAddress', e.target.value)} placeholder="Full delivery address" rows={2} required />
+                <Label>{L.recipientAddress} *</Label>
+                <Textarea value={form.recipientAddress} onChange={(e) => set('recipientAddress', e.target.value)} rows={2} required />
               </div>
             </div>
           </Card>
         </div>
 
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Package & COD</h3>
+          <h3 className="text-lg font-semibold mb-4">{L.packagePricing}</h3>
           <div className="grid md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>Weight (kg)</Label>
+              <Label>{L.weight}</Label>
               <Input type="number" step="0.1" value={form.weight} onChange={(e) => set('weight', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Pieces</Label>
+              <Label>{L.pieces}</Label>
               <Input type="number" value={form.pieces} onChange={(e) => set('pieces', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>COD Amount (EGP)</Label>
+              <Label>{L.codAmount}</Label>
               <Input type="number" value={form.codAmount} onChange={(e) => set('codAmount', e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Input value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Contents" />
+              <Label>{L.description}</Label>
+              <Input value={form.description} onChange={(e) => set('description', e.target.value)} placeholder={L.packageContents} />
             </div>
           </div>
           <div className="mt-4 p-4 rounded-xl bg-muted/40 flex items-center justify-between text-sm">
             <div>
-              <div className="text-muted-foreground">COD Fee (2%)</div>
-              <div className="font-bold">{Math.round(Number(form.codAmount) * 0.02 * 100) / 100} EGP</div>
+              <div className="text-muted-foreground">{L.codFee2}</div>
+              <div className="font-bold">{Math.round(Number(form.codAmount) * 0.02 * 100) / 100} {dict.common.currency}</div>
             </div>
             <div>
-              <div className="text-muted-foreground">Total Cost</div>
+              <div className="text-muted-foreground">{dict.common.total}</div>
               <div className="font-bold text-primary text-lg">
-                {Number(form.serviceType === 'EXPRESS' ? 50 : 25) + Math.round(Number(form.codAmount) * 0.02 * 100) / 100} EGP
+                {Number(form.serviceType === 'EXPRESS' ? 50 : 25) + Math.round(Number(form.codAmount) * 0.02 * 100) / 100} {dict.common.currency}
               </div>
             </div>
           </div>
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.back()}><X className="w-4 h-4 mr-2" />Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => router.back()}><X className="w-4 h-4 mr-2" />{dict.common.cancel}</Button>
           <Button type="submit" disabled={loading} className="shadow-premium">
-            <Save className="w-4 h-4 mr-2" />{loading ? 'Creating...' : 'Create Shipment'}
+            <Save className="w-4 h-4 mr-2" />{loading ? dict.common.loading : L.createShipment}
           </Button>
         </div>
       </form>

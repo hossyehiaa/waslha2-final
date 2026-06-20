@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { toast } from 'sonner'
+import { useLanguage } from '@/components/language-provider'
 
 type Settlement = {
   id: string
@@ -27,6 +28,8 @@ type Settlement = {
 }
 
 export default function AdminFinancePage() {
+  const { dict } = useLanguage()
+  const L = dict.pages.finance
   const [settlements, setSettlements] = useState<Settlement[]>([])
   const [loading, setLoading] = useState(true)
   const [totals, setTotals] = useState({ pending: 0, paid: 0 })
@@ -40,13 +43,13 @@ export default function AdminFinancePage() {
       setSettlements(data.settlements || [])
       setTotals(data.totals || { pending: 0, paid: 0 })
     } catch {
-      toast.error('Failed to load settlements')
+      toast.error(dict.common.noData)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { load() }, [statusFilter])
+  useEffect(() => { load() }, [statusFilter, dict])
 
   async function handleAction(id: string, action: 'approve' | 'pay') {
     try {
@@ -57,78 +60,38 @@ export default function AdminFinancePage() {
       })
       if (!res.ok) {
         const d = await res.json()
-        toast.error(d.error || 'Action failed')
+        toast.error(d.error || dict.common.noData)
         return
       }
-      toast.success(action === 'approve' ? 'Settlement approved' : 'Settlement paid to client')
+      toast.success(action === 'approve' ? dict.common.approve : dict.common.pay)
       load()
     } catch {
-      toast.error('Network error')
+      toast.error(dict.common.networkError)
     }
   }
 
   const columns: Column<Settlement>[] = [
+    { key: 'reference', header: L.reference, sortable: true, cell: (s) => <span className="font-mono font-medium text-xs">{s.reference}</span> },
+    { key: 'client', header: L.client, sortable: true, cell: (s) => <span className="font-medium">{s.client}</span> },
+    { key: 'period', header: L.period, hideOnMobile: true, cell: (s) => <span className="text-xs">{s.period}</span> },
+    { key: 'shipmentCount', header: L.shipments, sortable: true, cell: (s) => <span className="font-medium">{s.shipmentCount}</span> },
+    { key: 'totalAmount', header: L.totalCod, sortable: true, cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.totalAmount)}</span> },
+    { key: 'fees', header: L.fees, hideOnMobile: true, cell: (s) => <span className="text-xs text-rose-600">-{formatCurrency(s.fees)}</span> },
+    { key: 'netAmount', header: L.netPayable, sortable: true, cell: (s) => <span className="font-bold text-emerald-600">{formatCurrency(s.netAmount)}</span> },
+    { key: 'status', header: dict.common.status, cell: (s) => <StatusBadge status={s.status} /> },
     {
-      key: 'reference',
-      header: 'Reference',
-      sortable: true,
-      cell: (s) => <span className="font-mono font-medium text-xs">{s.reference}</span>,
-    },
-    {
-      key: 'client',
-      header: 'Client',
-      sortable: true,
-      cell: (s) => <span className="font-medium">{s.client}</span>,
-    },
-    {
-      key: 'period',
-      header: 'Period',
-      hideOnMobile: true,
-      cell: (s) => <span className="text-xs">{s.period}</span>,
-    },
-    {
-      key: 'shipmentCount',
-      header: 'Shipments',
-      sortable: true,
-      cell: (s) => <span className="font-medium">{s.shipmentCount}</span>,
-    },
-    {
-      key: 'totalAmount',
-      header: 'Total COD',
-      sortable: true,
-      cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.totalAmount)}</span>,
-    },
-    {
-      key: 'fees',
-      header: 'Fees',
-      hideOnMobile: true,
-      cell: (s) => <span className="text-xs text-rose-600">-{formatCurrency(s.fees)}</span>,
-    },
-    {
-      key: 'netAmount',
-      header: 'Net Payable',
-      sortable: true,
-      cell: (s) => <span className="font-bold text-emerald-600">{formatCurrency(s.netAmount)}</span>,
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      cell: (s) => <StatusBadge status={s.status} />,
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
+      key: 'actions', header: dict.common.actions,
       cell: (s) => (
         <div className="flex items-center gap-2">
           {s.status === 'PENDING' && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleAction(s.id, 'approve') }}>
-              Approve
+              {dict.common.approve}
             </Button>
           )}
           {(s.status === 'PENDING' || s.status === 'APPROVED') && (
             <Button size="sm" onClick={(e) => { e.stopPropagation(); handleAction(s.id, 'pay') }} className="bg-emerald-600 hover:bg-emerald-700">
               <DollarSign className="w-3.5 h-3.5 mr-1" />
-              Pay
+              {dict.common.pay}
             </Button>
           )}
           {s.status === 'PAID' && s.paidAt && (
@@ -141,18 +104,13 @@ export default function AdminFinancePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="COD Settlements"
-        subtitle="Cash on Delivery settlements for clients"
-        icon={Wallet}
-      />
-
+      <PageHeader title={L.title} subtitle={L.subtitle} icon={Wallet} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Pending Settlements', value: formatCurrency(totals.pending), icon: Clock, color: 'bg-amber-100 text-amber-700' },
-          { label: 'Total Paid', value: formatCurrency(totals.paid), icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
-          { label: 'Total Settlements', value: settlements.length, icon: Wallet, color: 'bg-purple-100 text-purple-700' },
-          { label: 'Avg Settlement', value: formatCurrency(settlements.length > 0 ? (totals.pending + totals.paid) / settlements.length : 0), icon: TrendingUp, color: 'bg-cyan-100 text-cyan-700' },
+          { label: L.pendingSettlements, value: formatCurrency(totals.pending), icon: Clock, color: 'bg-amber-100 text-amber-700' },
+          { label: L.totalPaid, value: formatCurrency(totals.paid), icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.totalSettlements, value: settlements.length, icon: Wallet, color: 'bg-purple-100 text-purple-700' },
+          { label: L.avgSettlement, value: formatCurrency(settlements.length > 0 ? (totals.pending + totals.paid) / settlements.length : 0), icon: TrendingUp, color: 'bg-cyan-100 text-cyan-700' },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <Card className="p-5">
@@ -165,25 +123,22 @@ export default function AdminFinancePage() {
           </motion.div>
         ))}
       </div>
-
       <DataTable
         data={settlements}
         columns={columns}
         loading={loading}
-        searchPlaceholder="Search settlements..."
+        searchPlaceholder={`${dict.common.search}...`}
         searchKeys={['reference', 'client', 'period']}
-        filters={[
-          {
-            label: 'Status',
-            value: statusFilter,
-            options: [
-              { label: 'Pending', value: 'PENDING' },
-              { label: 'Approved', value: 'APPROVED' },
-              { label: 'Paid', value: 'PAID' },
-            ],
-            onChange: (v) => setStatusFilter(v),
-          },
-        ]}
+        filters={[{
+          label: dict.common.status,
+          value: statusFilter,
+          options: [
+            { label: dict.statuses.PENDING, value: 'PENDING' },
+            { label: dict.statuses.APPROVED, value: 'APPROVED' },
+            { label: dict.statuses.PAID, value: 'PAID' },
+          ],
+          onChange: (v) => setStatusFilter(v),
+        }]}
         pageSize={10}
       />
     </div>
