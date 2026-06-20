@@ -72,6 +72,7 @@ function buildAdminNav(dict: Dict): NavItem[] {
     { label: dict.nav.pricing, href: '/admin/pricing', icon: CreditCard },
     { label: dict.nav.reports, href: '/admin/reports', icon: BarChart3 },
     { label: dict.nav.notifications, href: '/admin/notifications', icon: Bell },
+    { label: 'Audit Logs', href: '/admin/audit-logs', icon: FileText },
     { label: dict.nav.settings, href: '/admin/settings', icon: Settings },
   ]
 }

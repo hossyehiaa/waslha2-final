@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         user: { select: { id: true, username: true, fullName: true, email: true, phone: true, status: true, lastLoginAt: true } },
-        branch: { select: { name: true } },
+        branch: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
         salary: e.salary,
         status: e.status,
         branch: e.branch?.name,
+        branchId: e.branchId,
         hireDate: e.hireDate,
         lastLoginAt: e.user.lastLoginAt,
       })),
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = await db.user.findFirst({
-      where: { OR: [{ username }, { email }] },
+      where: { OR: [{ username }, ...(email ? [{ email }] : [])] },
     })
     if (existing) {
       return NextResponse.json({ error: 'Username or email already exists' }, { status: 400 })
@@ -106,13 +107,13 @@ export async function POST(req: NextRequest) {
         action: 'CREATE',
         entity: 'Employee',
         entityId: newUser.employeeProfile!.id,
-        afterData: JSON.stringify({ username, position }),
+        afterData: JSON.stringify({ username, position, fullName }),
       },
     })
 
     return NextResponse.json({ success: true, userId: newUser.id }, { status: 201 })
   } catch (e: any) {
     console.error('Create employee error:', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
   }
 }

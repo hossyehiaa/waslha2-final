@@ -20,15 +20,16 @@ export async function GET(req: NextRequest) {
         { user: { fullName: { contains: search } } },
         { user: { username: { contains: search } } },
         { driverCode: { contains: search } },
+        { vehiclePlate: { contains: search } },
       ]
     }
 
     const drivers = await db.driver.findMany({
       where,
       include: {
-        user: { select: { id: true, username: true, email: true, phone: true, status: true, lastLoginAt: true, fullName: true } },
-        branch: { select: { name: true } },
-        zone: { select: { name: true } },
+        user: { select: { id: true, username: true, fullName: true, email: true, phone: true, status: true, lastLoginAt: true } },
+        branch: { select: { id: true, name: true } },
+        zone: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -49,7 +50,9 @@ export async function GET(req: NextRequest) {
         totalEarnings: d.totalEarnings,
         pendingEarnings: d.pendingEarnings,
         branch: d.branch?.name,
+        branchId: d.branchId,
         zone: d.zone?.name,
+        zoneId: d.zoneId,
         joinDate: d.joinDate,
         lastLoginAt: d.user.lastLoginAt,
       })),
@@ -82,7 +85,7 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = await db.user.findFirst({
-      where: { OR: [{ username }, { email }] },
+      where: { OR: [{ username }, ...(email ? [{ email }] : [])] },
     })
     if (existing) {
       return NextResponse.json({ error: 'Username or email already exists' }, { status: 400 })
@@ -101,7 +104,7 @@ export async function POST(req: NextRequest) {
         role: 'DRIVER',
         status: 'ACTIVE',
         driverProfile: {
-          create: { driverCode, vehicleType, vehiclePlate, branchId, zoneId },
+          create: { driverCode, vehicleType, vehiclePlate: vehiclePlate || null, branchId, zoneId },
         },
       },
       include: { driverProfile: true },
@@ -113,13 +116,13 @@ export async function POST(req: NextRequest) {
         action: 'CREATE',
         entity: 'Driver',
         entityId: newUser.driverProfile!.id,
-        afterData: JSON.stringify({ username, vehicleType }),
+        afterData: JSON.stringify({ username, vehicleType, fullName }),
       },
     })
 
     return NextResponse.json({ success: true, userId: newUser.id }, { status: 201 })
   } catch (e: any) {
     console.error('Create driver error:', e)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
   }
 }

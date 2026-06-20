@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Building2, Plus, Users, Truck, Boxes } from 'lucide-react'
+import { Building2, Plus, Users, Truck, Boxes, MoreHorizontal, Edit, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
@@ -9,6 +9,11 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
+import { EntityFormModal } from '@/components/dashboard/entity-form-modal'
+import { ConfirmDialog } from '@/components/dashboard/confirm-dialog'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 
 type Branch = {
   id: string
@@ -16,6 +21,7 @@ type Branch = {
   code: string
   phone: string | null
   address: string | null
+  cityId: string | null
   city: string | null
   status: string
   clients: number
@@ -30,14 +36,64 @@ export default function AdminBranchesPage() {
   const L = dict.pages.branches
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
+  const [cities, setCities] = useState<{label: string, value: string}[]>([])
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Branch | null>(null)
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/branches')
+      const data = await res.json()
+      setBranches(data.branches || [])
+    } catch {
+      toast.error(dict.common.noData)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    fetch('/api/admin/branches')
-      .then(r => r.json())
-      .then(d => setBranches(d.branches || []))
-      .catch(() => toast.error(dict.common.noData))
-      .finally(() => setLoading(false))
+    load()
+    fetch('/api/admin/cities').then(r => r.json()).then(d => {
+      setCities((d.cities || []).map((c: any) => ({ label: c.name, value: c.id })))
+    })
   }, [dict])
+
+  const formFields = [
+    { key: 'name', label: L.branch, type: 'text' as const, placeholder: 'Cairo Main Hub', required: true },
+    { key: 'code', label: 'Code', type: 'text' as const, placeholder: 'CAI-01', required: true },
+    { key: 'phone', label: L.phone, type: 'text' as const, placeholder: '+20 2 2345 6789' },
+    { key: 'cityId', label: L.city, type: 'select' as const, options: cities },
+    { key: 'address', label: dict.pages.addresses.address, type: 'textarea' as const, placeholder: 'Nasr City, Cairo' },
+  ]
+
+  async function handleSubmit(data: Record<string, any>) {
+    const isEditing = !!editingBranch
+    const url = isEditing ? `/api/admin/branches/${editingBranch.id}` : '/api/admin/branches'
+    const method = isEditing ? 'PATCH' : 'POST'
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    const result = await res.json()
+    if (!res.ok) throw new Error(result.error || dict.common.noData)
+    toast.success(isEditing ? dict.common.edit : dict.common.create)
+    load()
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    const res = await fetch(`/api/admin/branches/${deleteTarget.id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const d = await res.json()
+      throw new Error(d.error || dict.common.noData)
+    }
+    toast.success(dict.common.delete)
+    load()
+  }
 
   const columns: Column<Branch>[] = [
     {
@@ -63,6 +119,30 @@ export default function AdminBranchesPage() {
     { key: 'drivers', header: L.drivers, hideOnMobile: true, cell: (b) => <div className="flex items-center gap-1 text-xs"><Truck className="w-3 h-3 text-muted-foreground" />{b.drivers}</div> },
     { key: 'warehouses', header: L.storage, hideOnMobile: true, cell: (b) => <div className="flex items-center gap-1 text-xs"><Boxes className="w-3 h-3 text-muted-foreground" />{b.warehouses}</div> },
     { key: 'status', header: dict.common.status, cell: (b) => <StatusBadge status={b.status} /> },
+    {
+      key: 'actions',
+      header: dict.common.actions,
+      cell: (b) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => { setEditingBranch(b); setModalOpen(true) }}>
+              <Edit className="w-4 h-4 mr-2" />
+              {dict.common.edit}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(b)}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              {dict.common.delete}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
   ]
 
   return (
@@ -71,7 +151,11 @@ export default function AdminBranchesPage() {
         title={dict.nav.branches}
         subtitle={`${branches.length} ${L.subtitle}`}
         icon={Building2}
-        actions={<Button className="shadow-premium"><Plus className="w-4 h-4 mr-2" />{L.newBranch}</Button>}
+        actions={
+          <Button className="shadow-premium" onClick={() => { setEditingBranch(null); setModalOpen(true) }}>
+            <Plus className="w-4 h-4 mr-2" />{L.newBranch}
+          </Button>
+        }
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -96,6 +180,25 @@ export default function AdminBranchesPage() {
         searchPlaceholder={`${dict.common.search}...`}
         searchKeys={['name', 'code', 'city']}
         pageSize={10}
+      />
+
+      <EntityFormModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title={editingBranch ? `${dict.common.edit} - ${editingBranch.name}` : L.newBranch}
+        fields={formFields}
+        initialData={editingBranch || undefined}
+        onSubmit={handleSubmit}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+        title={`${dict.common.delete} ${deleteTarget?.name || ''}`}
+        description={`${dict.common.delete} ${deleteTarget?.code}?`}
+        onConfirm={handleDelete}
+        destructive
+        confirmLabel={dict.common.delete}
       />
     </div>
   )

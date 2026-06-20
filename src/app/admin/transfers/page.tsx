@@ -1,14 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArrowLeftRight, Truck } from 'lucide-react'
+import { ArrowLeftRight, Truck, Plus, Check, X } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
+import { ConfirmDialog } from '@/components/dashboard/confirm-dialog'
 
 type Transfer = {
   id: string
@@ -27,14 +29,53 @@ export default function AdminTransfersPage() {
   const L = dict.pages.transfers
   const [transfers, setTransfers] = useState<Transfer[]>([])
   const [loading, setLoading] = useState(true)
+  const [receiveTarget, setReceiveTarget] = useState<Transfer | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<Transfer | null>(null)
 
-  useEffect(() => {
-    fetch('/api/admin/transfers')
-      .then(r => r.json())
-      .then(d => setTransfers(d.transfers || []))
-      .catch(() => toast.error(dict.common.noData))
-      .finally(() => setLoading(false))
-  }, [dict])
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/transfers')
+      const data = await res.json()
+      setTransfers(data.transfers || [])
+    } catch {
+      toast.error(dict.common.noData)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [dict])
+
+  async function handleReceive() {
+    if (!receiveTarget) return
+    const res = await fetch('/api/admin/transfers', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: receiveTarget.id, action: 'receive' }),
+    })
+    if (!res.ok) {
+      const d = await res.json()
+      throw new Error(d.error || dict.common.noData)
+    }
+    toast.success(dict.statuses.RECEIVED)
+    load()
+  }
+
+  async function handleCancel() {
+    if (!cancelTarget) return
+    const res = await fetch('/api/admin/transfers', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: cancelTarget.id, action: 'cancel' }),
+    })
+    if (!res.ok) {
+      const d = await res.json()
+      throw new Error(d.error || dict.common.noData)
+    }
+    toast.success(dict.statuses.CANCELLED)
+    load()
+  }
 
   const columns: Column<Transfer>[] = [
     { key: 'reference', header: L.reference, sortable: true, cell: (t) => <span className="font-mono font-medium text-xs">{t.reference}</span> },
@@ -44,6 +85,29 @@ export default function AdminTransfersPage() {
     { key: 'totalValue', header: L.value, sortable: true, cell: (t) => <span className="font-medium text-xs">{formatCurrency(t.totalValue)}</span> },
     { key: 'sentAt', header: L.sent, sortable: true, hideOnMobile: true, cell: (t) => <span className="text-xs text-muted-foreground">{formatDateTime(t.sentAt)}</span> },
     { key: 'status', header: dict.common.status, cell: (t) => <StatusBadge status={t.status} /> },
+    {
+      key: 'actions',
+      header: dict.common.actions,
+      cell: (t) => (
+        <div className="flex gap-2">
+          {t.status === 'PENDING_RECEIPT' && (
+            <>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setReceiveTarget(t) }}>
+                <Check className="w-3.5 h-3.5 mr-1" />
+                {dict.statuses.RECEIVED}
+              </Button>
+              <Button size="sm" variant="outline" className="text-destructive" onClick={(e) => { e.stopPropagation(); setCancelTarget(t) }}>
+                <X className="w-3.5 h-3.5 mr-1" />
+                {dict.statuses.CANCELLED}
+              </Button>
+            </>
+          )}
+          {t.status === 'RECEIVED' && t.receivedAt && (
+            <span className="text-xs text-muted-foreground">{formatDateTime(t.receivedAt)}</span>
+          )}
+        </div>
+      ),
+    },
   ]
 
   return (
@@ -66,6 +130,25 @@ export default function AdminTransfersPage() {
         ))}
       </div>
       <DataTable data={transfers} columns={columns} loading={loading} searchPlaceholder={`${dict.common.search}...`} searchKeys={['reference', 'fromBranch', 'toBranch']} pageSize={10} />
+
+      <ConfirmDialog
+        open={!!receiveTarget}
+        onOpenChange={(v) => !v && setReceiveTarget(null)}
+        title={dict.statuses.RECEIVED}
+        description={`${dict.statuses.RECEIVED} ${receiveTarget?.reference}?`}
+        onConfirm={handleReceive}
+        confirmLabel={dict.statuses.RECEIVED}
+      />
+
+      <ConfirmDialog
+        open={!!cancelTarget}
+        onOpenChange={(v) => !v && setCancelTarget(null)}
+        title={dict.statuses.CANCELLED}
+        description={`${dict.statuses.CANCELLED} ${cancelTarget?.reference}?`}
+        onConfirm={handleCancel}
+        destructive
+        confirmLabel={dict.statuses.CANCELLED}
+      />
     </div>
   )
 }

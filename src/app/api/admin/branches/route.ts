@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getCurrentUser } from '@/lib/auth-helpers'
+import { getCurrentUser, sanitizeInput } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
@@ -28,6 +28,7 @@ export async function GET() {
         code: b.code,
         phone: b.phone,
         address: b.address,
+        cityId: b.cityId,
         city: b.city?.name,
         status: b.status,
         clients: b._count.clients,
@@ -50,14 +51,25 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, code, phone, address, cityId } = body
+    const name = sanitizeInput(body.name || '')
+    const code = sanitizeInput(body.code || '').toUpperCase()
+    const phone = sanitizeInput(body.phone || '')
+    const address = sanitizeInput(body.address || '')
+    const cityId = body.cityId || null
 
     if (!name || !code) {
       return NextResponse.json({ error: 'Name and code required' }, { status: 400 })
     }
 
+    const existing = await db.branch.findFirst({
+      where: { OR: [{ name }, { code }] },
+    })
+    if (existing) {
+      return NextResponse.json({ error: 'Branch name or code already exists' }, { status: 400 })
+    }
+
     const branch = await db.branch.create({
-      data: { name, code, phone, address, cityId: cityId || null, status: 'ACTIVE' },
+      data: { name, code, phone: phone || null, address: address || null, cityId, status: 'ACTIVE' },
     })
 
     await db.auditLog.create({
@@ -66,11 +78,12 @@ export async function POST(req: NextRequest) {
         action: 'CREATE',
         entity: 'Branch',
         entityId: branch.id,
+        afterData: JSON.stringify({ name, code }),
       },
     })
 
     return NextResponse.json({ branch }, { status: 201 })
   } catch (e: any) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
   }
 }

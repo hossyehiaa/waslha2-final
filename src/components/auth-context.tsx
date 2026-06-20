@@ -1,32 +1,42 @@
 'use client'
 
-import { useEffect, useState, createContext, useContext, ReactNode } from 'react'
-import { getCurrentUser } from '@/lib/auth-helpers'
+import { useEffect, useState, createContext, useContext, ReactNode, useCallback } from 'react'
 
 type AuthUser = {
   id: string
   username: string
   fullName: string
+  email?: string | null
+  phone?: string | null
   role: string
   clientId?: string | null
   driverId?: string | null
   employeeId?: string | null
 }
 
-const AuthContext = createContext<{ user: AuthUser | null; loading: boolean }>({ user: null, loading: true })
+const AuthContext = createContext<{ user: AuthUser | null; loading: boolean; refresh: () => Promise<void> }>({ user: null, loading: true, refresh: async () => {} })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then(r => r.json())
-      .then(d => setUser(d.user || null))
-      .finally(() => setLoading(false))
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me')
+      const data = await res.json()
+      setUser(data.user || null)
+    } catch {
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  return <AuthContext.Provider value={{ user, loading, refresh }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
