@@ -33,3 +33,37 @@ Stage Summary:
 - Demo accounts: admin/admin123, braa/client123, manager/emp123, drv-001/driver123
 - All 26 routes verified working in browser (HTTP 200)
 - Lint passes cleanly with 0 errors
+
+---
+Task ID: 2
+Agent: Main (Super Z)
+Task: Deploy Wsalhali to Vercel with Neon PostgreSQL database
+
+Work Log:
+- Switched Prisma datasource from SQLite to PostgreSQL
+- Updated .env with Neon connection string (sslmode=require)
+- Pushed schema to Neon (24 models, all tables created)
+- Seeded Neon database with full demo data (cities, branches, users, shipments, etc.)
+- Updated package.json: removed standalone build, added postinstall for prisma generate
+- Updated next.config.ts: removed output: 'standalone' for Vercel compatibility
+- Removed .env, db/, upload/, .zscripts/ from git tracking (security)
+- Updated .gitignore to prevent future sensitive file commits
+- Committed changes locally
+- Verified Vercel API token works (account: bhgreecr-6875)
+- Created Vercel project "wsalhali" via API
+- Set DATABASE_URL environment variable on Vercel (production/preview/development)
+- Linked local directory to Vercel project (.vercel/project.json)
+- Deployed to Vercel production: build completed in ~60s
+- Production URL: https://wsalhali.vercel.app
+- All routes verified working: /, /login, /admin, /dashboard
+- APIs verified: /api/track, /api/auth/login (admin + client both work)
+- Admin dashboard API returns real data from Neon (60 shipments, 5 clients, 5 drivers, etc.)
+- Added comprehensive README.md
+- Redeployed with README
+
+Stage Summary:
+- Production deployment: https://wsalhali.vercel.app
+- Database: Neon PostgreSQL (serverless, real-time)
+- All demo accounts work on production
+- Note: GitHub push to hossyehiaa/waslha2-final requires GitHub PAT (not provided)
+- Project is live and fully functional
