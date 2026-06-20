@@ -1,0 +1,527 @@
+// Wsalhali - Shipping & Logistics Platform
+// Complete database schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ AUTH & USERS ============
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  email         String?  @unique
+  passwordHash  String
+  fullName      String
+  phone         String?
+  role          String   @default("CLIENT") // ADMIN, EMPLOYEE, DRIVER, CLIENT
+  avatar        String?
+  status        String   @default("ACTIVE") // ACTIVE, SUSPENDED, INACTIVE
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  clientProfile   Client?
+  employeeProfile Employee?
+  driverProfile   Driver?
+  notifications   Notification[]
+  activityLogs    ActivityLog[]
+  shipments       Shipment[]      @relation("createdBy")
+  auditActions    AuditLog[]      @relation("auditBy")
+  sessions        Session[]
+}
+
+// ============ CLIENTS (Merchants) ============
+model Client {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName     String
+  codBalance      Float    @default(0)
+  codCollected    Float    @default(0)
+  codPaid         Float    @default(0)
+  codPending      Float    @default(0)
+  shippingBalance Float    @default(0) // prepaid shipping wallet
+  creditLimit     Float    @default(0)
+  rating          Float    @default(5)
+  totalShipments  Int      @default(0)
+  activeShipments Int      @default(0)
+  status          String   @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
+  branchId        String?
+  branch          Branch?  @relation(fields: [branchId], references: [id])
+  cityId          String?
+  city            City?    @relation(fields: [cityId], references: [id])
+  address         String?
+  taxNumber       String?
+  commercialReg   String?
+  joinDate        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shipments       Shipment[]
+  addresses       ClientAddress[]
+  invoices        Invoice[]
+  codSettlements  CodSettlement[]
+  pickupRequests  PickupRequest[]
+  payoutRequests  PayoutRequest[]
+  flyerRequests   FlyerRequest[]
+}
+
+model ClientAddress {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  label       String   // "Office", "Warehouse", "Home"
+  contactName String
+  phone       String
+  cityId      String
+  city        City     @relation(fields: [cityId], references: [id])
+  address     String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// ============ EMPLOYEES ============
+model Employee {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode String  @unique
+  position    String   // MANAGER, SUPERVISOR, CLERK, AGENT
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  salary      Float    @default(0)
+  hireDate    DateTime @default(now())
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ DRIVERS (Couriers) ============
+model Driver {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driverCode    String   @unique
+  vehicleType   String   @default("MOTORCYCLE") // MOTORCYCLE, CAR, VAN, TRUCK
+  vehiclePlate  String?
+  licenseNumber String?
+  branchId      String?
+  branch        Branch?  @relation(fields: [branchId], references: [id])
+  zoneId        String?
+  zone          Zone?    @relation(fields: [zoneId], references: [id])
+  rating        Float    @default(5)
+  totalDeliveries Int    @default(0)
+  totalEarnings Float    @default(0)
+  pendingEarnings Float  @default(0)
+  status        String   @default("ACTIVE") // ACTIVE, OFFLINE, SUSPENDED
+  joinDate      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shipments     Shipment[]
+  pickupRequests PickupRequest[]
+}
+
+// ============ BRANCHES ============
+model Branch {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  phone       String?
+  address     String?
+  cityId      String?
+  city        City?    @relation(fields: [cityId], references: [id])
+  managerId   String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  clients       Client[]
+  employees     Employee[]
+  drivers       Driver[]
+  warehouses    Warehouse[]
+  shipmentsFrom Shipment[]     @relation("shipmentFromBranch")
+  shipmentsTo   Shipment[]     @relation("shipmentToBranch")
+  transfersFrom BranchTransfer[] @relation("transferFrom")
+  transfersTo   BranchTransfer[] @relation("transferTo")
+}
+
+// ============ WAREHOUSES ============
+model Warehouse {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  capacity    Int      @default(1000)
+  currentLoad Int      @default(0)
+  address     String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+}
+
+// ============ GEOGRAPHY ============
+model City {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  governorate String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+
+  zones        Zone[]
+  branches     Branch[]
+  clients      Client[]
+  addresses    ClientAddress[]
+  shipmentsFrom Shipment[] @relation("shipmentFromCity")
+  shipmentsTo   Shipment[] @relation("shipmentToCity")
+  pricingFrom   PricingRule[] @relation("pricingFromCity")
+  pricingTo     PricingRule[] @relation("pricingToCity")
+}
+
+model Zone {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  cityId      String
+  city        City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+
+  drivers     Driver[]
+}
+
+// ============ SHIPMENTS ============
+model Shipment {
+  id                String   @id @default(cuid())
+  trackingNumber    String   @unique
+  clientId          String
+  client            Client   @relation(fields: [clientId], references: [id])
+  createdById       String
+  createdBy         User     @relation("createdBy", fields: [createdById], references: [id])
+
+  // Sender
+  senderName        String
+  senderPhone       String
+  senderAddress     String
+  senderCityId      String
+  senderCity        City     @relation("shipmentFromCity", fields: [senderCityId], references: [id])
+  fromBranchId      String?
+  fromBranch        Branch?  @relation("shipmentFromBranch", fields: [fromBranchId], references: [id])
+
+  // Recipient
+  recipientName     String
+  recipientPhone    String
+  recipientAddress  String
+  recipientCityId   String
+  recipientCity     City     @relation("shipmentToCity", fields: [recipientCityId], references: [id])
+  toBranchId        String?
+  toBranch          Branch?  @relation("shipmentToBranch", fields: [toBranchId], references: [id])
+
+  // Shipment details
+  type              String   @default("DELIVERY") // DELIVERY, RETURN, EXCHANGE
+  serviceType       String   @default("STANDARD") // STANDARD, EXPRESS, SAME_DAY
+  weight            Float    @default(0.5)
+  pieces            Int      @default(1)
+  description       String?
+
+  // Pricing
+  shippingCost      Float    @default(0)
+  codAmount         Float    @default(0) // Cash on Delivery amount
+  codFee            Float    @default(0) // Fee charged for COD service
+  insuranceFee      Float    @default(0)
+  totalCost         Float    @default(0)
+  currency          String   @default("EGP")
+
+  // Assignment & status
+  driverId          String?
+  driver            Driver?  @relation(fields: [driverId], references: [id])
+  status            String   @default("PENDING") // PENDING, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, RETURNED, CANCELLED, FAILED
+  deliveryStatus    String?  // DELIVERED, FAILED_ATTEMPT, REFUSED, POSTPONED
+  failureReason     String?
+  priority          String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  isFavorite        Boolean  @default(false)
+
+  // Payment status (COD)
+  paymentStatus     String   @default("PENDING") // PENDING, COLLECTED, SETTLED
+  codCollectedAt    DateTime?
+  codSettledAt      DateTime?
+  settlementId      String?
+
+  // Timestamps
+  pickupAt          DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  statusHistory     ShipmentStatus[]
+  pickupRequest     PickupRequest?
+  returns           Return[]
+  labels            ShippingLabel[]
+
+  @@index([clientId])
+  @@index([driverId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model ShipmentStatus {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status      String
+  note        String?
+  location    String?
+  lat         Float?
+  lng         Float?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([shipmentId])
+}
+
+model ShippingLabel {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  barcode     String
+  qrCode      String?
+  printedAt   DateTime?
+  printedBy   String?
+  createdAt   DateTime @default(now())
+}
+
+// ============ PICKUP REQUESTS ============
+model PickupRequest {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  driverId    String?
+  driver      Driver?  @relation(fields: [driverId], references: [id])
+
+  pickupAddress String
+  pickupCityId  String
+  contactName   String
+  contactPhone  String
+
+  requestedDate DateTime
+  scheduledDate DateTime?
+  completedDate DateTime?
+
+  packagesCount Int    @default(1)
+  totalWeight   Float  @default(0)
+  notes         String?
+
+  status      String   @default("PENDING") // PENDING, CONFIRMED, ASSIGNED, PICKED_UP, CANCELLED
+  shipmentId  String?  @unique
+  shipment    Shipment? @relation(fields: [shipmentId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+}
+
+// ============ RETURNS ============
+model Return {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id])
+  reason      String
+  status      String   @default("PENDING") // PENDING, IN_TRANSIT, RETURNED_TO_CLIENT, DISPOSED
+  condition   String?  // GOOD, DAMAGED, LOST
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ FINANCE - COD SETTLEMENTS ============
+model CodSettlement {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  reference   String   @unique
+  period      String   // e.g., "2026-06"
+  totalAmount Float    // total COD collected
+  fees        Float    // total COD fees
+  netAmount   Float    // net to be paid to client
+  shipmentCount Int
+  status      String   @default("PENDING") // PENDING, APPROVED, PAID, CANCELLED
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+model PayoutRequest {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  amount      Float
+  method      String   @default("BANK_TRANSFER") // BANK_TRANSFER, CASH, WALLET
+  bankAccount String?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, PAID
+  notes       String?
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  invoiceNumber String @unique
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  type        String   @default("SHIPPING") // SHIPPING, COD_FEES, INSURANCE
+  amount      Float
+  tax         Float    @default(0)
+  total       Float
+  status      String   @default("UNPAID") // UNPAID, PAID, OVERDUE
+  dueDate     DateTime?
+  paidAt      DateTime?
+  period      String?
+  createdAt   DateTime @default(now())
+}
+
+// ============ BRANCH TRANSFERS ============
+model BranchTransfer {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  fromBranchId String
+  fromBranch   Branch   @relation("transferFrom", fields: [fromBranchId], references: [id])
+  toBranchId   String
+  toBranch     Branch   @relation("transferTo", fields: [toBranchId], references: [id])
+
+  shipmentCount Int
+  totalValue    Float
+  status        String  @default("PENDING_RECEIPT") // PENDING_RECEIPT, RECEIVED, CANCELLED
+  sentAt        DateTime
+  receivedAt    DateTime?
+  notes         String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============ PRICING ============
+model PricingRule {
+  id          String   @id @default(cuid())
+  name        String
+  fromCityId  String?
+  fromCity    City?    @relation("pricingFromCity", fields: [fromCityId], references: [id])
+  toCityId    String?
+  toCity      City?    @relation("pricingToCity", fields: [toCityId], references: [id])
+
+  serviceType String   @default("STANDARD")
+  baseWeight  Float    @default(0.5) // kg
+  basePrice   Float    @default(0)
+  perKgPrice  Float    @default(0)
+  codFeePercent Float  @default(2) // % of COD amount
+  insuranceFeePercent Float @default(0)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+}
+
+// ============ EXPENSES ============
+model Expense {
+  id          String   @id @default(cuid())
+  category    String   // SALARIES, FUEL, MAINTENANCE, RENT, UTILITIES, OTHER
+  description String
+  amount      Float
+  branchId    String?
+  date        DateTime
+  status      String   @default("CONFIRMED")
+  createdAt   DateTime @default(now())
+}
+
+// ============ FLYER REQUESTS (customer wants flyers/materials) ============
+model FlyerRequest {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  quantity    Int
+  type        String   @default("STANDARD") // STANDARD, BRANDED
+  notes       String?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, FULFILLED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ NOTIFICATIONS ============
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // SHIPMENT, PAYMENT, SYSTEM, PICKUP, ALERT
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ============ ACTIVITY LOGS & AUDIT ============
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String
+  entity      String?
+  entityId    String?
+  details     String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation("auditBy", fields: [userId], references: [id])
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  entity      String
+  entityId    String?
+  beforeData  String?
+  afterData   String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ============ SETTINGS ============
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  category    String   @default("GENERAL")
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String   @unique
+  expiresAt   DateTime
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
