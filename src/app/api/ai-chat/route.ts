@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth-helpers'
-import ZAI from 'z-ai-web-dev-sdk'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -172,23 +171,37 @@ Rules:
 - Format numbers nicely (e.g., 1,234 EGP)
 - You can use markdown formatting for readability`
 
-    // Use z-ai-web-dev-sdk
-    const zai = await ZAI.create()
-
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...lastMessages.map((m: any) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      ],
-      thinking: { type: 'disabled' },
-      temperature: 0.7,
-      max_tokens: 1024,
+    // Call Pollinations AI (free, OpenAI-compatible, no API key needed)
+    const response = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'openai',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...lastMessages.map((m: any) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
     })
 
-    const reply = completion.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.'
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Z.AI API error:', response.status, errorText)
+      return NextResponse.json(
+        { error: 'AI service error', details: errorText.substring(0, 200) },
+        { status: 500 }
+      )
+    }
+
+    const data = await response.json()
+    const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.'
 
     return NextResponse.json({ reply })
   } catch (e: any) {
