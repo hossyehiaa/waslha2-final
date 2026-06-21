@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth-helpers'
+import ZAI from 'z-ai-web-dev-sdk'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -171,8 +172,7 @@ Rules:
 - Format numbers nicely (e.g., 1,234 EGP)
 - You can use markdown formatting for readability`
 
-    // Use z-ai-web-dev-sdk (available in the project)
-    const ZAI = (await import('z-ai-web-dev-sdk')).default
+    // Use z-ai-web-dev-sdk
     const zai = await ZAI.create()
 
     const completion = await zai.chat.completions.create({
