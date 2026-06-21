@@ -10,10 +10,13 @@ async function getDashboardContext(user: any): Promise<string> {
   const context: string[] = []
 
   try {
+    // Run all queries in parallel for speed
     const [
       totalShipments, todayShipments, pendingShipments, deliveredShipments,
       totalClients, activeDrivers, totalBranches, pendingPickups,
       pendingTransfers, payoutRequests,
+      codPending, codCollected, codPaid,
+      statusCounts, topClients, recentShipments, drivers, branches,
     ] = await Promise.all([
       db.shipment.count(),
       db.shipment.count({ where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } } }),
@@ -25,114 +28,55 @@ async function getDashboardContext(user: any): Promise<string> {
       db.pickupRequest.count({ where: { status: 'PENDING' } }),
       db.branchTransfer.count({ where: { status: 'PENDING_RECEIPT' } }),
       db.payoutRequest.count({ where: { status: 'PENDING' } }),
-    ])
-
-    context.push(`=== DASHBOARD OVERVIEW ===`)
-    context.push(`Total Shipments: ${totalShipments}`)
-    context.push(`Today's Shipments: ${todayShipments}`)
-    context.push(`Pending Shipments: ${pendingShipments}`)
-    context.push(`Delivered Shipments: ${deliveredShipments}`)
-    context.push(`Total Clients: ${totalClients}`)
-    context.push(`Active Drivers: ${activeDrivers}`)
-    context.push(`Total Branches: ${totalBranches}`)
-    context.push(`Pending Pickups: ${pendingPickups}`)
-    context.push(`Pending Transfers: ${pendingTransfers}`)
-    context.push(`Pending Payout Requests: ${payoutRequests}`)
-
-    const [codPending, codCollected, codPaid] = await Promise.all([
       db.shipment.aggregate({ _sum: { codAmount: true }, where: { paymentStatus: 'PENDING' } }),
       db.shipment.aggregate({ _sum: { codAmount: true }, where: { paymentStatus: 'COLLECTED' } }),
       db.shipment.aggregate({ _sum: { codAmount: true }, where: { paymentStatus: 'SETTLED' } }),
+      db.shipment.groupBy({ by: ['status'], _count: { status: true } }),
+      db.client.findMany({
+        take: 5,
+        orderBy: { totalShipments: 'desc' },
+        select: { companyName: true, totalShipments: true, codCollected: true, codPending: true, rating: true },
+      }),
+      db.shipment.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          client: { select: { companyName: true } },
+          senderCity: { select: { name: true } },
+          recipientCity: { select: { name: true } },
+        },
+      }),
+      db.driver.findMany({
+        take: 5,
+        include: { user: { select: { fullName: true } } },
+        orderBy: { totalDeliveries: 'desc' },
+      }),
+      db.branch.findMany({
+        include: {
+          city: { select: { name: true } },
+          _count: { select: { clients: true, employees: true, drivers: true } },
+        },
+      }),
     ])
-    context.push(`\n=== FINANCIAL SUMMARY ===`)
-    context.push(`COD Pending Collection: ${codPending._sum.codAmount || 0} EGP`)
-    context.push(`COD Collected (Ready to Pay): ${codCollected._sum.codAmount || 0} EGP`)
-    context.push(`COD Settled (Paid to Clients): ${codPaid._sum.codAmount || 0} EGP`)
 
-    const statusCounts = await db.shipment.groupBy({
-      by: ['status'],
-      _count: { status: true },
-    })
-    context.push(`\n=== SHIPMENT STATUS DISTRIBUTION ===`)
-    for (const s of statusCounts) {
-      context.push(`${s.status.replace(/_/g, ' ')}: ${s._count.status}`)
-    }
-
-    const topClients = await db.client.findMany({
-      take: 5,
-      orderBy: { totalShipments: 'desc' },
-      select: { companyName: true, totalShipments: true, codCollected: true, codPending: true, rating: true },
-    })
+    context.push(`=== DASHBOARD OVERVIEW ===`)
+    context.push(`Total Shipments: ${totalShipments}, Today: ${todayShipments}, Pending: ${pendingShipments}, Delivered: ${deliveredShipments}`)
+    context.push(`Total Clients: ${totalClients}, Active Drivers: ${activeDrivers}, Branches: ${totalBranches}`)
+    context.push(`Pending Pickups: ${pendingPickups}, Pending Transfers: ${pendingTransfers}, Payout Requests: ${payoutRequests}`)
+    context.push(`\n=== FINANCIAL ===`)
+    context.push(`COD Pending: ${codPending._sum.codAmount || 0} EGP, Collected: ${codCollected._sum.codAmount || 0} EGP, Settled: ${codPaid._sum.codAmount || 0} EGP`)
+    context.push(`\n=== STATUS DISTRIBUTION ===`)
+    for (const s of statusCounts) context.push(`${s.status.replace(/_/g, ' ')}: ${s._count.status}`)
     context.push(`\n=== TOP 5 CLIENTS ===`)
-    topClients.forEach((c, i) => {
-      context.push(`${i + 1}. ${c.companyName} - ${c.totalShipments} shipments, ${c.codCollected} EGP collected, ${c.codPending} EGP pending, rating ${c.rating.toFixed(1)}`)
-    })
-
-    const recentShipments = await db.shipment.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        client: { select: { companyName: true } },
-        senderCity: { select: { name: true } },
-        recipientCity: { select: { name: true } },
-      },
-    })
-    context.push(`\n=== RECENT 10 SHIPMENTS ===`)
-    recentShipments.forEach((s, i) => {
-      context.push(`${i + 1}. ${s.trackingNumber} - ${s.client.companyName} | ${s.senderCity.name} → ${s.recipientCity.name} | Status: ${s.status} | COD: ${s.codAmount} EGP | ${s.createdAt.toISOString().split('T')[0]}`)
-    })
-
-    const drivers = await db.driver.findMany({
-      take: 10,
-      include: { user: { select: { fullName: true } } },
-      orderBy: { totalDeliveries: 'desc' },
-    })
-    context.push(`\n=== TOP DRIVERS ===`)
-    drivers.forEach((d, i) => {
-      context.push(`${i + 1}. ${d.user.fullName} (${d.driverCode}) - ${d.totalDeliveries} deliveries, ${d.pendingEarnings} EGP pending, rating ${d.rating.toFixed(1)}, status: ${d.status}`)
-    })
-
-    const branches = await db.branch.findMany({
-      include: {
-        city: { select: { name: true } },
-        _count: { select: { clients: true, employees: true, drivers: true } },
-      },
-    })
+    topClients.forEach((c, i) => context.push(`${i + 1}. ${c.companyName} - ${c.totalShipments} shipments, ${c.codCollected} EGP collected, ${c.codPending} EGP pending, rating ${c.rating.toFixed(1)}`))
+    context.push(`\n=== RECENT 5 SHIPMENTS ===`)
+    recentShipments.forEach((s, i) => context.push(`${i + 1}. ${s.trackingNumber} - ${s.client.companyName} | ${s.senderCity.name}→${s.recipientCity.name} | ${s.status} | COD: ${s.codAmount} EGP`))
+    context.push(`\n=== TOP 5 DRIVERS ===`)
+    drivers.forEach((d, i) => context.push(`${i + 1}. ${d.user.fullName} (${d.driverCode}) - ${d.totalDeliveries} deliveries, ${d.pendingEarnings} EGP pending, rating ${d.rating.toFixed(1)}`))
     context.push(`\n=== BRANCHES ===`)
-    branches.forEach((b, i) => {
-      context.push(`${i + 1}. ${b.name} (${b.code}) - ${b.city?.name || 'N/A'} | Clients: ${b._count.clients}, Staff: ${b._count.employees}, Drivers: ${b._count.drivers}`)
-    })
-
-    const expenses = await db.expense.findMany({
-      take: 10,
-      orderBy: { date: 'desc' },
-      include: { branch: { select: { name: true } } },
-    })
-    const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0)
-    context.push(`\n=== RECENT EXPENSES (last 10) ===`)
-    context.push(`Total recent expenses: ${totalExpenses} EGP`)
-    expenses.forEach((e, i) => {
-      context.push(`${i + 1}. ${e.category} - ${e.description} - ${e.amount} EGP - ${e.branch?.name || 'N/A'} - ${e.date.toISOString().split('T')[0]}`)
-    })
-
-    const settlements = await db.codSettlement.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      include: { client: { select: { companyName: true } } },
-    })
-    context.push(`\n=== RECENT COD SETTLEMENTS ===`)
-    if (settlements.length === 0) {
-      context.push('No settlements yet')
-    } else {
-      settlements.forEach((s, i) => {
-        context.push(`${i + 1}. ${s.reference} - ${s.client.companyName} | Period: ${s.period} | Total: ${s.totalAmount} EGP | Net: ${s.netAmount} EGP | Status: ${s.status}`)
-      })
-    }
-
-    context.push(`\n=== CURRENT USER ===`)
-    context.push(`Name: ${user.fullName}`)
-    context.push(`Role: ${user.role}`)
-    context.push(`Time: ${new Date().toISOString()}`)
+    branches.forEach((b, i) => context.push(`${i + 1}. ${b.name} (${b.code}) - ${b.city?.name || 'N/A'} | Clients: ${b._count.clients}, Staff: ${b._count.employees}, Drivers: ${b._count.drivers}`))
+    context.push(`\n=== USER ===`)
+    context.push(`Name: ${user.fullName}, Role: ${user.role}, Time: ${new Date().toISOString()}`)
   } catch (e: any) {
     context.push(`Error gathering context: ${e.message}`)
   }
