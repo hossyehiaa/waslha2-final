@@ -80,9 +80,7 @@ export default function LoginPage() {
           className="relative z-10 flex items-center justify-between mb-12"
         >
           <div className="flex items-center gap-3">
-            <div className="bg-white/95 rounded-xl p-2 flex items-center justify-center">
-              <img src="/wsalhali-icon.png" alt="Wsalhali" className="h-8 w-auto object-contain" />
-            </div>
+            <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-12 w-auto object-contain" />
             <p className="text-xs text-white/70">{L.brandTagline}</p>
           </div>
           <LanguageToggle />

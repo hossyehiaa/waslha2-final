@@ -134,12 +134,7 @@ export function DashboardShell({
     <div className="flex flex-col h-full">
       <div className="h-16 flex items-center px-5 border-b border-sidebar-border shrink-0">
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/wsalhali-icon.png" alt="Wsalhali" className="h-8 w-auto object-contain shrink-0" />
-          <div className="min-w-0 hidden sm:block">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
-              {variant === 'admin' ? dict.nav.adminConsole : dict.nav.clientPortal}
-            </div>
-          </div>
+          <img src="/wsalhali-logo-light.png" alt="Wsalhali" className="h-10 w-auto object-contain shrink-0" />
         </Link>
       </div>
 
