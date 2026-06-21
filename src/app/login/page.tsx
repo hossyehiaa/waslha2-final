@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -83,7 +84,10 @@ export default function LoginPage() {
             <img src="/wsalhali-logo.png" alt="Wsalhali" className="h-12 w-auto object-contain" />
             <p className="text-xs text-white/70">{L.brandTagline}</p>
           </div>
-          <LanguageToggle />
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </motion.div>
 
         <div className="relative z-10 flex-1 flex flex-col justify-center max-w-md">

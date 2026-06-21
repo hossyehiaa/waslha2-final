@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard/shell'
+import { AIChatbot } from '@/components/ai-chatbot'
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -38,5 +39,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     )
   }
 
-  return <DashboardShell variant="client" user={user}>{children}</DashboardShell>
+  return (
+    <>
+      <DashboardShell variant="client" user={user}>{children}</DashboardShell>
+      <AIChatbot />
+    </>
+  )
 }

@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/components/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Dict } from '@/lib/i18n'
 
 type NavItem = {
@@ -251,6 +252,9 @@ export function DashboardShell({
 
             {/* Language Toggle */}
             <LanguageToggle />
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
 
             {/* Notifications */}
             <DropdownMenu>

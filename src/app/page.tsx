@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function HomePage() {
   const router = useRouter()
@@ -89,6 +90,7 @@ export default function HomePage() {
 
           <div className="flex items-center gap-2">
             <LanguageToggle />
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"
