@@ -9,6 +9,7 @@ import {
   FileText, Settings, Bell, Search, LogOut, Menu, X, ChevronDown,
   Building2, UserCog, CreditCard, TrendingUp, PackageCheck,
   ArrowLeftRight, Receipt, BarChart3, Boxes, Star, User,
+  Key, Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -72,6 +73,10 @@ function buildAdminNav(dict: Dict): NavItem[] {
     },
     { label: dict.nav.pricing, href: '/admin/pricing', icon: CreditCard },
     { label: dict.nav.reports, href: '/admin/reports', icon: BarChart3 },
+    { label: 'Loyalty Program', href: '/admin/loyalty', icon: Star },
+    { label: 'Insurance Claims', href: '/admin/insurance-claims', icon: Shield },
+    { label: 'Bulk Import', href: '/admin/bulk-import', icon: PackageCheck },
+    { label: 'API Keys', href: '/admin/api-keys', icon: Key },
     { label: dict.nav.notifications, href: '/admin/notifications', icon: Bell },
     { label: 'Audit Logs', href: '/admin/audit-logs', icon: FileText },
     { label: dict.nav.settings, href: '/admin/settings', icon: Settings },
@@ -87,6 +92,9 @@ function buildClientNav(dict: Dict): NavItem[] {
     { label: dict.nav.pickups, href: '/dashboard/pickups', icon: Truck },
     { label: dict.nav.cod, href: '/dashboard/cod', icon: Wallet },
     { label: dict.nav.invoices, href: '/dashboard/invoices', icon: Receipt },
+    { label: 'Loyalty', href: '/dashboard/loyalty', icon: Star },
+    { label: 'Insurance Claims', href: '/dashboard/insurance-claims', icon: Shield },
+    { label: 'API Keys', href: '/dashboard/api-keys', icon: Key },
     { label: dict.nav.addresses, href: '/dashboard/addresses', icon: MapPin },
     { label: dict.nav.notifications, href: '/dashboard/notifications', icon: Bell },
     { label: dict.nav.profile, href: '/dashboard/profile', icon: User },

@@ -70,6 +70,11 @@ model Client {
   pickupRequests  PickupRequest[]
   payoutRequests  PayoutRequest[]
   flyerRequests   FlyerRequest[]
+  apiKeys         ApiKey[]
+  loyaltyPoints   LoyaltyPoint[]
+  insuranceClaims InsuranceClaim[]
+  logoUrl         String?
+  preferredCurrency String @default("EGP")
 }
 
 model ClientAddress {
@@ -265,6 +270,7 @@ model Shipment {
   pickupRequest     PickupRequest?
   returns           Return[]
   labels            ShippingLabel[]
+  insuranceClaims   InsuranceClaim[]
 
   @@index([clientId])
   @@index([driverId])
@@ -524,4 +530,99 @@ model Session {
 
   @@index([userId])
   @@index([token])
+}
+
+// ============ API KEYS (Third-party integration) ============
+model ApiKey {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  key         String   @unique
+  name        String   // e.g., "Shopify Integration"
+  scopes      String   @default("shipments:read,shipments:write") // comma-separated
+  lastUsedAt  DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([clientId])
+  @@index([key])
+}
+
+// ============ LOYALTY PROGRAM ============
+model LoyaltyPoint {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  points      Int      // positive = earned, negative = redeemed
+  reason      String   // e.g., "Shipment delivered", "Redeemed for discount"
+  shipmentId  String?
+  createdAt   DateTime @default(now())
+
+  @@index([clientId])
+}
+
+model LoyaltyTier {
+  id          String   @id @default(cuid())
+  name        String   @unique // Bronze, Silver, Gold, Platinum
+  minPoints   Int
+  discountPercent Float @default(0) // e.g., 5 = 5% discount on shipping
+  color       String   @default("#888888")
+  createdAt   DateTime @default(now())
+}
+
+// ============ INSURANCE CLAIMS ============
+model InsuranceClaim {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id])
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  claimNumber String   @unique
+  type        String   // DAMAGED, LOST, PARTIAL_DAMAGE
+  description String
+  claimedAmount Float
+  approvedAmount Float?
+  status      String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED, PAID
+  evidenceUrls String  // JSON array of image URLs
+  notes       String?
+  processedBy String?
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([shipmentId])
+  @@index([status])
+}
+
+// ============ NOTIFICATION LOG (Email/SMS/WhatsApp) ============
+model NotificationLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  recipient   String   // email or phone
+  channel     String   // EMAIL, SMS, WHATSAPP
+  subject     String?
+  body        String
+  status      String   @default("PENDING") // PENDING, SENT, FAILED
+  errorMessage String?
+  metadata    String?  // JSON
+  createdAt   DateTime @default(now())
+
+  @@index([recipient])
+  @@index([channel])
+}
+
+// ============ BULK IMPORT LOG ============
+model BulkImport {
+  id          String   @id @default(cuid())
+  filename    String
+  uploadedBy  String
+  totalCount  Int
+  successCount Int     @default(0)
+  failCount   Int      @default(0)
+  errors      String?  // JSON array of error details
+  status      String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
+  createdAt   DateTime @default(now())
+
+  @@index([uploadedBy])
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth-helpers'
+import { sendShipmentNotification } from '@/lib/notification-service'
 
 export const runtime = 'nodejs'
 
@@ -159,6 +160,35 @@ export async function PATCH(
         afterData: JSON.stringify({ status, note }),
       },
     })
+
+    // Send Email/SMS/WhatsApp notifications
+    if (statusMessages[status]) {
+      const notificationType = `SHIPMENT_${status}`
+      try {
+        await sendShipmentNotification(notificationType, shipment, shipment.client)
+      } catch (e) {
+        console.error('Notification send error:', e)
+      }
+    }
+
+    // Award loyalty points on delivery
+    if (status === 'DELIVERED') {
+      try {
+        const pointsEarned = Math.floor(shipment.codAmount / 100) // 1 point per 100 EGP COD
+        if (pointsEarned > 0) {
+          await db.loyaltyPoint.create({
+            data: {
+              clientId: shipment.clientId,
+              points: pointsEarned,
+              reason: `Shipment ${shipment.trackingNumber} delivered - ${pointsEarned} points earned`,
+              shipmentId: shipment.id,
+            },
+          })
+        }
+      } catch (e) {
+        console.error('Loyalty points error:', e)
+      }
+    }
 
     return NextResponse.json({ shipment: updated })
   } catch (e: any) {

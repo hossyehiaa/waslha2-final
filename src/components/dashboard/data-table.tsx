@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Download, Filter } from 'lucide-react'
+import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Download, Filter, FileText, FileSpreadsheet } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { useLanguage } from '@/components/language-provider'
+import { downloadCSV, downloadExcel } from '@/lib/export-utils'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export type Column<T> = {
   key: string
@@ -31,6 +35,7 @@ export function DataTable<T extends { id: string }>({
   onRowClick,
   emptyMessage,
   pageSize = 10,
+  exportFilename = 'export',
 }: {
   data: T[]
   columns: Column<T>[]
@@ -41,12 +46,21 @@ export function DataTable<T extends { id: string }>({
   onRowClick?: (row: T) => void
   emptyMessage?: string
   pageSize?: number
+  exportFilename?: string
 }) {
   const { dict, isRTL } = useLanguage()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  // Helper to extract a cell value for export
+  function getCellValue(row: T, key: string): string {
+    const value = (row as any)[key]
+    if (value === null || value === undefined) return ''
+    if (typeof value === 'object') return JSON.stringify(value)
+    return String(value)
+  }
 
   const emptyMsg = emptyMessage || dict.common.noData
 
@@ -118,10 +132,38 @@ export function DataTable<T extends { id: string }>({
               </SelectContent>
             </Select>
           ))}
-          <Button variant="outline" size="sm" className="h-9">
-            <Download className={`w-3.5 h-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
-            {dict.common.export}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9">
+                <Download className={`w-3.5 h-3.5 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                {dict.common.export}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => {
+                const exportData = filtered.map(row => {
+                  const obj: Record<string, any> = {}
+                  columns.forEach(col => { obj[col.header] = getCellValue(row, col.key) })
+                  return obj
+                })
+                downloadCSV(exportData, exportFilename)
+              }}>
+                <FileText className="w-4 h-4 mr-2" />
+                CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const exportData = filtered.map(row => {
+                  const obj: Record<string, any> = {}
+                  columns.forEach(col => { obj[col.header] = getCellValue(row, col.key) })
+                  return obj
+                })
+                downloadExcel(exportData, exportFilename)
+              }}>
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
