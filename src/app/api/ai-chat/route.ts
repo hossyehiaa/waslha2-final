@@ -5,45 +5,48 @@ import { getCurrentUser } from '@/lib/auth-helpers'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-// Optimized: minimal DB queries for fast response
-async function getDashboardContext(user: any): Promise<string> {
-  try {
-    // Single batch of parallel queries - keep it minimal
-    const [shipments, clients, drivers, codAgg] = await Promise.all([
-      db.shipment.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          client: { select: { companyName: true } },
-          senderCity: { select: { name: true } },
-          recipientCity: { select: { name: true } },
-        },
-      }),
-      db.client.count(),
-      db.driver.count({ where: { status: 'ACTIVE' } }),
-      db.shipment.aggregate({
-        _sum: { codAmount: true },
-        where: { status: 'DELIVERED' },
-      }),
-    ])
+// Check if the question needs dashboard data
+function needsDashboardData(question: string): boolean {
+  const keywords = ['shipments', 'client', 'driver', 'cod', 'finance', 'deliver',
+    'شحن', 'عميل', 'مندوب', 'تحصيل', 'مال', 'توصيل', 'كم', 'عدد', 'اجمالي',
+    'today', 'النهارده', 'اليوم', 'status', 'حالة', 'report', 'تقرير',
+    'balance', 'رصيد', 'pending', 'معلق', 'how many']
+  const lower = question.toLowerCase()
+  return keywords.some(k => lower.includes(k))
+}
 
-    const totalShipments = await db.shipment.count()
+// Ultra-fast context: only 2 queries
+async function getFastContext(): Promise<string> {
+  try {
+    const [totalShipments, totalClients] = await Promise.all([
+      db.shipment.count(),
+      db.client.count(),
+    ])
+    return `Stats: Shipments=${totalShipments}, Clients=${totalClients}`
+  } catch {
+    return ''
+  }
+}
+
+// Full context: more queries but only when needed
+async function getFullContext(): Promise<string> {
+  try {
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
-    const todayShipments = await db.shipment.count({
-      where: { createdAt: { gte: todayStart } },
-    })
-    const pendingCount = await db.shipment.count({ where: { status: 'PENDING' } })
-    const deliveredCount = await db.shipment.count({ where: { status: 'DELIVERED' } })
 
-    const lines = [
-      `Dashboard: Total=${totalShipments}, Today=${todayShipments}, Pending=${pendingCount}, Delivered=${deliveredCount}`,
-      `Clients=${clients}, ActiveDrivers=${drivers}, TotalCOD=${codAgg._sum.codAmount || 0} EGP`,
-      `Recent: ${shipments.map(s => `${s.trackingNumber}(${s.status},${s.codAmount}EGP,${s.client.companyName})`).join('; ')}`,
-    ]
-    return lines.join('\n')
-  } catch (e: any) {
-    return 'Dashboard data unavailable'
+    const [total, today, pending, delivered, clients, drivers, codAgg] = await Promise.all([
+      db.shipment.count(),
+      db.shipment.count({ where: { createdAt: { gte: todayStart } } }),
+      db.shipment.count({ where: { status: 'PENDING' } }),
+      db.shipment.count({ where: { status: 'DELIVERED' } }),
+      db.client.count(),
+      db.driver.count({ where: { status: 'ACTIVE' } }),
+      db.shipment.aggregate({ _sum: { codAmount: true }, where: { status: 'DELIVERED' } }),
+    ])
+
+    return `Stats: Total=${total}, Today=${today}, Pending=${pending}, Delivered=${delivered}, Clients=${clients}, Drivers=${drivers}, COD=${codAgg._sum.codAmount || 0}`
+  } catch {
+    return ''
   }
 }
 
@@ -54,55 +57,61 @@ export async function POST(req: NextRequest) {
 
     const { messages } = await req.json()
     const lastMessages = messages.slice(-6)
+    const lastQuestion = lastMessages.findLast?.(m => m.role === 'user')?.content || ''
+    const lastUserMsg = [...lastMessages].reverse().find(m => m.role === 'user')
+    const questionText = lastUserMsg?.content || ''
 
-    // Gather minimal context
-    const dashboardContext = await getDashboardContext(user)
+    // Only gather context if the question needs it
+    const needData = needsDashboardData(questionText)
+    const context = needData ? await getFullContext() : await getFastContext()
 
-    const systemPrompt = `You are Wslahali AI Assistant for a shipping platform. Respond in the user's language (Arabic or English). Be concise. Dashboard data: ${dashboardContext}`
+    const systemPrompt = `You are Wslahali AI Assistant for a shipping platform. Respond in the user's language (Arabic or English). Be concise and helpful.${context ? ' Dashboard: ' + context : ''}`
 
-    // Call Pollinations AI with a short timeout
+    // Call Pollinations AI with 15s timeout
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 20000) // 20s timeout
+    const timeout = setTimeout(() => controller.abort(), 15000)
 
-    const response = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'openai',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...lastMessages.map((m: any) => ({ role: m.role, content: m.content })),
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeout)
-
-    if (!response.ok) {
-      // Fallback: provide a basic response with dashboard data
-      return NextResponse.json({
-        reply: `عذراً، حدث خطأ في الاتصال بالخدمة. لكن يمكنني مساعدتك:\n\n📊 بيانات لوحة التحكم:\n${dashboardContext}\n\nجرّب إعادة السؤال مرة أخرى.`,
+    let reply = ''
+    try {
+      const response = await fetch('https://text.pollinations.ai/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'openai',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...lastMessages.map((m: any) => ({ role: m.role, content: m.content })),
+          ],
+          temperature: 0.7,
+          max_tokens: 400,
+        }),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeout)
+
+      if (response.ok) {
+        const data = await response.json()
+        reply = data.choices?.[0]?.message?.content || ''
+      }
+    } catch (e: any) {
+      clearTimeout(timeout)
     }
 
-    const data = await response.json()
-    const reply = data.choices?.[0]?.message?.content || 'عذراً، لم أتمكن من توليد رد. حاول مرة أخرى.'
+    // Fallback if AI failed
+    if (!reply) {
+      if (needData && context) {
+        reply = `📊 بيانات لوحة التحكم:\n${context}\n\n(الخدمة الذكية مشغولة حالياً، حاول مرة أخرى)`
+      } else {
+        reply = 'مرحباً! أنا المساعد الذكي لوصلهالي. اسألني عن الشحنات، العملاء، المناديب، أو أي حاجة عن لوحة التحكم.'
+      }
+    }
 
     return NextResponse.json({ reply })
   } catch (e: any) {
-    // If timeout or any error, return a helpful fallback
-    if (e.name === 'AbortError') {
-      return NextResponse.json({
-        reply: '⏳ استغرق الرد وقتاً أطول من المتوقع. حاول مرة أخرى - السؤال البسيط هيرد أسرع.',
-      })
-    }
-
     console.error('AI chat error:', e)
     return NextResponse.json({
-      reply: 'حدث خطأ. حاول مرة أخرى من فضلك.',
+      reply: 'حدث خطأ بسيط. حاول مرة أخرى من فضلك. 🔄',
     })
   }
 }
