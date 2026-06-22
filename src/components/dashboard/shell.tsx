@@ -9,7 +9,9 @@ import {
   FileText, Settings, Bell, Search, LogOut, Menu, X, ChevronDown,
   Building2, UserCog, CreditCard, TrendingUp, PackageCheck,
   ArrowLeftRight, Receipt, BarChart3, Boxes, Star, User,
-  Key, Shield,
+  Key, Shield, Wrench, ListChecks, MapPinned, DollarSign,
+  Banknote, ArrowRightLeft, ClipboardList, RotateCcw,
+  UserPlus, RefreshCw, Clock, FileSpreadsheet, BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,49 +39,160 @@ type NavItem = {
 
 function buildAdminNav(dict: Dict): NavItem[] {
   return [
-    { label: dict.nav.dashboard, href: '/admin', icon: LayoutDashboard },
-    { label: dict.nav.shipments, href: '/admin/shipments', icon: Package },
-    { label: dict.nav.addShipment, href: '/admin/shipments/new', icon: PackageCheck },
-    { label: dict.nav.tracking, href: '/admin/tracking', icon: MapPin },
+    // 0 - Dashboard
+    { label: 'لوحة التحكم', href: '/admin', icon: LayoutDashboard },
+
+    // 1 - Setup (التهيئة)
     {
-      label: dict.nav.clients, href: '/admin/clients', icon: Users,
+      label: 'التهيئة', href: '/admin/setup', icon: Wrench,
       children: [
-        { label: dict.nav.clients, href: '/admin/clients' },
-        { label: dict.nav.clientRequests, href: '/admin/clients/requests' },
+        { label: 'قوالب الصلاحيات', href: '/admin/setup/permissions' },
+        { label: 'حركة المستخدمين', href: '/admin/setup/user-moves' },
+        { label: 'الفروع', href: '/admin/branches' },
+        { label: 'أسباب الإلغاء والتأجيل', href: '/admin/setup/reasons' },
+        { label: 'المدن', href: '/admin/setup/cities' },
+        { label: 'المناطق', href: '/admin/setup/areas' },
+        { label: 'أقسام الأسعار', href: '/admin/pricing' },
       ],
     },
-    { label: dict.nav.employees, href: '/admin/employees', icon: UserCog },
-    { label: dict.nav.drivers, href: '/admin/drivers', icon: Truck },
-    { label: dict.nav.branches, href: '/admin/branches', icon: Building2 },
-    { label: dict.nav.warehouses, href: '/admin/warehouses', icon: Boxes },
-    { label: dict.nav.pickups, href: '/admin/pickups', icon: PackageCheck },
+
+    // 2 - Employees
+    { label: 'إدارة الموظفين', href: '/admin/employees', icon: UserCog },
+
+    // 3 - Drivers
+    { label: 'إدارة المناديب', href: '/admin/drivers', icon: Truck },
+
+    // 4 - Clients
     {
-      label: dict.nav.delivery, href: '/admin/delivery', icon: Truck,
+      label: 'إدارة العملاء', href: '/admin/clients', icon: Users,
       children: [
-        { label: dict.nav.delivery, href: '/admin/delivery' },
-        { label: dict.nav.returns, href: '/admin/returns' },
-        { label: dict.nav.transfers, href: '/admin/transfers' },
+        { label: 'بيانات العملاء', href: '/admin/clients' },
+        { label: 'استبدال شحنات العملاء', href: '/admin/clients/exchange-shipments' },
       ],
     },
-    { label: dict.nav.printLabels, href: '/admin/print', icon: Receipt },
+
+    // 5 - Client Requests
     {
-      label: dict.nav.finance, href: '/admin/finance', icon: Wallet,
+      label: 'طلبات العملاء', href: '/admin/client-requests', icon: ClipboardList,
       children: [
-        { label: dict.nav.codSettlements, href: '/admin/finance' },
-        { label: dict.nav.payouts, href: '/admin/finance/payouts' },
-        { label: dict.nav.invoices, href: '/admin/finance/invoices' },
-        { label: dict.nav.expenses, href: '/admin/finance/expenses' },
+        { label: 'طلبات فلير', href: '/admin/client-requests/flyer' },
+        { label: 'طلبات السداد', href: '/admin/finance/payouts' },
       ],
     },
-    { label: dict.nav.pricing, href: '/admin/pricing', icon: CreditCard },
-    { label: dict.nav.reports, href: '/admin/reports', icon: BarChart3 },
-    { label: 'Loyalty Program', href: '/admin/loyalty', icon: Star },
-    { label: 'Insurance Claims', href: '/admin/insurance-claims', icon: Shield },
-    { label: 'Bulk Import', href: '/admin/bulk-import', icon: PackageCheck },
+
+    // 6 - Finance & Accounts
+    {
+      label: 'إدارة الحسابات والمالية', href: '/admin/finance', icon: Wallet,
+      children: [
+        { label: 'بيانات الحسابات', href: '/admin/finance/accounts' },
+        { label: 'سداد العملاء', href: '/admin/finance' },
+        { label: 'فواتير العملاء', href: '/admin/finance/invoices' },
+        { label: 'سداد المناديب', href: '/admin/finance/driver-payments' },
+        { label: 'التحويل بين الحسابات', href: '/admin/finance/transfers' },
+        { label: 'إذن صرف نقدية', href: '/admin/finance/cash-out' },
+        { label: 'إذن قبض نقدية', href: '/admin/finance/cash-in' },
+      ],
+    },
+
+    // 7 - Expenses
+    {
+      label: 'إدارة المصروفات', href: '/admin/finance/expenses', icon: TrendingDown,
+      children: [
+        { label: 'بيانات المصروفات', href: '/admin/finance/expenses' },
+        { label: 'أنواع المصروفات', href: '/admin/finance/expense-types' },
+      ],
+    },
+
+    // 8 - Pickup
+    {
+      label: 'بيك أب', href: '/admin/pickups', icon: PackageCheck,
+      children: [
+        { label: 'بيانات بيك أب', href: '/admin/pickups' },
+        { label: 'إسناد بيك أب', href: '/admin/pickups/assign' },
+      ],
+    },
+
+    // 9 - Add Shipments
+    { label: 'إضافة شحنات', href: '/admin/shipments/new', icon: PackageCheck },
+
+    // 10 - Follow-up Shipments
+    { label: 'متابعة الشحنات', href: '/admin/tracking', icon: MapPin },
+
+    // 11 - Shipment Movement
+    { label: 'حركة الشحنات', href: '/admin/shipments/movement', icon: RefreshCw },
+
+    // 12 - Shipment Management
+    {
+      label: 'إدارة الشحنات', href: '/admin/shipments', icon: Package,
+      children: [
+        { label: 'الشحنات المحذوفة', href: '/admin/shipments/deleted' },
+        { label: 'بانتظار الموافقة', href: '/admin/shipments/pending' },
+        { label: 'بانتظار الموافقة API', href: '/admin/shipments/pending-api' },
+        { label: 'تسليم الشحنات', href: '/admin/shipments/delivery' },
+        { label: 'الشحنات المؤجلة', href: '/admin/shipments/postponed' },
+        { label: 'تحصيل الشحنات', href: '/admin/shipments/collection' },
+      ],
+    },
+
+    // 13 - Branch Transfers
+    {
+      label: 'تحويلات الفروع', href: '/admin/transfers', icon: ArrowLeftRight,
+      children: [
+        { label: 'تحويل شحنات بين الفروع', href: '/admin/transfers' },
+      ],
+    },
+
+    // 14 - Delivery Management
+    {
+      label: 'إدارة التوصيل', href: '/admin/delivery', icon: Truck,
+      children: [
+        { label: 'توزيع الشحنات للمناديب', href: '/admin/delivery/assign' },
+        { label: 'استبدال مندوبين الشحنات', href: '/admin/delivery/exchange' },
+        { label: 'توزيع المرتجع للمناديب', href: '/admin/delivery/returns-assign' },
+        { label: 'استبدال مندوبين المرتجعات', href: '/admin/delivery/returns-exchange' },
+      ],
+    },
+
+    // 15 - Returns Management
+    {
+      label: 'إدارة المرتجعات', href: '/admin/returns', icon: RotateCcw,
+      children: [
+        { label: 'استلام المرتجعات', href: '/admin/returns/receive' },
+        { label: 'تسليم المرتجعات', href: '/admin/returns/deliver' },
+      ],
+    },
+
+    // 16 - Reports
+    {
+      label: 'التقارير', href: '/admin/reports', icon: BarChart3,
+      children: [
+        { label: 'متابعة العملاء', href: '/admin/reports/clients' },
+        { label: 'متابعة المناديب', href: '/admin/reports/drivers' },
+        { label: 'متابعة الشحنات', href: '/admin/reports/shipments' },
+        { label: 'متابعة المرتجعات', href: '/admin/reports/returns' },
+        { label: 'متابعة المتأخرات', href: '/admin/reports/late' },
+        { label: 'كشف حساب مندوب', href: '/admin/reports/driver-statement' },
+        { label: 'كشف حساب عميل', href: '/admin/reports/client-statement' },
+        { label: 'شيت توصيل شحنات', href: '/admin/reports/delivery-sheet' },
+        { label: 'شيت توصيل مرتجع', href: '/admin/reports/return-sheet' },
+        { label: 'شيت توصيل فروع', href: '/admin/reports/branch-sheet' },
+        { label: 'المصروفات', href: '/admin/reports/expenses' },
+        { label: 'متابعة اليومية', href: '/admin/reports/daily' },
+        { label: 'متابعة الحسابات', href: '/admin/reports/accounts' },
+      ],
+    },
+
+    // Print Labels
+    { label: 'طباعة البوالص', href: '/admin/print', icon: Receipt },
+
+    // Extra features
+    { label: 'الولاء', href: '/admin/loyalty', icon: Star },
+    { label: 'مطالبات التأمين', href: '/admin/insurance-claims', icon: Shield },
+    { label: 'استيراد جماعي', href: '/admin/bulk-import', icon: PackageCheck },
     { label: 'API Keys', href: '/admin/api-keys', icon: Key },
-    { label: dict.nav.notifications, href: '/admin/notifications', icon: Bell },
-    { label: 'Audit Logs', href: '/admin/audit-logs', icon: FileText },
-    { label: dict.nav.settings, href: '/admin/settings', icon: Settings },
+    { label: 'الإشعارات', href: '/admin/notifications', icon: Bell },
+    { label: 'سجل العمليات', href: '/admin/audit-logs', icon: FileText },
+    { label: 'الإعدادات', href: '/admin/settings', icon: Settings },
   ]
 }
 
