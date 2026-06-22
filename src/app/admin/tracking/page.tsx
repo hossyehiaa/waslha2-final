@@ -347,7 +347,7 @@ export default function FollowUpShipmentsPage() {
                     <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">{s.notes || '-'}</td>
                     <td className="py-2 px-2 whitespace-nowrap">{formatCurrency(s.shippingCost)}</td>
                     <td className="py-2 px-2 font-medium whitespace-nowrap">{formatCurrency(s.codAmount)}</td>
-                    <td className="py-2 px-2 text-emerald-600 whitespace-nowrap">{formatCurrency(s.codAmount - s.codFee)}</td>
+                    <td className="py-2 px-2 text-emerald-600 whitespace-nowrap">{formatCurrency(s.codAmount - (s.codFee || 0))}</td>
                     <td className="py-2 px-2 font-bold text-amber-600 whitespace-nowrap">{formatCurrency(s.codAmount)}</td>
                     <td className="py-2 px-2"><StatusBadge status={s.paymentStatus} /></td>
                     <td className="py-2 px-2"><StatusBadge status={s.paymentStatus === 'SETTLED' ? 'SETTLED' : 'PENDING'} /></td>
