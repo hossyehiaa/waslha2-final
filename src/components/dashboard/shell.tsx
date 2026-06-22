@@ -7,11 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, Truck, Package, MapPin, Wallet,
   FileText, Settings, Bell, Search, LogOut, Menu, X, ChevronDown,
-  Building2, UserCog, CreditCard, TrendingUp, PackageCheck,
-  ArrowLeftRight, Receipt, BarChart3, Boxes, Star, User,
-  Key, Shield, Wrench, ListChecks, MapPinned, DollarSign,
-  Banknote, ArrowRightLeft, ClipboardList, RotateCcw,
-  UserPlus, RefreshCw, Clock, FileSpreadsheet, BookOpen,
+  UserCog, PackageCheck, ArrowLeftRight, Receipt, BarChart3,
+  Star, User, Key, Shield, Wrench, ClipboardList, RotateCcw,
+  RefreshCw, TrendingDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
