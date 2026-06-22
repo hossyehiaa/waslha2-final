@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+@page {
+    size: 720px 1020px;
+    margin: 0;
+}
+:root {
+    --c-primary: #0d9488;
+    --c-primary-dark: #0f766e;
+    --c-accent: #f59e0b;
+    --c-bg: #ffffff;
+    --c-bg-soft: #f0fdfa;
+    --c-bg-card: #f8fafc;
+    --c-text: #1e293b;
+    --c-text-muted: #64748b;
+    --c-border: #e2e8f0;
+    --c-success: #10b981;
+    --c-warning: #f59e0b;
+    --c-danger: #ef4444;
+    --c-info: #3b82f6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    width: 720px;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+    line-height: 1.8;
+    direction: rtl;
+}
+@media screen {
+    html { display: flex; justify-content: center; background: #e2e8f0; min-height: 100vh; }
+    body { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+}
+
+/* ===== COVER PAGE ===== */
+.cover {
+    width: 720px;
+    height: 1020px;
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 50%, #134e4a 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    break-after: page;
+    overflow: hidden;
+    position: relative;
+    padding: 60px;
+}
+.cover::before {
+    content: '';
+    position: absolute;
+    top: 50px; right: 50px;
+    width: 300px; height: 300px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+}
+.cover::after {
+    content: '';
+    position: absolute;
+    bottom: 50px; left: 50px;
+    width: 350px; height: 350px;
+    background: rgba(245,158,11,0.08);
+    border-radius: 50%;
+}
+.cover-logo {
+    width: 120px; height: 120px;
+    background: white;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+.cover-logo img { width: 80px; height: 80px; object-fit: contain; }
+.cover h1 {
+    font-size: 52px;
+    font-weight: 900;
+    margin-bottom: 16px;
+    z-index: 1;
+    line-height: 1.2;
+}
+.cover h2 {
+    font-size: 28px;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-bottom: 8px;
+    z-index: 1;
+}
+.cover .tagline {
+    font-size: 18px;
+    opacity: 0.7;
+    margin-top: 8px;
+    z-index: 1;
+}
+.cover .meta {
+    position: absolute;
+    bottom: 50px;
+    font-size: 14px;
+    opacity: 0.6;
+    z-index: 1;
+}
+
+/* ===== CONTENT ===== */
+.main-content {
+    padding: 50px 55px 40px 55px;
+}
+.chapter {
+    margin-top: 30px;
+    break-inside: avoid-page;
+}
+.chapter:first-child { margin-top: 0; }
+.chapter-header {
+    break-after: avoid;
+    margin-bottom: 16px;
+}
+.chapter-number {
+    display: inline-block;
+    background: var(--c-primary);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+.chapter-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--c-primary-dark);
+    margin-bottom: 6px;
+}
+.chapter-divider {
+    width: 60px;
+    height: 4px;
+    background: var(--c-accent);
+    border-radius: 2px;
+    margin-bottom: 16px;
+}
+p { margin-bottom: 12px; font-size: 16px; line-height: 1.9; color: var(--c-text); }
+ul, ol { margin-bottom: 12px; padding-right: 24px; }
+li { margin-bottom: 8px; font-size: 15px; line-height: 1.8; }
+
+/* Cards */
+.card {
+    background: var(--c-bg-card);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.card-accent {
+    border-right: 4px solid var(--c-primary);
+}
+.card-warning {
+    border-right: 4px solid var(--c-accent);
+    background: #fffbeb;
+}
+.card-info {
+    border-right: 4px solid var(--c-info);
+    background: #eff6ff;
+}
+.card-success {
+    border-right: 4px solid var(--c-success);
+    background: #ecfdf5;
+}
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-text);
+    margin-bottom: 8px;
+}
+.card p { font-size: 14px; margin-bottom: 6px; }
+
+/* Feature list */
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.feature-item {
+    background: var(--c-bg-card);
+    border-radius: 10px;
+    padding: 14px;
+    break-inside: avoid;
+    border: 1px solid var(--c-border);
+}
+.feature-item strong {
+    display: block;
+    color: var(--c-primary-dark);
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+.feature-item span {
+    font-size: 13px;
+    color: var(--c-text-muted);
+}
+
+/* Steps */
+.steps {
+    counter-reset: step;
+    margin-bottom: 14px;
+}
+.step {
+    position: relative;
+    padding-right: 50px;
+    margin-bottom: 16px;
+    break-inside: avoid;
+}
+.step::before {
+    counter-increment: step;
+    content: counter(step);
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px; height: 36px;
+    background: var(--c-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+}
+.step-title {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--c-text);
+    margin-bottom: 4px;
+}
+.step-desc {
+    font-size: 14px;
+    color: var(--c-text-muted);
+    line-height: 1.7;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 14px;
+    break-inside: avoid;
+}
+th {
+    background: var(--c-primary);
+    color: white;
+    padding: 10px;
+    text-align: right;
+    font-weight: 600;
+}
+td {
+    padding: 10px;
+    border-bottom: 1px solid var(--c-border);
+    text-align: right;
+}
+tr:nth-child(even) { background: var(--c-bg-soft); }
+
+/* Badge */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 6px;
+}
+.badge-admin { background: #dbeafe; color: #1e40af; }
+.badge-client { background: #dcfce7; color: #166534; }
+.badge-both { background: #fef3c7; color: #92400e; }
+
+/* Section break */
+.section-break {
+    height: 1px;
+    background: var(--c-border);
+    margin: 24px 0;
+}
+
+/* Tip box */
+.tip {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.tip strong { color: #92400e; }
+.tip p { font-size: 14px; color: #78350f; margin: 0; }
+
+/* Ending */
+.ending {
+    width: 720px;
+    min-height: 1020px;
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    break-before: page;
+    overflow: hidden;
+    padding: 60px;
+    position: relative;
+}
+.ending::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+    transform: translate(-50%,-50%);
+}
+.ending h2 {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    z-index: 1;
+}
+.ending p {
+    font-size: 18px;
+    opacity: 0.8;
+    z-index: 1;
+    max-width: 500px;
+    line-height: 1.8;
+}
+.ending .url {
+    margin-top: 30px;
+    font-size: 16px;
+    background: rgba(255,255,255,0.15);
+    padding: 12px 28px;
+    border-radius: 30px;
+    z-index: 1;
+    font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== COVER PAGE ===== -->
+<div class="cover">
+    <div class="cover-logo">
+        <img src="wsalhali-icon.png" alt="Wsalhali">
+    </div>
+    <h1>وصالحي</h1>
+    <h2>الدليل الشامل لاستخدام المنصة</h2>
+    <p class="tagline">كل اللي محتاج تعرفه عن شحناتك وإدارة حسابك</p>
+    <div class="meta">wsalhali.vercel.app &nbsp;|&nbsp; 2026</div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+<!-- Chapter 1: Introduction -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل الأول</span>
+        <h3 class="chapter-title">إيه هو وصالحي؟</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        وصالحي ده منصة شحن وإدارة خدمات لوجستية متكاملة، بتساعد التجار والشركات على إدارة الشحنات بتاعتهم من أول ما تنشأ الشحنة لحد ما توصل للعميل النهائي وتتحصيل الفلوس. المنصة دي بتغطي كل حاجة: من تتبع الشحنات، تحصيل الدفع عند الاستلام (COD)، إدارة المناديب والفروع، التقارير المالية، والمزيد.
+    </p>
+    <p>
+        المنصة مصممة لتكون سهلة الاستخدام لأي حد، سواء كنت تاجر كبير عنده آلاف الشحنات في اليوم، أو تاجر صغير بيبدأ بتشغيل أول شحنة. كل اللي محتاجه موجود في مكان واحد، وبيدعم اللغة العربية والإنجليزية، وكمان الوضع الليلي (Dark Mode).
+    </p>
+    <div class="card card-accent">
+        <div class="card-title">الرابط بتاع المنصة</div>
+        <p>الموقع: <strong>wsalhali.vercel.app</strong></p>
+        <p>تقدر تفتحه من الموبايل أو الكمبيوتر، وهو متجاوب مع كل الأحجام.</p>
+    </div>
+</div>
+
+<!-- Chapter 2: Account Types -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل التاني</span>
+        <h3 class="chapter-title">أنواع الحسابات</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        المنصة فيها نوعين أساسيين من الحسابات، وكل نوع ليه صلاحيات وصفحات مختلفة:
+    </p>
+    <div class="card card-info">
+        <div class="card-title">حساب الأدمن (المدير)</div>
+        <p>الحساب ده بيقدر يتحكم في كل حاجة في المنصة:</p>
+        <ul>
+            <li>إنشاء وتعديل وحذف العملاء والموظفين والمناديب</li>
+            <li>إدارة الشحنات وتغيير حالتها</li>
+            <li>اعتماد ودفع تسويات الدفع عند الاستلام</li>
+            <li>إدارة الفروع والمخازن والتسعير</li>
+            <li>عرض كل التقارير والإحصائيات</li>
+        </ul>
+    </div>
+    <div class="card card-success">
+        <div class="card-title">حساب العميل (التاجر)</div>
+        <p>الحساب ده بيقدر يدير شحناته الخاصة:</p>
+        <ul>
+            <li>إنشاء شحنات جديدة وتتبعها</li>
+            <li>طلب استلام (Pickup) من العنوان بتاعه</li>
+            <li>متابعة تسويات الدفع عند الاستلام والفواتير</li>
+            <li>إدارة العناوين المحفوظة</li>
+            <li>تقديم مطالبات تأمين</li>
+            <li>متابعة نقاط الولاء</li>
+        </ul>
+    </div>
+    <div class="tip">
+        <strong>ملاحظة مهمة:</strong>
+        <p>العملاء مش بيقدروا يسجلوا لوحدهم. الأدمن هو اللي بيأنشئ الحسابات وبيعطيهم بيانات الدخول.</p>
+    </div>
+</div>
+
+<!-- Chapter 3: Login -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل التالت</span>
+        <h3 class="chapter-title">تسجيل الدخول</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>عشان تدخل على المنصة، اتبع الخطوات دي:</p>
+    <div class="steps">
+        <div class="step">
+            <div class="step-title">افتح الموقع</div>
+            <div class="step-desc">روح على <strong>wsalhali.vercel.app/login</strong> هتلاقي صفحة دخول مقسومة نصين: نص فيه معلومات المنصة، والنص التاني فيه فورم الدخول.</div>
+        </div>
+        <div class="step">
+            <div class="step-title">اكتب اسم المستخدم وكلمة المرور</div>
+            <div class="step-desc">الأدمن هيدخلك بيانات الدخول. اكتبهم في الخانات واضغط "تسجيل الدخول".</div>
+        </div>
+        <div class="step">
+            <div class="step-title">التحويل التلقائي</div>
+            <div class="step-desc">بعد ما تدخل، المنصة هتحولك تلقائياً على لوحة التحكم بتاعتك: الأدمن يروح على <strong>/admin</strong> والعميل يروح على <strong>/dashboard</strong>.</div>
+        </div>
+    </div>
+    <div class="card card-accent">
+        <div class="card-title">حسابات تجريبية</div>
+        <p>تقدر تجرب المنصة بحسابات جاهزة:</p>
+        <table>
+            <tr><th>النوع</th><th>اسم المستخدم</th><th>كلمة المرور</th></tr>
+            <tr><td>أدمن</td><td>admin</td><td>admin123</td></tr>
+            <tr><td>عميل</td><td>braa</td><td>client123</td></tr>
+            <tr><td>موظف</td><td>manager</td><td>emp123</td></tr>
+            <tr><td>مندوب</td><td>drv-001</td><td>driver123</td></tr>
+        </table>
+    </div>
+</div>
+
+<!-- Chapter 4: Dashboard Overview -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل الرابع</span>
+        <h3 class="chapter-title">لوحة التحكم - نظرة عامة</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        أول ما تدخل، هتلاقي لوحة تحكم بتعرض لك أهم الأرقام والإحصائيات. دي اللي بتساعدك تفهم حالة شغلك في لمحة واحدة.
+    </p>
+    <div class="card card-accent">
+        <div class="card-title">إيه اللي هتشوفه في لوحة تحكم الأدمن؟</div>
+        <ul>
+            <li><strong>شحنات اليوم:</strong> عدد الشحنات اللي اتعملت النهارده</li>
+            <li><strong>جاهز للتحصيل:</strong> إجمالي فلوس الـ COD اللي لسه متحصلتش</li>
+            <li><strong>مناديب نشطون:</strong> عدد المناديب اللي شغالين دلوقتي</li>
+            <li><strong>إجمالي العملاء:</strong> عدد العملاء المسجلين</li>
+            <li><strong>استلامات معلقة:</strong> طلبات الاستلام اللي محتاجة تتعمل</li>
+            <li><strong>تحويلات معلقة:</strong> تحويلات الفروع اللي لسه مستلمتش</li>
+        </ul>
+    </div>
+    <p>
+        كمان هتلاقي رسوم بيانية بتوريك حركة الشحنات خلال آخر 7 أيام، وتوزيع حالات الشحنات (معلقة، قيد الشحن، تم التوصيل، إلخ)، وكمان قائمة بأهم العملاء وآخر الشحنات.
+    </p>
+    <div class="card card-success">
+        <div class="card-title">لوحة تحكم العميل</div>
+        <p>العميل بيشوف:</p>
+        <ul>
+            <li>عدد شحناته النشطة</li>
+            <li>رصيد الـ COD المتاح (اللي ممكن يطلبه)</li>
+            <li>رصيد الـ COD المعلق (اللي لسه متحصّل)</li>
+            <li>إجمالي شحناته</li>
+            <li>آخر الشحنات وتسوياته</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Chapter 5: Shipments -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل الخامس</span>
+        <h3 class="chapter-title">إدارة الشحنات</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        الشحنات هي قلب المنصة. تقدر تنشئ شحنة جديدة، تتبعها، تغير حالتها، وتطبع بوليصة الشحن.
+    </p>
+
+    <div class="card card-accent">
+        <div class="card-title">إنشاء شحنة جديدة</div>
+        <p>عشان تعمل شحنة جديدة:</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-title">اضغط "شحنة جديدة"</div>
+                <div class="step-desc">هتلاقي الزرار في صفحة الشحنات أو في لوحة التحكم.</div>
+            </div>
+            <div class="step">
+                <div class="step-title">اختار العميل والخدمة</div>
+                <div class="step-desc">اختار العميل (لو أدمن)، نوع الخدمة (عادي أو سريع)، والأولوية.</div>
+            </div>
+            <div class="step">
+                <div class="step-title">بيانات المرسل</div>
+                <div class="step-desc">اكتب اسم المرسل، التليفون، المدينة، والعنوان. لو عميل، ممكن تختار عنوان محفوظ.</div>
+            </div>
+            <div class="step">
+                <div class="step-title">بيانات المستلم</div>
+                <div class="step-desc">اكتب اسم المستلم، التليفون، المدينة، والعنوان بالتفصيل.</div>
+            </div>
+            <div class="step">
+                <div class="step-title">الوزن والـ COD</div>
+                <div class="step-desc">حدد وزن الطرد، عدد القطع، ومبلغ الدفع عند الاستلام (لو فيه). المنصة هتحسب رسوم الشحن ورسوم الـ COD (2%) تلقائياً.</div>
+            </div>
+            <div class="step">
+                <div class="step-title">اضغط "إنشاء الشحنة"</div>
+                <div class="step-desc">هتاخد رقم تتبع فوراً، والشحنة هتظهر في قائمتك بحالة "معلقة".</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-info">
+        <div class="card-title">حالات الشحنة</div>
+        <p>الشحنة بتمر بمراحل مختلفة، وكل مرحلة ليها معنى:</p>
+        <table>
+            <tr><th>الحالة</th><th>المعنى</th></tr>
+            <tr><td>معلقة (PENDING)</td><td>الشحنة اتخلقت بس لسه ما اتسلمتش من المندوب</td></tr>
+            <tr><td>تم الاستلام (PICKED_UP)</td><td>المندوب سلم الطرد من عند التاجر</td></tr>
+            <tr><td>قيد الشحن (IN_TRANSIT)</td><td>الطرد في الطريق للفرع الوجهة</td></tr>
+            <tr><td>خرج للتوصيل (OUT_FOR_DELIVERY)</td><td>المندوب طلع يوصل الطرد للعميل</td></tr>
+            <tr><td>تم التوصيل (DELIVERED)</td><td>العميل استلم الطرد والـ COD اتحصّل</td></tr>
+            <tr><td>مرتجع (RETURNED)</td><td>العميل رفض الاستلام والطرد رجع للتاجر</td></tr>
+            <tr><td>فشل (FAILED)</td><td>محاولة التوصيل فشلت (العميل مش موجود، عنوان غلط، إلخ)</td></tr>
+        </table>
+    </div>
+
+    <div class="tip">
+        <strong>تيب:</strong>
+        <p>لما تحدد شحنة كـ "تم التوصيل"، المنصة بتسجل مبلغ الـ COD تلقائياً في حساب العميل، وبتدي المندوب نص رسوم الـ COD كمكافأة، وبتدي العميل نقاط ولاء!</p>
+    </div>
+</div>
+
+<!-- Chapter 6: COD & Finance -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل السادس</span>
+        <h3 class="chapter-title">الفلوس - الدفع عند الاستلام والتسويات</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        الدفع عند الاستلام (COD) هو أهم جزء مالي في المنصة. لما المندوب يوصل الشحنة، بياخد فلوس الـ COD من العميل النهائي، وبعدين المنصة بتسوّيها مع التاجر.
+    </p>
+
+    <div class="card card-warning">
+        <div class="card-title">إزاي تسوية الـ COD بتشتغل؟</div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-title">الشحنة تتسلم</div>
+                <div class="step-desc">لما الشحنة توصل، المندوب بياخد فلوس الـ COD. المنصة بتسجل المبلغ في حساب العميل كـ "محصّل".</div>
+            </div>
+            <div class="step">
+                <div class="step-title">إنشاء التسوية</div>
+                <div class="step-desc">الأدمن بيقدر يعمل تسوية تجمع كل الشحنات المحصّلة لعميل معين. المنصة بتطرح رسوم الـ COD (2%) وتحسب الصافي.</div>
+            </div>
+            <div class="step">
+                <div class="step-title">اعتماد التسوية</div>
+                <div class="step-desc">الأدمن بيعتمد التسوية، والعميل بياخد إشعار.</div>
+            </div>
+            <div class="step">
+                <div class="step-title">دفع التسوية</div>
+                <div class="step-desc">لما الأدمن يدفع الفلوس للعميل، بيضغط "دفع" والمنصة بتحدّث رصيد العميل وتخلي الشحنات "مسدّدة".</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-success">
+        <div class="card-title">طلب سداد (Payout)</div>
+        <p>العميل يقدر يطلب سداد رصيده المتاح في أي وقت. الأدمن بيراجع الطلب ويوافق عليه أو يرفضه، وبعدين يعمله "دفع" لما يحوّل الفلوس.</p>
+    </div>
+</div>
+
+<!-- Chapter 7: Other Features -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل السابع</span>
+        <h3 class="chapter-title">مميزات تانية في المنصة</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    
+    <div class="feature-grid">
+        <div class="feature-item">
+            <strong>طلبات الاستلام (Pickup)</strong>
+            <span>العميل بيطلب استلام شحناته من عنده، والأدمن بيأكد الطلب ويعين مندوب.</span>
+        </div>
+        <div class="feature-item">
+            <strong>تحويلات الفروع</strong>
+            <span>نقل شحنات بين الفروع، مع متابعة حالة التحويل (معلق → تم الاستلام).</span>
+        </div>
+        <div class="feature-item">
+            <strong>المرتجعات</strong>
+            <span>تسجيل وإدارة الشحنات المرتجعة بمعرفة السبب والحالة.</span>
+        </div>
+        <div class="feature-item">
+            <strong>طباعة البوالص</strong>
+            <span>اختر شحنات واطبع بوالص شحن بباركود لكل شحنة.</span>
+        </div>
+        <div class="feature-item">
+            <strong>التقارير</strong>
+            <span>إحصائيات شاملة: الإيرادات، الشحنات، أداء المناديب، أرباح الشحنات.</span>
+        </div>
+        <div class="feature-item">
+            <strong>المصروفات</strong>
+            <span>تسجيل وتتبع المصروفات (رواتب، وقود، صيانة، إيجار).</span>
+        </div>
+        <div class="feature-item">
+            <strong>نقاط الولاء</strong>
+            <span>العميل بيكسب نقاط مع كل شحنة تتسلم، وبيوصل لمستويات (برونزي، فضي، ذهبي، بلاتيني).</span>
+        </div>
+        <div class="feature-item">
+            <strong>مطالبات التأمين</strong>
+            <span>لو شحنة اتضررت أو ضاعت، العميل بيقدر يقدم مطالبة تأمين.</span>
+        </div>
+        <div class="feature-item">
+            <strong>استيراد جماعي</strong>
+            <span>ارفع ملف Excel ببيانات شحنات كتير واعملهم مرة واحدة.</span>
+        </div>
+        <div class="feature-item">
+            <strong>تصدير البيانات</strong>
+            <span>صدّر أي جدول (شحنات، عملاء، فواتير) بصيغة CSV أو Excel.</span>
+        </div>
+        <div class="feature-item">
+            <strong>API للتكامل</strong>
+            <span>اربط وصالحي بمتجر إلكتروني (Shopify/WooCommerce) عن طريق API Keys.</span>
+        </div>
+        <div class="feature-item">
+            <strong>المساعد الذكي (AI)</strong>
+            <span>اسأل المساعد الذكي أي سؤال عن بياناتك وهو هيجاوبك فوراً.</span>
+        </div>
+    </div>
+</div>
+
+<!-- Chapter 8: Language & Theme -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل التامن</span>
+        <h3 class="chapter-title">اللغة والوضع الليلي</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <div class="card card-accent">
+        <div class="card-title">تبديل اللغة</div>
+        <p>في أعلى الصفحة هتلاقي زرار بيقول "ع" أو "EN". اضغط عليه واختار اللغة اللي تعجبك. المنصة كاملة هتتقلب لعربي أو إنجليزي، وحتى الاتجاه (يمين لشمال أو شمال ليمين) هيتغير تلقائياً. اختيارك بيتحفظ وبيفضل معاك في كل مرة تفتح فيها الموقع.</p>
+    </div>
+    <div class="card card-accent">
+        <div class="card-title">الوضع الليلي (Dark Mode)</div>
+        <p>جنب زرار اللغة هتلاقي زرار شكل قمر أو شمس. اضغط عليه عشان تبدّل بين الوضع النهاري والليلي. الوضع الليلي مريح للعين لما تشتغل بالليل، وبيحافظ على بطارية الموبايل.</p>
+    </div>
+</div>
+
+<!-- Chapter 9: Driver App -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل التاسع</span>
+        <h3 class="chapter-title">تطبيق المندوب</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        المنصة فيها صفحة مخصصة للمناديب على الموبايل على الرابط <strong>wsalhali.vercel.app/driver</strong>. الصفحة دي مصممة لتكون سهلة الاستخدام من الموبايل وهي في الشارع.
+    </p>
+    <div class="card card-success">
+        <div class="card-title">المندوب يقدر يعمل إيه؟</div>
+        <ul>
+            <li><strong>شوف شحناته:</strong> كل الشحنات المخصصة له في تبويبات (نشطة، تم توصيلها، فشلت)</li>
+            <li><strong>اتصل بالعميل:</strong> زرار مكالمة مباشرة بضغطة واحدة</li>
+            <li><strong>سجّل التوصيل:</strong> اضغط "تم التوصيل" لما توصل الشحنة وتاخد الفلوس</li>
+            <li><strong>سجّل الفشل:</strong> لو العميل مش موجود، اختار سبب الفشل وسجّله</li>
+            <li><strong>شوف مبلغ الـ COD:</strong> المبلغ اللي لازم تحصّله معروض بوضوح لكل شحنة</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Chapter 10: AI Chatbot -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل العاشر</span>
+        <h3 class="chapter-title">المساعد الذكي (AI)</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        في أسفل الشاشة هتلاقي أيقونة روبوت خضرا. اضغط عليها وهيفتحلك شات تقدر تسأله أي سؤال عن بياناتك. المساعد الذكي بيقدر يقرا كل بيانات الداشبورد ويرد عليك فوراً.
+    </p>
+    <div class="card card-info">
+        <div class="card-title">أسئلة ممكن تسألها</div>
+        <ul>
+            <li>"كام شحنة النهارده؟"</li>
+            <li>"إيه إجمالي الـ COD اللي اتحصّل؟"</li>
+            <li>"أظهرلي أهم العملاء"</li>
+            <li>"إيه الملخص المالي؟"</li>
+            <li>"أي المناديب عندهم أكتر توصيلات؟"</li>
+            <li>"كم شحنة مسدّدة؟"</li>
+        </ul>
+    </div>
+    <div class="tip">
+        <strong>تيب:</strong>
+        <p>المساعد بيرد باللغة اللي بتسأل بيها. اسأل بالعربي هيرد بالعربي، واسأل بالإنجليزي هيرد بالإنجليزي!</p>
+    </div>
+</div>
+
+<!-- Chapter 11: Notifications -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل الحداشر</span>
+        <h3 class="chapter-title">الإشعارات</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <p>
+        المنصة بتبعت إشعارات تلقائية للعملاء لما تحصل أحداث مهمة. الإشعارات بتظهر في الجرس اللي فوق، وكمان بتبعت إيميل وواتساب (لما تتفعل الخدمات).
+    </p>
+    <div class="card card-accent">
+        <div class="card-title">إشعارات الشحنات</div>
+        <ul>
+            <li>لما الشحنة تتسلم من التاجر</li>
+            <li>لما الشحنة تخرج للتوصيل</li>
+            <li>لما الشحنة تتوصّل بنجاح</li>
+            <li>لما الشونة ترجع (مرتجع)</li>
+            <li>لما محاولة التوصيل تفشل</li>
+        </ul>
+    </div>
+    <div class="card card-accent">
+        <div class="card-title">إشعارات مالية</div>
+        <ul>
+            <li>لما تسوية COD تتعتمد</li>
+            <li>لما تسوية COD تتدفع</li>
+            <li>لما طلب سداد يتوافق عليه أو يترفض</li>
+            <li>لما طلب سداد يتدفع</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Chapter 12: Quick Tips -->
+<div class="chapter">
+    <div class="chapter-header">
+        <span class="chapter-number">الفصل الاتناشر</span>
+        <h3 class="chapter-title">نصائح سريعة</h3>
+        <div class="chapter-divider"></div>
+    </div>
+    <div class="card card-warning">
+        <div class="card-title">عشان تستخدم المنصة صح</div>
+        <ul>
+            <li><strong>دخل كل يوم:</strong> راجع لوحة التحكم كل يوم عشان تتابع شحناتك والـ COD بتاعك.</li>
+            <li><strong>استخدم البحث:</strong> في كل صفحة فيه خانة بحث، استخدمها عشان تلاقي شحنة بالرقم أو اسم العميل بسرعة.</li>
+            <li><strong>صدّر البيانات:</strong> قبل ما تعمل أي تغييرات كبيرة، صدّر البيانات كملف Excel عشان يبقى عندك نسخة.</li>
+            <li><strong>اسأل المساعد الذكي:</strong> لو مش فاهم حاجة، اسأل الـ AI وهو هيساعدك.</li>
+            <li><strong>تتبع شحناتك:</strong> استخدم صفحة التتبع عشان تشوف كل خطوة في رحلة الشحنة.</li>
+            <li><strong>حدّث العناوين:</strong> احفظ عناوينك في صفحة "العناوين" عشان تختارها بسرعة لما تعمل شحنة جديدة.</li>
+            <li><strong>تابع نقاطك:</strong> كل شحنة تتسلم بتديك نقاط ولاء، جمعها عشان توصل لمستويات أعلى وتاخد خصومات.</li>
+        </ul>
+    </div>
+</div>
+
+</div>
+
+<!-- ===== ENDING PAGE ===== -->
+<div class="ending">
+    <h2>محتاج مساعدة؟</h2>
+    <p>لو عندك أي سؤال أو مش فاهم حاجة، اسأل المساعد الذكي اللي في المنصة، أو تواصل مع إدارة وصالحي.</p>
+    <div class="url">wsalhali.vercel.app</div>
+</div>
+
+</body>
+</html>
