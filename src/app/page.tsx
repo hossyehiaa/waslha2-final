@@ -73,7 +73,7 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center">
-            <img src="/wsalhali-logo-badge.png" alt="Wsalhali" className="h-10 w-auto object-contain" />
+            <img src="/wsalhali-logo-badge.png" alt="Wslahali" className="h-10 w-auto object-contain" />
           </a>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -575,7 +575,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <img src="/wsalhali-logo-light.png" alt="Wsalhali" className="h-10 w-auto mb-4 object-contain" />
+              <img src="/wsalhali-logo-light.png" alt="Wslahali" className="h-10 w-auto mb-4 object-contain" />
               <p className="text-sm text-muted-foreground">
                 {L.footer.description}
               </p>

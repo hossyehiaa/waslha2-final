@@ -1,11 +1,11 @@
-// Wsalhali Database Seed - Production-grade demo data
+// Wslahali Database Seed - Production-grade demo data
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const db = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Seeding Wsalhali database...')
+  console.log('🌱 Seeding Wslahali database...')
 
   // ============ Geography ============
   const cairo = await db.city.create({
@@ -72,7 +72,7 @@ async function main() {
       username: 'admin',
       email: 'admin@wsalhali.com',
       passwordHash: adminHash,
-      fullName: 'Wsalhali Administrator',
+      fullName: 'Wslahali Administrator',
       phone: '+20 100 000 0000',
       role: 'ADMIN',
       status: 'ACTIVE',
@@ -486,7 +486,7 @@ async function main() {
       data: {
         userId: u.id,
         type: 'SYSTEM',
-        title: 'Welcome to Wsalhali',
+        title: 'Welcome to Wslahali',
         message: 'Your premium shipping platform is ready to use.',
         isRead: false,
       },
@@ -515,7 +515,7 @@ async function main() {
 
   // ============ Settings ============
   const settings = [
-    { key: 'company_name', value: 'Wsalhali', category: 'GENERAL' },
+    { key: 'company_name', value: 'Wslahali', category: 'GENERAL' },
     { key: 'currency', value: 'EGP', category: 'GENERAL' },
     { key: 'timezone', value: 'Africa/Cairo', category: 'GENERAL' },
     { key: 'cod_fee_percent', value: '2', category: 'PRICING' },

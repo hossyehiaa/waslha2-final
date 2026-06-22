@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Wsalhali Logo component
+ * Wslahali Logo component
  * 
  * Variants:
  * - 'icon': Just the green icon mark (for small spaces, sidebars, etc.)
@@ -44,7 +44,7 @@ export function Logo({
   return (
     <img
       src={src}
-      alt="Wsalhali"
+      alt="Wslahali"
       className={cn(
         'w-auto object-contain',
         variant === 'badge' ? badgeSizes[size] : sizes[size],

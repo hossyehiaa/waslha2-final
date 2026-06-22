@@ -1,4 +1,4 @@
-// Comprehensive translation dictionary for Wsalhali
+// Comprehensive translation dictionary for Wslahali
 // Supports English (en) and Arabic (ar)
 
 export type Locale = 'en' | 'ar'
@@ -26,7 +26,7 @@ export const translations = {
   en: {
     // Common
     common: {
-      appName: 'Wsalhali',
+      appName: 'Wslahali',
       tagline: 'Premium Shipping Platform',
       loading: 'Loading...',
       save: 'Save',
@@ -136,7 +136,7 @@ export const translations = {
         badge: 'Now serving 27+ cities across Egypt',
         title1: 'Shipping that',
         title2: 'moves at light speed',
-        subtitle: 'Wsalhali is the premium COD shipping platform built for modern Egyptian commerce. Real-time tracking, instant settlements, and a dashboard that feels like the future.',
+        subtitle: 'Wslahali is the premium COD shipping platform built for modern Egyptian commerce. Real-time tracking, instant settlements, and a dashboard that feels like the future.',
         trackPlaceholder: 'Enter tracking number (e.g., WSL...)',
         track: 'Track',
         tracking: 'Tracking...',
@@ -155,7 +155,7 @@ export const translations = {
       services: {
         badge: 'Platform Features',
         title: 'Everything you need to ship at scale',
-        subtitle: 'From the first pickup to the final COD settlement, Wsalhali handles every step with precision and care.',
+        subtitle: 'From the first pickup to the final COD settlement, Wslahali handles every step with precision and care.',
         items: {
           smartShipment: {
             title: 'Smart Shipment Management',
@@ -237,7 +237,7 @@ export const translations = {
       },
       cta: {
         title: 'Ready to ship smarter?',
-        subtitle: 'Join thousands of Egyptian merchants who trust Wsalhali for their daily shipping and COD operations.',
+        subtitle: 'Join thousands of Egyptian merchants who trust Wslahali for their daily shipping and COD operations.',
         getStarted: 'Get started today',
         learnMore: 'Learn more',
       },
@@ -820,7 +820,7 @@ export const translations = {
 
   ar: {
     common: {
-      appName: 'وصالحي',
+      appName: 'وصلهالي',
       tagline: 'منصة الشحن المميزة',
       loading: 'جارٍ التحميل...',
       save: 'حفظ',
@@ -928,7 +928,7 @@ export const translations = {
         badge: 'نخدم الآن أكثر من 27 مدينة في مصر',
         title1: 'شحن',
         title2: 'بسرعة الضوء',
-        subtitle: 'وصالحي هي منصة الشحن المميزة للدفع عند الاستلام والمبنية للتجارة المصرية الحديثة. تتبع فوري، تسويات سريعة، ولوحة تحكم تبدو كالمستقبل.',
+        subtitle: 'وصلهالي هي منصة الشحن المميزة للدفع عند الاستلام والمبنية للتجارة المصرية الحديثة. تتبع فوري، تسويات سريعة، ولوحة تحكم تبدو كالمستقبل.',
         trackPlaceholder: 'أدخل رقم التتبع (مثال: WSL...)',
         track: 'تتبع',
         tracking: 'جارٍ التتبع...',
@@ -947,7 +947,7 @@ export const translations = {
       services: {
         badge: 'مزايا المنصة',
         title: 'كل ما تحتاجه للشحن على نطاق واسع',
-        subtitle: 'من أول استلام حتى تسوية الدفع عند الاستلام النهائية، وصالحي تتعامل مع كل خطوة بدقة وعناية.',
+        subtitle: 'من أول استلام حتى تسوية الدفع عند الاستلام النهائية، وصلهالي تتعامل مع كل خطوة بدقة وعناية.',
         items: {
           smartShipment: {
             title: 'إدارة الشحنات الذكية',
@@ -1029,7 +1029,7 @@ export const translations = {
       },
       cta: {
         title: 'جاهز للشحن بذكاء؟',
-        subtitle: 'انضم لآلاف التجار المصريين الذين يثقون في وصالحي لعمليات الشحن وتسويات الدفع عند الاستلام اليومية.',
+        subtitle: 'انضم لآلاف التجار المصريين الذين يثقون في وصلهالي لعمليات الشحن وتسويات الدفع عند الاستلام اليومية.',
         getStarted: 'ابدأ اليوم',
         learnMore: 'اعرف المزيد',
       },

@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
 
     const dashboardContext = await getDashboardContext(user)
 
-    const systemPrompt = `You are Wsalhali AI Assistant, an intelligent helper integrated into the Wsalhali shipping & logistics platform dashboard.
+    const systemPrompt = `You are Wslahali AI Assistant, an intelligent helper integrated into the Wslahali shipping & logistics platform dashboard.
 
 You have access to real-time dashboard data. Use this data to answer questions accurately:
 

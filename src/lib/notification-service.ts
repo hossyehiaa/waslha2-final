@@ -23,7 +23,7 @@ COD Amount: ${data.codAmount} EGP
 You can track your shipment anytime at: https://wsalhali.vercel.app/track?q=${data.trackingNumber}
 
 Best regards,
-Wsalhali Team`,
+Wslahali Team`,
     },
     SHIPMENT_OUT_FOR_DELIVERY: {
       subject: `Shipment ${data.trackingNumber} is out for delivery`,
@@ -38,7 +38,7 @@ COD Amount: ${data.codAmount} EGP
 Please ensure someone is available to receive the package.
 
 Best regards,
-Wsalhali Team`,
+Wslahali Team`,
     },
     SHIPMENT_DELIVERED: {
       subject: `Shipment ${data.trackingNumber} has been delivered`,
@@ -49,10 +49,10 @@ Your shipment ${data.trackingNumber} has been successfully delivered.
 Delivered to: ${data.recipientName}
 COD Collected: ${data.codAmount} EGP
 
-Thank you for using Wsalhali!
+Thank you for using Wslahali!
 
 Best regards,
-Wsalhali Team`,
+Wslahali Team`,
     },
     COD_SETTLEMENT_PAID: {
       subject: `COD Settlement ${data.reference} has been paid`,
@@ -67,7 +67,7 @@ Shipments Included: ${data.shipmentCount}
 The funds have been transferred to your registered account.
 
 Best regards,
-Wsalhali Team`,
+Wslahali Team`,
     },
     PAYOUT_APPROVED: {
       subject: `Your payout request has been approved`,
@@ -80,7 +80,7 @@ Method: ${data.method}
 You will receive the funds shortly.
 
 Best regards,
-Wsalhali Team`,
+Wslahali Team`,
     },
     PAYOUT_PAID: {
       subject: `Your payout of ${data.amount} EGP has been sent`,
@@ -88,32 +88,32 @@ Wsalhali Team`,
 
 Your payout of ${data.amount} EGP has been transferred to your account.
 
-Thank you for using Wsalhali!
+Thank you for using Wslahali!
 
 Best regards,
-Wsalhali Team`,
+Wslahali Team`,
     },
   }
 
-  return templates[type] || { subject: 'Wsalhali Notification', body: 'You have a new notification from Wsalhali.' }
+  return templates[type] || { subject: 'Wslahali Notification', body: 'You have a new notification from Wslahali.' }
 }
 
 // ============ SMS TEMPLATES ============
 
 export function getSMSTemplate(type: string, data: Record<string, any>): string {
   const templates: Record<string, string> = {
-    SHIPMENT_OUT_FOR_DELIVERY: `Wsalhali: Your shipment ${data.trackingNumber} is out for delivery today. Recipient: ${data.recipientName}. COD: ${data.codAmount} EGP. Track: wsalhali.vercel.app/track?q=${data.trackingNumber}`,
-    SHIPMENT_DELIVERED: `Wsalhali: Shipment ${data.trackingNumber} delivered successfully to ${data.recipientName}. COD ${data.codAmount} EGP collected. Thank you!`,
-    SHIPMENT_FAILED: `Wsalhali: Delivery attempt failed for ${data.trackingNumber}. Reason: ${data.reason}. We will retry tomorrow.`,
+    SHIPMENT_OUT_FOR_DELIVERY: `Wslahali: Your shipment ${data.trackingNumber} is out for delivery today. Recipient: ${data.recipientName}. COD: ${data.codAmount} EGP. Track: wsalhali.vercel.app/track?q=${data.trackingNumber}`,
+    SHIPMENT_DELIVERED: `Wslahali: Shipment ${data.trackingNumber} delivered successfully to ${data.recipientName}. COD ${data.codAmount} EGP collected. Thank you!`,
+    SHIPMENT_FAILED: `Wslahali: Delivery attempt failed for ${data.trackingNumber}. Reason: ${data.reason}. We will retry tomorrow.`,
   }
-  return templates[type] || `Wsalhali: Update on shipment ${data.trackingNumber}`
+  return templates[type] || `Wslahali: Update on shipment ${data.trackingNumber}`
 }
 
 // ============ WHATSAPP TEMPLATES ============
 
 export function getWhatsAppTemplate(type: string, data: Record<string, any>): string {
   const templates: Record<string, string> = {
-    SHIPMENT_OUT_FOR_DELIVERY: `🚚 *Wsalhali - Out for Delivery*
+    SHIPMENT_OUT_FOR_DELIVERY: `🚚 *Wslahali - Out for Delivery*
 
 Your shipment *${data.trackingNumber}* is out for delivery today!
 
@@ -124,15 +124,15 @@ Your shipment *${data.trackingNumber}* is out for delivery today!
 Please ensure someone is available to receive the package.
 
 Track: wsalhali.vercel.app/track?q=${data.trackingNumber}`,
-    SHIPMENT_DELIVERED: `✅ *Wsalhali - Delivered*
+    SHIPMENT_DELIVERED: `✅ *Wslahali - Delivered*
 
 Your shipment *${data.trackingNumber}* has been delivered successfully!
 
 📦 *Delivered to:* ${data.recipientName}
 💰 *COD Collected:* ${data.codAmount} EGP
 
-Thank you for using Wsalhali! 🙏`,
-    COD_SETTLEMENT_PAID: `💰 *Wsalhali - COD Settlement Paid*
+Thank you for using Wslahali! 🙏`,
+    COD_SETTLEMENT_PAID: `💰 *Wslahali - COD Settlement Paid*
 
 Your settlement *${data.reference}* has been paid!
 
@@ -142,7 +142,7 @@ Your settlement *${data.reference}* has been paid!
 
 The funds have been transferred to your account.`,
   }
-  return templates[type] || `*Wsalhali:* Update on ${data.trackingNumber}`
+  return templates[type] || `*Wslahali:* Update on ${data.trackingNumber}`
 }
 
 // ============ SEND FUNCTIONS ============
@@ -179,7 +179,7 @@ export async function sendEmail(to: string, subject: string, body: string) {
   // TODO: Integrate with Resend
   // const resend = new Resend(process.env.RESEND_API_KEY)
   // await resend.emails.send({
-  //   from: 'Wsalhali <noreply@wsalhali.com>',
+  //   from: 'Wslahali <noreply@wsalhali.com>',
   //   to,
   //   subject,
   //   text: body,

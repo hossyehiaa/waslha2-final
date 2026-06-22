@@ -1,4 +1,4 @@
-# Wsalhali — Premium Shipping & Logistics Platform
+# Wslahali — Premium Shipping & Logistics Platform
 
 A production-ready shipping and logistics platform built with Next.js 16, TypeScript, Prisma, and a premium modern UI/UX inspired by Linear / Stripe / Vercel.
 
@@ -134,7 +134,7 @@ scripts/
 
 ## 📄 License
 
-© 2026 Wsalhali. All rights reserved.
+© 2026 Wslahali. All rights reserved.
 
 ## 🔄 Continuous Deployment
 

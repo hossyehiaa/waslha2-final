@@ -105,7 +105,7 @@ export default function AdminPrintPage() {
     const labels = selectedShipments.map(s => `
       <div class="label">
         <div class="header">
-          <div class="logo">Wsalhali</div>
+          <div class="logo">Wslahali</div>
           <div class="tracking">${s.trackingNumber}</div>
         </div>
         <div class="barcode">${generateBarcode(s.trackingNumber)}</div>
@@ -127,7 +127,7 @@ export default function AdminPrintPage() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Shipping Labels - Wsalhali</title>
+          <title>Shipping Labels - Wslahali</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: Arial, sans-serif; padding: 20px; }

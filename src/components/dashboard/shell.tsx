@@ -143,7 +143,7 @@ export function DashboardShell({
     <div className="flex flex-col h-full">
       <div className="h-16 flex items-center px-5 border-b border-sidebar-border shrink-0">
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/wsalhali-logo-light.png" alt="Wsalhali" className="h-10 w-auto object-contain shrink-0" />
+          <img src="/wsalhali-logo-light.png" alt="Wslahali" className="h-10 w-auto object-contain shrink-0" />
         </Link>
       </div>
 

@@ -25,17 +25,17 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "Wsalhali — Premium Shipping & Logistics Platform",
-  description: "Wsalhali is a modern shipping and logistics platform offering COD delivery, real-time tracking, branch transfers, and complete fleet management.",
-  keywords: ["Wsalhali", "shipping", "logistics", "COD", "delivery", "courier", "Egypt"],
-  authors: [{ name: "Wsalhali" }],
+  title: "Wslahali — Premium Shipping & Logistics Platform",
+  description: "Wslahali is a modern shipping and logistics platform offering COD delivery, real-time tracking, branch transfers, and complete fleet management.",
+  keywords: ["Wslahali", "shipping", "logistics", "COD", "delivery", "courier", "Egypt"],
+  authors: [{ name: "Wslahali" }],
   icons: {
     icon: "/wsalhali-icon.png",
   },
   openGraph: {
-    title: "Wsalhali — Premium Shipping & Logistics",
+    title: "Wslahali — Premium Shipping & Logistics",
     description: "Modern COD shipping platform with real-time tracking and complete fleet management.",
-    siteName: "Wsalhali",
+    siteName: "Wslahali",
     type: "website",
   },
 };

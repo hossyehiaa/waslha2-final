@@ -26,7 +26,7 @@ export function AIChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I am Wsalhali AI Assistant. I can see your dashboard data in real-time. Ask me anything about shipments, clients, drivers, COD, finances, and more!\n\nTry one of the suggested questions below to get started.',
+      content: 'Hello! I am Wslahali AI Assistant. I can see your dashboard data in real-time. Ask me anything about shipments, clients, drivers, COD, finances, and more!\n\nTry one of the suggested questions below to get started.',
     },
   ])
   const [input, setInput] = useState('')
@@ -116,7 +116,7 @@ export function AIChatbot() {
                 </div>
                 <div>
                   <div className="font-semibold flex items-center gap-1.5">
-                    Wsalhali AI
+                    Wslahali AI
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
                   <div className="text-xs text-white/70 flex items-center gap-1">
