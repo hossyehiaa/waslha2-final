@@ -244,9 +244,12 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mt-6 text-center">
-            <a href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+          <div className="mt-6 text-center space-y-2">
+            <a href="/" className="block text-sm text-muted-foreground hover:text-primary transition-colors">
               {isRTL ? '→' : '←'} {L.backHome}
+            </a>
+            <a href="/guide" className="block text-sm text-primary hover:underline">
+              📖 دليل الاستخدام الشامل
             </a>
           </div>
         </motion.div>

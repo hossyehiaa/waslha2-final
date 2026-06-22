@@ -6,7 +6,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   Package, Truck, MapPin, Shield, Zap, BarChart3, Search,
   ArrowRight, CheckCircle2, Globe, Clock, Wallet, Users,
-  Star, ChevronDown, Menu, X, LogIn, TrendingUp,
+  Star, ChevronDown, Menu, X, LogIn, TrendingUp, BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -579,6 +579,10 @@ export default function HomePage() {
               <p className="text-sm text-muted-foreground">
                 {L.footer.description}
               </p>
+              <a href="/guide" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-3">
+                <BookOpen className="w-4 h-4" />
+                دليل الاستخدام الشامل
+              </a>
             </div>
             {[
               { title: L.footer.platform, links: [L.footer.features, L.footer.pricing, L.footer.coverage, L.footer.apiDocs] },
