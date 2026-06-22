@@ -54,6 +54,7 @@ export function AIChatbot() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: newMessages }),
+        signal: AbortSignal.timeout(55000), // 55s client timeout
       })
       const data = await res.json()
       if (!res.ok) {
@@ -62,7 +63,7 @@ export function AIChatbot() {
         setMessages([...newMessages, { role: 'assistant', content: data.reply }])
       }
     } catch {
-      setMessages([...newMessages, { role: 'assistant', content: 'Network error. Please try again.' }])
+      setMessages([...newMessages, { role: 'assistant', content: '⏳ جاري المحاولة مرة أخرى... السؤال البسيط يأخذ وقتاً أقل.' }])
     } finally {
       setLoading(false)
     }
