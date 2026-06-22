@@ -1,39 +1,115 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapPinned } from 'lucide-react'
+import { MapPinned, Plus, Edit, Trash2, MoreVertical, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCurrency, formatTimeAgo } from '@/lib/format'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { ConfirmDialog } from '@/components/dashboard/confirm-dialog'
+import { toast } from 'sonner'
+
+type Entity = Record<string, any>
 
 export default function Page() {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<Entity[]>([])
   const [loading, setLoading] = useState(true)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editing, setEditing] = useState<Entity | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Entity | null>(null)
+  const [form, setForm] = useState<Record<string, any>>({})
+  const [saving, setSaving] = useState(false)
+  const [extraData, setExtraData] = useState<Record<string, any[]>>({})
 
-  useEffect(() => {
-    fetch('/api/admin/setup?resource=areas')
-      .then(r => r.json())
-      .then(d => {
-        const key = Object.keys(d).find(k => Array.isArray(d[k]))
-        setData(key ? d[key] : [])
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/areas')
+      const d = await res.json()
+      setData(d['zones'] || d['zones'] || [])
+      const cityRes = await fetch('/api/admin/cities'); const cityD = await cityRes.json(); setExtraData({ cities: cityD.cities || [] });
+    } catch { toast.error('فشل تحميل البيانات') }
+    finally { setLoading(false) }
+  }
 
-  function getValue(obj: any, path: string) {
-    return path.split('.').reduce((o, k) => o?.[k], obj)
+  useEffect(() => { load() }, [])
+
+  function openCreate() {
+    setEditing(null)
+    const initial: Record<string, any> = {}
+    initial['name'] = ''
+    initial['code'] = ''
+    initial['cityId'] = ''
+    initial['status'] = "ACTIVE"
+    setForm(initial)
+    setModalOpen(true)
+  }
+
+  function openEdit(item: Entity) {
+    setEditing(item)
+    const initial: Record<string, any> = {}
+    initial['name'] = item['name'] || ''
+    initial['code'] = item['code'] || ''
+    initial['cityId'] = item['cityId'] || ''
+    initial['status'] = item['status'] || ''
+    setForm(initial)
+    setModalOpen(true)
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const isEdit = !!editing
+      const url = isEdit ? '/api/admin/areas' : '/api/admin/areas'
+      const method = isEdit ? 'PATCH' : 'POST'
+      const body = isEdit ? { id: editing.id, ...form } : form
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const d = await res.json()
+      if (!res.ok) { toast.error(d.error || 'فشل الحفظ'); return }
+      toast.success(isEdit ? 'تم التعديل بنجاح' : 'تم الإضافة بنجاح')
+      setModalOpen(false)
+      load()
+    } catch { toast.error('خطأ في الشبكة') }
+    finally { setSaving(false) }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    try {
+      const res = await fetch('/api/admin/areas?id=' + deleteTarget.id, { method: 'DELETE' })
+      if (!res.ok) { const d = await res.json(); toast.error(d.error || 'فشل الحذف'); return }
+      toast.success('تم الحذف بنجاح')
+      setDeleteTarget(null)
+      load()
+    } catch { toast.error('خطأ في الشبكة') }
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="المناطق" subtitle="إدارة المناطق داخل المدن" icon={MapPinned} />
+      <PageHeader
+        title="المناطق"
+        subtitle="إدارة المناطق داخل المدن"
+        icon={MapPinned}
+        actions={
+          <Button className="shadow-premium" onClick={openCreate}>
+            <Plus className="w-4 h-4 mr-2" /> إضافة جديد
+          </Button>
+        }
+      />
+
       <Card className="overflow-hidden">
         {loading ? (
-          <div className="p-4 space-y-3">
-            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
-          </div>
+          <div className="p-4 space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
         ) : data.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground">
             <MapPinned className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -48,15 +124,27 @@ export default function Page() {
                   <th className="text-right py-3 px-4 font-medium">الكود</th>
                   <th className="text-right py-3 px-4 font-medium">المدينة</th>
                   <th className="text-right py-3 px-4 font-medium">الحالة</th>
+                  <th className="text-right py-3 px-4 font-medium">خيارات</th>
                 </tr>
               </thead>
               <tbody>
-                {data.map((row, i) => (
-                  <tr key={i} className="border-b last:border-0 hover:bg-accent/30 transition-colors">
-                    <td className="py-3 px-4">{getValue(row, 'name') || '-'}</td>
-                    <td className="py-3 px-4">{getValue(row, 'code') || '-'}</td>
-                    <td className="py-3 px-4">{getValue(row, 'city.name') || '-'}</td>
-                    <td className="py-3 px-4"><span className="text-xs px-2 py-1 rounded bg-muted">{String(getValue(row, 'status') ?? '-')}</span></td>
+                {data.map((item, i) => (
+                  <tr key={item.id || i} className="border-b last:border-0 hover:bg-accent/30 transition-colors">
+                    <td className="py-3 px-4">{item.name || '-'}</td>
+                    <td className="py-3 px-4">{item.code || '-'}</td>
+                    <td className="py-3 px-4">{item.cityName || '-'}</td>
+                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (item.status === true || item.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>{item.status === true || item.status === 'ACTIVE' ? 'نشط' : 'موقوف'}</span></td>
+                    <td className="py-3 px-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEdit(item)}><Edit className="w-4 h-4 mr-2" /> تعديل</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(item)}><Trash2 className="w-4 h-4 mr-2" /> حذف</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -64,6 +152,73 @@ export default function Page() {
           </div>
         )}
       </Card>
+
+      {/* Create/Edit Modal */}
+      <AnimatePresence>
+        {modalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              className="bg-card rounded-2xl max-w-lg w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold">{editing ? 'تعديل' : 'إضافة جديد'}</h2>
+                <Button variant="ghost" size="icon" onClick={() => setModalOpen(false)}><X className="w-5 h-5" /></Button>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>اسم المنطقة</Label>
+                  <Input value={form['name'] || ''} onChange={(e) => setForm({ ...form, 'name': e.target.value })} placeholder="مدينة نصر" />
+                </div>
+                <div className="space-y-2">
+                  <Label>الكود</Label>
+                  <Input value={form['code'] || ''} onChange={(e) => setForm({ ...form, 'code': e.target.value })} placeholder="CAI-NSR" />
+                </div>
+                <div className="space-y-2">
+                  <Label>المدينة</Label>
+                  <Select value={form['cityId'] || ''} onValueChange={(v) => setForm({ ...form, 'cityId': v })}>
+                    <SelectTrigger><SelectValue placeholder="المدينة" /></SelectTrigger>
+                    <SelectContent>
+                      
+                      {extraData.cities?.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>الحالة</Label>
+                  <Select value={form['status'] || ''} onValueChange={(v) => setForm({ ...form, 'status': v })}>
+                    <SelectTrigger><SelectValue placeholder="الحالة" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">نشط</SelectItem>
+                      <SelectItem value="INACTIVE">موقوف</SelectItem>
+                      
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setModalOpen(false)}>إلغاء</Button>
+                <Button onClick={handleSave} disabled={saving}>{saving ? 'جاري الحفظ...' : 'حفظ'}</Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+        title="تأكيد الحذف"
+        description={'هل أنت متأكد من حذف ' + (deleteTarget?.name || '') + '؟'}
+        onConfirm={handleDelete}
+        destructive
+        confirmLabel="حذف"
+      />
     </div>
   )
 }
