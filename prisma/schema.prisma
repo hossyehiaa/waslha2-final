@@ -155,6 +155,7 @@ model Branch {
   shipmentsTo   Shipment[]     @relation("shipmentToBranch")
   transfersFrom BranchTransfer[] @relation("transferFrom")
   transfersTo   BranchTransfer[] @relation("transferTo")
+  accounts      Account[]
 }
 
 // ============ WAREHOUSES ============
@@ -516,6 +517,82 @@ model SystemSetting {
   category    String   @default("GENERAL")
   description String?
   updatedAt   DateTime @updatedAt
+}
+
+// ============ PERMISSION TEMPLATES ============
+model PermissionTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String   // JSON array of permission keys
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// ============ CANCEL/POSTPONE REASONS ============
+model CancelReason {
+  id          String   @id @default(cuid())
+  reason      String   @unique
+  type        String   @default("CANCEL") // CANCEL, POSTPONE
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ============ EXPENSE TYPES ============
+model ExpenseType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ============ ACCOUNTS (Financial) ============
+model Account {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String   @default("BANK") // BANK, CASH, WALLET
+  balance     Float    @default(0)
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transfersFrom AccountTransfer[] @relation("transferFrom")
+  transfersTo   AccountTransfer[] @relation("transferTo")
+  cashOrders    CashOrder[]
+}
+
+// ============ CASH ORDERS (صرف/قبض) ============
+model CashOrder {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  type        String   // CASH_OUT, CASH_IN
+  amount      Float
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id])
+  reason      String
+  recipient   String
+  approvedBy  String?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ ACCOUNT TRANSFERS ============
+model AccountTransfer {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  fromAccountId String
+  fromAccount   Account @relation("transferFrom", fields: [fromAccountId], references: [id])
+  toAccountId   String
+  toAccount     Account @relation("transferTo", fields: [toAccountId], references: [id])
+  amount      Float
+  reason      String?
+  status      String   @default("COMPLETED")
+  createdAt   DateTime @default(now())
 }
 
 model Session {

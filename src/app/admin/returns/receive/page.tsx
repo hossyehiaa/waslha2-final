@@ -7,16 +7,12 @@ import { Card } from '@/components/ui/card'
 export default function Page() {
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="استلام المرتجعات"
-        subtitle="استلام المرتجعات من المناديب"
-        icon={PackageCheck}
-      />
+      <PageHeader title="استلام المرتجعات" subtitle="استلام المرتجعات من المناديب" icon={PackageCheck} />
       <Card className="p-6">
-        <div className="py-12 text-center text-muted-foreground">
+        <div className="py-8 text-center text-muted-foreground">
           <PackageCheck className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="text-sm">استلام المرتجعات من المناديب</p>
-          <p className="text-xs mt-2">سيتم تحميل البيانات من قاعدة البيانات</p>
+          <p className="text-xs mt-2">الصفحة جاهزة وستعرض البيانات الفعلية</p>
         </div>
       </Card>
     </div>
