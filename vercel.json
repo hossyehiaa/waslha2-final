@@ -9,11 +9,5 @@
     "src/app/api/internal/webhooks/process/route.ts": {
       "maxDuration": 60
     }
-  },
-  "crons": [
-    {
-      "path": "/api/internal/webhooks/process",
-      "schedule": "* * * * *"
-    }
-  ]
+  }
 }
