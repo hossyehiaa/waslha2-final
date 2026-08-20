@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth-helpers'
 import { sendShipmentNotification } from '@/lib/notification-service'
+import { dispatchWebhookEvent } from '@/lib/webhooks'
+import type { WebhookEvent } from '@/lib/partner-api'
+import { updateShipmentStatus } from '@/lib/partner-api'
 
 export const runtime = 'nodejs'
 
@@ -49,48 +52,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Clients cannot change shipment status' }, { status: 403 })
     }
 
-    // Validate transition
-    const allowed = VALID_TRANSITIONS[shipment.status] || []
-    if (status !== shipment.status && !allowed.includes(status)) {
-      return NextResponse.json({
-        error: `Cannot transition from ${shipment.status} to ${status}. Allowed: ${allowed.join(', ') || 'none (terminal state)'}`
-      }, { status: 400 })
-    }
-
-    // Add to status history
-    await db.shipmentStatus.create({
-      data: {
-        shipmentId: id,
-        status,
-        note: note || `Status updated by ${user.fullName}`,
-        location: body.location || null,
-        createdBy: user.id,
-      },
-    })
-
-    // Update shipment
-    const updateData: any = { status }
-    if (driverId !== undefined) updateData.driverId = driverId || null
-    if (failureReason) updateData.failureReason = failureReason
-
-    if (status === 'PICKED_UP' && !shipment.pickupAt) {
-      updateData.pickupAt = new Date()
-    }
-    if (status === 'DELIVERED') {
-      updateData.deliveredAt = new Date()
-      // COD is collected when delivered (if it was a COD shipment)
-      if (shipment.codAmount > 0 && shipment.paymentStatus === 'PENDING') {
-        updateData.paymentStatus = 'COLLECTED'
-        updateData.codCollectedAt = new Date()
-      }
-    }
-    if (status === 'RETURNED') {
-      // Add to client's pending returns count
-    }
-
-    const updated = await db.shipment.update({
-      where: { id },
-      data: updateData,
+    const { shipment: updated } = await updateShipmentStatus({
+      shipmentId: id,
+      status,
+      note: note || `Status updated by ${user.fullName}`,
+      location: body.location || null,
+      changedBy: user.id,
+      driverId,
+      failureReason,
     })
 
     // If delivered with COD, update client balances
@@ -169,6 +138,20 @@ export async function PATCH(
       } catch (e) {
         console.error('Notification send error:', e)
       }
+    }
+
+    const webhookData = {
+      shipmentId: shipment.id,
+      trackingNumber: shipment.trackingNumber,
+      status,
+      previousStatus: shipment.status,
+      codAmount: shipment.codAmount,
+      updatedAt: updated.updatedAt.toISOString(),
+    }
+    if (status !== shipment.status) {
+      void dispatchWebhookEvent(shipment.clientId, 'shipment.status_changed', webhookData).catch((error) => console.error('Shipment status webhook error:', error))
+      const webhookEvent = `shipment.${status.toLowerCase()}` as WebhookEvent
+      if (webhookEvent !== 'shipment.status_changed') void dispatchWebhookEvent(shipment.clientId, webhookEvent, webhookData).catch((error) => console.error('Shipment status webhook error:', error))
     }
 
     // Award loyalty points on delivery

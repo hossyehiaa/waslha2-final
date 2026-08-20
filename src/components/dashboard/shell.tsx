@@ -5,11 +5,11 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, Users, Truck, Package, MapPin, Wallet,
+  LayoutDashboard, Users, Truck, Package, MapPin, Wallet, Activity,
   FileText, Settings, Bell, Search, LogOut, Menu, X, ChevronDown,
   UserCog, PackageCheck, ArrowLeftRight, Receipt, BarChart3,
   Star, User, Key, Shield, Wrench, ClipboardList, RotateCcw,
-  RefreshCw, TrendingDown,
+  RefreshCw, TrendingDown, Webhook,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -188,6 +188,7 @@ function buildAdminNav(dict: Dict): NavItem[] {
     { label: 'مطالبات التأمين', href: '/admin/insurance-claims', icon: Shield },
     { label: 'استيراد جماعي', href: '/admin/bulk-import', icon: PackageCheck },
     { label: 'API Keys', href: '/admin/api-keys', icon: Key },
+    { label: 'Integration Logs', href: '/admin/integration-logs', icon: Activity },
     { label: 'الإشعارات', href: '/admin/notifications', icon: Bell },
     { label: 'سجل العمليات', href: '/admin/audit-logs', icon: FileText },
     { label: 'الإعدادات', href: '/admin/settings', icon: Settings },
@@ -206,6 +207,7 @@ function buildClientNav(dict: Dict): NavItem[] {
     { label: 'Loyalty', href: '/dashboard/loyalty', icon: Star },
     { label: 'Insurance Claims', href: '/dashboard/insurance-claims', icon: Shield },
     { label: 'API Keys', href: '/dashboard/api-keys', icon: Key },
+    { label: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },
     { label: dict.nav.addresses, href: '/dashboard/addresses', icon: MapPin },
     { label: dict.nav.notifications, href: '/dashboard/notifications', icon: Bell },
     { label: dict.nav.profile, href: '/dashboard/profile', icon: User },

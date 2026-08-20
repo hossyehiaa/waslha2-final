@@ -12,7 +12,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "seed": "bun run scripts/seed.ts"
+    "seed": "bun run scripts/seed.ts",
+    "partner:key": "node scripts/generate-demo-api-key.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

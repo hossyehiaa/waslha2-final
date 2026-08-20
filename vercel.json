@@ -5,6 +5,15 @@
     },
     "src/app/api/admin/bulk-import/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/internal/webhooks/process/route.ts": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/internal/webhooks/process",
+      "schedule": "* * * * *"
+    }
+  ]
 }

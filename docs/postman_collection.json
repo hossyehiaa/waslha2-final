@@ -1,0 +1,62 @@
+{
+  "info": {
+    "name": "Wslahali Partner API",
+    "_postman_id": "wslahali-partner-api-v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://wsalhali.vercel.app/api/integrations/v1" },
+    { "key": "apiKey", "value": "wsl_replace_me" },
+    { "key": "trackingNumber", "value": "WSL_REPLACE_ME" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{apiKey}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Cities",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/cities" }
+    },
+    {
+      "name": "Create shipment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "postman-order-001" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender\": {\"name\": \"Brand Warehouse\", \"phone\": \"01000000000\", \"address\": \"Nasr City\", \"cityCode\": \"CAI\"},\n  \"recipient\": {\"name\": \"Ahmed Ali\", \"phone\": \"01111111111\", \"address\": \"Smouha\", \"cityCode\": \"ALX\"},\n  \"serviceType\": \"STANDARD\",\n  \"weight\": 1,\n  \"pieces\": 1,\n  \"codAmount\": 750\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/shipments"
+      }
+    },
+    {
+      "name": "List shipments",
+      "request": { "method": "GET", "url": "{{baseUrl}}/shipments?page=1&limit=50" }
+    },
+    {
+      "name": "Track shipment",
+      "request": { "method": "GET", "url": "{{baseUrl}}/shipments/{{trackingNumber}}" }
+    },
+    {
+      "name": "Bulk create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "postman-bulk-001" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"shipments\": []}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/shipments/bulk"
+      }
+    },
+    {
+      "name": "Bulk track",
+      "request": { "method": "GET", "url": "{{baseUrl}}/shipments/bulk-track?trackingNumbers={{trackingNumber}}" }
+    }
+  ]
+}

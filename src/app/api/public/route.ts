@@ -1,131 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { generateTrackingNumber } from '@/lib/auth-helpers'
+import { dispatchWebhookEvent } from '@/lib/webhooks'
+import {
+  authenticatePartnerRequest,
+  createPartnerShipment,
+  getIdempotentResponse,
+  jsonError,
+  logPartnerRequest,
+  requestHash,
+  requestId,
+  shipmentInputSchema,
+  storeIdempotentResponse,
+} from '@/lib/partner-api'
 
 export const runtime = 'nodejs'
+const DEPRECATION_HEADERS = { 'X-Deprecated': 'Use /api/integrations/v1 instead' }
 
-// Authenticate via API key
-async function authenticate(req: NextRequest) {
-  const authHeader = req.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) return null
-
-  const key = authHeader.substring(7)
-  const apiKey = await db.apiKey.findUnique({
-    where: { key, isActive: true },
-    include: { client: true },
-  })
-  if (!apiKey) return null
-
-  // Update last used
-  await db.apiKey.update({
-    where: { id: apiKey.id },
-    data: { lastUsedAt: new Date() },
-  })
-
-  return apiKey
+function legacyResponse(body: unknown, status: number, requestIdValue: string) {
+  return NextResponse.json(body, { status, headers: { ...DEPRECATION_HEADERS, 'X-Request-ID': requestIdValue } })
 }
 
-// GET - list shipments for the authenticated client
 export async function GET(req: NextRequest) {
+  const path = new URL(req.url).pathname
+  let auth: Awaited<ReturnType<typeof authenticatePartnerRequest>> | null = null
   try {
-    const apiKey = await authenticate(req)
-    if (!apiKey) return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
-
-    const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status')
-    const limit = Math.min(100, Number(searchParams.get('limit') || 50))
-    const page = Number(searchParams.get('page') || 1)
-    const skip = (page - 1) * limit
-
-    const where: any = { clientId: apiKey.clientId }
+    auth = await authenticatePartnerRequest(req, 'shipments_read')
+    const params = new URL(req.url).searchParams
+    const page = Math.max(1, Number(params.get('page') || 1))
+    const limit = Math.min(100, Math.max(1, Number(params.get('limit') || 50)))
+    const status = params.get('status')?.toUpperCase()
+    const where: any = { clientId: auth.clientId }
     if (status) where.status = status
-
     const [shipments, total] = await Promise.all([
-      db.shipment.findMany({
-        where,
-        include: {
-          senderCity: { select: { name: true } },
-          recipientCity: { select: { name: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip,
-      }),
+      db.shipment.findMany({ where, include: { senderCity: { select: { name: true, code: true } }, recipientCity: { select: { name: true, code: true } } }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
       db.shipment.count({ where }),
     ])
-
-    return NextResponse.json({
-      success: true,
-      data: shipments,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    })
-  } catch (e: any) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    const response = legacyResponse({ success: true, data: shipments, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } }, 200, auth.requestId)
+    await logPartnerRequest({ clientId: auth.clientId, apiKeyId: auth.apiKey.id, method: req.method, path, query: new URL(req.url).search, statusCode: 200, requestId: auth.requestId })
+    return response
+  } catch (error) {
+    const response = jsonError(error, auth?.requestId || requestId(req))
+    response.headers.set('X-Deprecated', DEPRECATION_HEADERS['X-Deprecated'])
+    await logPartnerRequest({ clientId: auth?.clientId, apiKeyId: auth?.apiKey.id, method: req.method, path, query: new URL(req.url).search, statusCode: response.status, requestId: auth?.requestId || requestId(req), errorMessage: error instanceof Error ? error.message : 'request failed' })
+    return response
   }
 }
 
-// POST - create a new shipment
 export async function POST(req: NextRequest) {
+  const path = new URL(req.url).pathname
+  let auth: Awaited<ReturnType<typeof authenticatePartnerRequest>> | null = null
   try {
-    const apiKey = await authenticate(req)
-    if (!apiKey) return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
-
-    // Check scopes
-    if (!apiKey.scopes.includes('shipments:write')) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
-    }
-
-    const body = await req.json()
-
-    // Validate required fields
-    const required = ['senderName', 'senderPhone', 'senderCityId', 'recipientName', 'recipientPhone', 'recipientAddress', 'recipientCityId']
-    for (const f of required) {
-      if (!body[f]) return NextResponse.json({ error: `Missing field: ${f}` }, { status: 400 })
-    }
-
-    const trackingNumber = generateTrackingNumber()
-    const codAmount = Number(body.codAmount) || 0
-    const shippingCost = Number(body.shippingCost) || 25
-    const codFee = Math.round(codAmount * 0.02 * 100) / 100
-
-    const shipment = await db.shipment.create({
-      data: {
-        trackingNumber,
-        clientId: apiKey.clientId,
-        createdById: apiKey.client.userId,
-        senderName: body.senderName,
-        senderPhone: body.senderPhone,
-        senderAddress: body.senderAddress || '',
-        senderCityId: body.senderCityId,
-        recipientName: body.recipientName,
-        recipientPhone: body.recipientPhone,
-        recipientAddress: body.recipientAddress,
-        recipientCityId: body.recipientCityId,
-        type: body.type || 'DELIVERY',
-        serviceType: body.serviceType || 'STANDARD',
-        weight: Number(body.weight) || 0.5,
-        pieces: Number(body.pieces) || 1,
-        description: body.description || null,
-        shippingCost,
-        codAmount,
-        codFee,
-        totalCost: shippingCost + codFee,
-        status: 'PENDING',
-        paymentStatus: 'PENDING',
-      },
+    auth = await authenticatePartnerRequest(req, 'shipments_write')
+    const raw = await req.json()
+    const senderCityId = raw.senderCityId || raw.sender?.cityId
+    const recipientCityId = raw.recipientCityId || raw.recipient?.cityId
+    const [senderCity, recipientCity] = await Promise.all([
+      db.city.findUnique({ where: { id: senderCityId } }),
+      db.city.findUnique({ where: { id: recipientCityId } }),
+    ])
+    if (!senderCity || !recipientCity) return legacyResponse({ error: 'Invalid city id' }, 400, auth.requestId)
+    const input = shipmentInputSchema.safeParse({
+      sender: { name: raw.senderName || raw.sender?.name, phone: raw.senderPhone || raw.sender?.phone, address: raw.senderAddress || raw.sender?.address, cityCode: senderCity.code },
+      recipient: { name: raw.recipientName || raw.recipient?.name, phone: raw.recipientPhone || raw.recipient?.phone, address: raw.recipientAddress || raw.recipient?.address, cityCode: recipientCity.code },
+      serviceType: raw.serviceType || 'STANDARD',
+      priority: raw.priority || 'NORMAL',
+      weight: raw.weight || 0.5,
+      pieces: raw.pieces || 1,
+      description: raw.description || null,
+      codAmount: raw.codAmount || 0,
     })
+    if (!input.success) return legacyResponse({ error: 'Invalid shipment data', details: input.error.flatten() }, 400, auth.requestId)
+    if (Object.prototype.hasOwnProperty.call(raw, 'shippingCost')) return legacyResponse({ error: 'shippingCost is calculated server-side' }, 400, auth.requestId)
 
-    // Update client counters
-    await db.client.update({
-      where: { id: apiKey.clientId },
-      data: { totalShipments: { increment: 1 }, activeShipments: { increment: 1 } },
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: { id: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status },
-    }, { status: 201 })
-  } catch (e: any) {
-    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
+    const hash = requestHash(input.data)
+    const idempotencyKey = req.headers.get('idempotency-key')
+    const existing = await getIdempotentResponse(idempotencyKey, auth.clientId, path, hash)
+    if (existing) return legacyResponse(existing.body, existing.status, auth.requestId)
+    const { shipment } = await createPartnerShipment(input.data, auth.clientId, auth.apiKey.client.userId)
+    const responseBody = { success: true, data: { id: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, totalCost: shipment.totalCost } }
+    if (idempotencyKey) await storeIdempotentResponse(idempotencyKey, auth.clientId, path, hash, 201, responseBody)
+    await logPartnerRequest({ clientId: auth.clientId, apiKeyId: auth.apiKey.id, method: req.method, path, query: new URL(req.url).search, statusCode: 201, requestId: auth.requestId })
+    void dispatchWebhookEvent(auth.clientId, 'shipment.created', { shipmentId: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, codAmount: shipment.codAmount, totalCost: shipment.totalCost, updatedAt: shipment.updatedAt.toISOString() }).catch((error) => console.error('legacy shipment webhook failed', error))
+    return legacyResponse(responseBody, 201, auth.requestId)
+  } catch (error) {
+    const response = jsonError(error, auth?.requestId || requestId(req))
+    response.headers.set('X-Deprecated', DEPRECATION_HEADERS['X-Deprecated'])
+    await logPartnerRequest({ clientId: auth?.clientId, apiKeyId: auth?.apiKey.id, method: req.method, path, query: new URL(req.url).search, statusCode: response.status, requestId: auth?.requestId || requestId(req), errorMessage: error instanceof Error ? error.message : 'request failed' })
+    return response
   }
 }

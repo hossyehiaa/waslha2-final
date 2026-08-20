@@ -1,0 +1,253 @@
+openapi: 3.1.0
+info:
+  title: Wslahali Partner API
+  version: 1.0.0
+  description: Versioned shipping integration API for brands and merchants.
+servers:
+  - url: https://wsalhali.vercel.app/api/integrations/v1
+security:
+  - bearerAuth: []
+  - apiKeyHeader: []
+paths:
+  /cities:
+    get:
+      summary: List active cities
+      security:
+        - bearerAuth: [shipments:read]
+        - apiKeyHeader: [shipments:read]
+      responses:
+        '200':
+          description: Active cities
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/City'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /shipments:
+    get:
+      summary: List shipments owned by the authenticated client
+      parameters:
+        - { $ref: '#/components/parameters/status' }
+        - { $ref: '#/components/parameters/search' }
+        - { $ref: '#/components/parameters/page' }
+        - { $ref: '#/components/parameters/limit' }
+      responses:
+        '200':
+          description: Paginated shipments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShipments'
+    post:
+      summary: Create a shipment
+      security:
+        - bearerAuth: [shipments:write]
+        - apiKeyHeader: [shipments:write]
+      parameters:
+        - { $ref: '#/components/parameters/idempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateShipment' }
+      responses:
+        '201':
+          description: Shipment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CreatedShipment' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /shipments/bulk:
+    post:
+      summary: Create up to 100 shipments
+      security:
+        - bearerAuth: [shipments:write]
+        - apiKeyHeader: [shipments:write]
+      parameters:
+        - { $ref: '#/components/parameters/idempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: array
+                  maxItems: 100
+                  items: { $ref: '#/components/schemas/CreateShipment' }
+                - type: object
+                  required: [shipments]
+                  properties:
+                    shipments:
+                      type: array
+                      maxItems: 100
+                      items: { $ref: '#/components/schemas/CreateShipment' }
+      responses:
+        '200': { description: Row-level results }
+  /shipments/bulk-track:
+    get:
+      summary: Track up to 100 shipments
+      parameters:
+        - name: trackingNumbers
+          in: query
+          required: true
+          schema: { type: string, example: WSL1,WSL2 }
+      responses:
+        '200': { description: Bulk tracking result }
+  /shipments/{trackingNumber}:
+    get:
+      summary: Track one shipment
+      parameters:
+        - name: trackingNumber
+          in: path
+          required: true
+          schema: { type: string, pattern: '^WSL' }
+      responses:
+        '200':
+          description: Shipment details and status history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ShipmentDetails' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: WSL API key
+    apiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  parameters:
+    idempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, maxLength: 200 }
+    status:
+      name: status
+      in: query
+      schema: { type: string }
+    search:
+      name: search
+      in: query
+      schema: { type: string }
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+  schemas:
+    City:
+      type: object
+      required: [id, code, name]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        name: { type: string }
+        governorate: { type: string, nullable: true }
+    CreateShipment:
+      type: object
+      required: [sender, recipient, serviceType, weight]
+      properties:
+        sender: { $ref: '#/components/schemas/Party' }
+        recipient: { $ref: '#/components/schemas/Party' }
+        serviceType: { type: string, enum: [STANDARD, EXPRESS, SAME_DAY] }
+        priority: { type: string, enum: [LOW, NORMAL, HIGH, URGENT], default: NORMAL }
+        weight: { type: number, exclusiveMinimum: 0 }
+        pieces: { type: integer, minimum: 1, default: 1 }
+        description: { type: string, nullable: true }
+        codAmount: { type: number, minimum: 0, default: 0 }
+    Party:
+      type: object
+      required: [name, phone, address, cityCode]
+      properties:
+        name: { type: string }
+        phone: { type: string }
+        address: { type: string }
+        cityCode: { type: string }
+    CreatedShipment:
+      type: object
+      properties:
+        id: { type: string }
+        trackingNumber: { type: string }
+        status: { type: string, example: PENDING }
+        totalCost: { type: number }
+        createdAt: { type: string, format: date-time }
+    ShipmentDetails:
+      allOf:
+        - $ref: '#/components/schemas/CreatedShipment'
+        - type: object
+          properties:
+            paymentStatus: { type: string }
+            sender: { $ref: '#/components/schemas/Party' }
+            recipient: { $ref: '#/components/schemas/Party' }
+            statusHistory:
+              type: array
+              items:
+                type: object
+                properties:
+                  status: { type: string }
+                  note: { type: string, nullable: true }
+                  location: { type: string, nullable: true }
+                  createdAt: { type: string, format: date-time }
+    PaginatedShipments:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ShipmentDetails' } }
+        meta:
+          type: object
+          properties:
+            total: { type: integer }
+            page: { type: integer }
+            limit: { type: integer }
+            totalPages: { type: integer }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: {}
+            requestId: { type: string }
+  responses:
+    BadRequest:
+      description: Invalid request
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: Invalid or missing API key
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: Missing scope
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: Shipment not found for this client
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Conflict:
+      description: Idempotency conflict
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    RateLimited:
+      description: Rate limit exceeded
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }

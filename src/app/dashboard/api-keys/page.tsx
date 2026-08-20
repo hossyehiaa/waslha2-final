@@ -103,11 +103,11 @@ export default function AdminApiKeysPage() {
               Use this base URL with your API key in the Authorization header:
             </p>
             <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 font-mono text-xs">
-              <code className="flex-1">https://wsalhali.vercel.app/api/public</code>
-              <Badge variant="secondary">POST/GET</Badge>
+              <code className="flex-1">https://wsalhali.vercel.app/api/integrations/v1</code>
+              <Badge variant="secondary">v1</Badge>
             </div>
             <div className="mt-2 text-xs text-muted-foreground">
-              Header: <code className="px-1 py-0.5 rounded bg-muted">Authorization: Bearer wsl_your_api_key</code>
+              Headers: <code className="px-1 py-0.5 rounded bg-muted">Authorization: Bearer wsl_... or X-API-Key: wsl_...</code>
             </div>
           </div>
         </div>

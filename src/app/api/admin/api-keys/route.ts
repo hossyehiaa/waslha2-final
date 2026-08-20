@@ -1,95 +1,68 @@
+import bcrypt from 'bcryptjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth-helpers'
-import crypto from 'crypto'
+import { generatePartnerApiKey, keyPrefix, parseScopes, scopeLabel } from '@/lib/partner-api'
 
 export const runtime = 'nodejs'
 
-function generateApiKey(): string {
-  return `wsl_${crypto.randomBytes(24).toString('hex')}`
+function unauthorized() {
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }
 
-// GET - list client's API keys
-export async function GET() {
+function serializeKey(key: { id: string; keyPrefix: string | null; key: string | null; name: string; scopes: string; isActive: boolean; isTestMode: boolean; lastUsedAt: Date | null; createdAt: Date }) {
+  const prefix = key.keyPrefix || (key.key ? keyPrefix(key.key) : 'wsl_')
+  return { id: key.id, key: `${prefix}...`, keyPrefix: prefix, name: key.name, scopes: parseScopes(key.scopes).map(scopeLabel).join(','), isActive: key.isActive, isTestMode: key.isTestMode, lastUsedAt: key.lastUsedAt, createdAt: key.createdAt }
+}
+
+async function resolveClientId(user: Awaited<ReturnType<typeof getCurrentUser>>, requested?: string | null) {
+  if (!user) return null
+  if (user.role === 'CLIENT') return user.clientId || null
+  return requested || null
+}
+
+export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const clientId = user.role === 'CLIENT' ? user.clientId : null
-    if (!clientId) return NextResponse.json({ error: 'No client account' }, { status: 400 })
-
-    const keys = await db.apiKey.findMany({
-      where: { clientId },
-      orderBy: { createdAt: 'desc' },
-    })
-
-    return NextResponse.json({
-      keys: keys.map(k => ({
-        id: k.id,
-        key: k.key.substring(0, 12) + '...', // mask the key
-        name: k.name,
-        scopes: k.scopes,
-        isActive: k.isActive,
-        lastUsedAt: k.lastUsedAt,
-        createdAt: k.createdAt,
-      })),
-    })
-  } catch (e: any) {
+    if (!user) return unauthorized()
+    const requestedClientId = new URL(req.url).searchParams.get('clientId')
+    const clientId = await resolveClientId(user, requestedClientId)
+    if (!clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 400 })
+    const keys = await db.apiKey.findMany({ where: { clientId }, orderBy: { createdAt: 'desc' } })
+    return NextResponse.json({ keys: keys.map(serializeKey) })
+  } catch (error) {
+    console.error('API key list error', error)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
 
-// POST - create new API key
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) return unauthorized()
+    const body = await req.json()
+    const clientId = await resolveClientId(user, body.clientId)
+    if (!clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 400 })
+    const name = typeof body.name === 'string' ? body.name.trim() : ''
+    if (!name || name.length > 120) return NextResponse.json({ error: 'A key name is required' }, { status: 400 })
+    const scopes = parseScopes(Array.isArray(body.scopes) ? body.scopes.join(',') : body.scopes)
+    if (!scopes.length) return NextResponse.json({ error: 'At least one valid scope is required' }, { status: 400 })
 
-    const clientId = user.role === 'CLIENT' ? user.clientId : null
-    if (!clientId) return NextResponse.json({ error: 'No client account' }, { status: 400 })
-
-    const { name, scopes } = await req.json()
-    if (!name) return NextResponse.json({ error: 'Name required' }, { status: 400 })
-
-    const key = generateApiKey()
-    const apiKey = await db.apiKey.create({
+    const rawKey = generatePartnerApiKey()
+    const record = await db.apiKey.create({
       data: {
         clientId,
-        key,
+        keyHash: await bcrypt.hash(rawKey, 12),
+        keyPrefix: keyPrefix(rawKey),
         name,
-        scopes: scopes || 'shipments:read,shipments:write',
+        scopes: scopes.map(scopeLabel).join(','),
+        isTestMode: Boolean(body.isTestMode),
         isActive: true,
       },
     })
-
-    return NextResponse.json({
-      id: apiKey.id,
-      key, // return full key only once
-      name: apiKey.name,
-      scopes: apiKey.scopes,
-      message: 'Save this key securely - you won\'t be able to see it again',
-    }, { status: 201 })
-  } catch (e: any) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
-  }
-}
-
-// DELETE - revoke API key
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const clientId = user.role === 'CLIENT' ? user.clientId : null
-    if (!clientId) return NextResponse.json({ error: 'No client account' }, { status: 400 })
-
-    const { searchParams } = new URL(req.url)
-    const id = searchParams.get('id')
-    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
-
-    await db.apiKey.delete({ where: { id, clientId } })
-    return NextResponse.json({ success: true })
-  } catch (e: any) {
+    return NextResponse.json({ id: record.id, key: rawKey, keyPrefix: record.keyPrefix, name: record.name, scopes: scopes.map(scopeLabel).join(','), isTestMode: record.isTestMode, message: 'Save this key securely; the full key will not be shown again' }, { status: 201 })
+  } catch (error) {
+    console.error('API key create error', error)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

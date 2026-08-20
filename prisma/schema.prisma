@@ -71,6 +71,9 @@ model Client {
   payoutRequests  PayoutRequest[]
   flyerRequests   FlyerRequest[]
   apiKeys         ApiKey[]
+  webhooks        WebhookEndpoint[]
+  idempotencyKeys IdempotencyKey[]
+  requestLogs     ApiRequestLog[]
   loyaltyPoints   LoyaltyPoint[]
   insuranceClaims InsuranceClaim[]
   logoUrl         String?
@@ -614,15 +617,110 @@ model ApiKey {
   id          String   @id @default(cuid())
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  key         String   @unique
-  name        String   // e.g., "Shopify Integration"
-  scopes      String   @default("shipments:read,shipments:write") // comma-separated
-  lastUsedAt  DateTime?
+  // Legacy plaintext key column is retained as nullable for safe one-time migration.
+  key         String?  @unique
+  keyHash     String?  @unique
+  keyPrefix   String?
+  name        String
+  scopes      String   @default("shipments:read,shipments:write") // comma-separated; colon/underscore forms accepted
+  isTestMode  Boolean  @default(false)
   isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requestLogs ApiRequestLog[]
 
   @@index([clientId])
+  @@index([keyHash])
   @@index([key])
+}
+
+// ============ PARTNER INTEGRATIONS ============
+model IdempotencyKey {
+  id             String   @id @default(cuid())
+  key            String
+  clientId       String
+  endpoint       String
+  requestHash    String
+  responseStatus Int?
+  responseBody   String?
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([key, clientId, endpoint])
+  @@index([key])
+  @@index([clientId])
+  @@index([expiresAt])
+}
+
+model WebhookEndpoint {
+  id             String   @id @default(cuid())
+  clientId       String
+  url            String
+  secretHash     String
+  secretEncrypted String?
+  secretPrefix   String
+  name           String?
+  events         String   // JSON array of event names
+  isActive       Boolean  @default(true)
+  description    String?
+  lastSuccessAt  DateTime?
+  lastFailureAt  DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  client    Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([clientId])
+  @@index([isActive])
+}
+
+model WebhookDelivery {
+  id                String   @id @default(cuid())
+  webhookEndpointId String
+  event             String
+  payload           String
+  responseStatus    Int?
+  responseBody      String?
+  attemptNumber     Int      @default(1)
+  status            String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  error             String?
+  nextAttemptAt     DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  webhookEndpoint WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([nextAttemptAt])
+  @@index([webhookEndpointId])
+}
+
+model ApiRequestLog {
+  id          String   @id @default(cuid())
+  clientId    String?
+  apiKeyId    String?
+  method      String
+  path        String
+  query       String?
+  statusCode  Int
+  errorMessage String?
+  requestId   String
+  createdAt   DateTime @default(now())
+
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  apiKey ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([clientId])
+  @@index([apiKeyId])
+  @@index([requestId])
 }
 
 // ============ LOYALTY PROGRAM ============

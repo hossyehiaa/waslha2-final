@@ -122,6 +122,14 @@ scripts/
 └── seed.ts               # Database seeder
 ```
 
+## Partner API
+
+The versioned Partner API is available at `https://wsalhali.vercel.app/api/integrations/v1`. Full endpoint documentation, webhook signing guidance, cURL examples, and production checks are in [`docs/partner-api.md`](docs/partner-api.md). An OpenAPI description is available at [`docs/openapi.yaml`](docs/openapi.yaml), and a Postman collection is available at [`docs/postman_collection.json`](docs/postman_collection.json).
+
+Apply the Partner API migration with `bunx prisma migrate deploy` after configuring `DATABASE_URL`. The migration adds hashed API-key metadata, idempotency records, webhook endpoints and deliveries, and partner request logs. Generate a demo key once with `bun run partner:key -- braa "Demo Integration"`; the full key is printed only at creation time and is not stored in plaintext. Run authenticated integration checks with `PARTNER_API_KEY=wsl_... bun scripts/test-partner-api.mjs`.
+
+Required Partner API environment variables are documented in [`.env.example`](.env.example). Configure `ADMIN_SESSION_SECRET`, `WEBHOOK_SECRET_ENCRYPTION_KEY`, and `WEBHOOK_PROCESS_SECRET` in the deployment platform’s secret store. Never commit `.env` files, API keys, webhook secrets, database URLs, or deployment tokens.
+
 ## 🔒 Security
 
 - bcrypt password hashing (12 rounds)

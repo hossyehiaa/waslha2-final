@@ -65,7 +65,7 @@ export default function AdminApiKeysPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Revoke this API key?')) return
-    const res = await fetch(`/api/admin/api-keys?id=${id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/admin/api-keys/${id}`, { method: 'DELETE' })
     if (!res.ok) { toast.error('Failed to revoke'); return }
     toast.success('Key revoked')
     load()
@@ -98,16 +98,16 @@ export default function AdminApiKeysPage() {
             <Code className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold mb-1">Public API Endpoint</h3>
+            <h3 className="font-semibold mb-1">Partner API Endpoint</h3>
             <p className="text-sm text-muted-foreground mb-2">
               Use this base URL with your API key in the Authorization header:
             </p>
             <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 font-mono text-xs">
-              <code className="flex-1">https://wsalhali.vercel.app/api/public</code>
-              <Badge variant="secondary">POST/GET</Badge>
+              <code className="flex-1">https://wsalhali.vercel.app/api/integrations/v1</code>
+              <Badge variant="secondary">v1</Badge>
             </div>
             <div className="mt-2 text-xs text-muted-foreground">
-              Header: <code className="px-1 py-0.5 rounded bg-muted">Authorization: Bearer wsl_your_api_key</code>
+              Headers: <code className="px-1 py-0.5 rounded bg-muted">Authorization: Bearer wsl_... or X-API-Key: wsl_...</code>
             </div>
           </div>
         </div>
