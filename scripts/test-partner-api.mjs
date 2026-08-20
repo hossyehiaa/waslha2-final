@@ -52,9 +52,12 @@ async function run() {
   assert.ok(created.body.data?.trackingNumber?.startsWith('WSL'), 'tracking number should start with WSL')
   assert.ok(Number(created.body.data?.totalCost) > 0, 'totalCost should be server-calculated')
 
-  const duplicate = await request(`${baseUrl}/shipments`, { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey }, body: JSON.stringify({ ...shipmentBody, shippingCost: 999999 }) })
+  const duplicate = await request(`${baseUrl}/shipments`, { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey }, body: JSON.stringify(shipmentBody) })
   assert.equal(duplicate.response.status, 201, 'same idempotency key should replay the original response')
   assert.equal(duplicate.body.data.trackingNumber, created.body.data.trackingNumber, 'idempotency replay should return the same shipment')
+
+  const clientCost = await request(`${baseUrl}/shipments`, { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json', 'Idempotency-Key': `${idempotencyKey}-client-cost` }, body: JSON.stringify({ ...shipmentBody, shippingCost: 999999 }) })
+  assert.equal(clientCost.response.status, 400, 'client-supplied shipping cost should be rejected')
 
   const listed = await request(`${baseUrl}/shipments?search=${encodeURIComponent(created.body.data.trackingNumber)}`, { headers: authHeaders() })
   assert.equal(listed.response.status, 200, 'list shipments should return 200')
