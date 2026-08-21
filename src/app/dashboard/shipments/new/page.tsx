@@ -11,23 +11,21 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { useAuth } from '@/components/auth-context'
 import { useLanguage } from '@/components/language-provider'
 
 export default function ClientNewShipmentPage() {
   const router = useRouter()
-  const { user } = useAuth()
   const { dict, isRTL } = useLanguage()
   const L = dict.pages.shipments.new
   const [loading, setLoading] = useState(false)
   const [cities, setCities] = useState<any[]>([])
   const [addresses, setAddresses] = useState<any[]>([])
   const [form, setForm] = useState({
-    clientId: '', senderName: '', senderPhone: '', senderAddress: '', senderCityId: '',
+    senderName: '', senderPhone: '', senderAddress: '', senderCityId: '',
     recipientName: '', recipientPhone: '', recipientAddress: '', recipientCityId: '',
     type: 'DELIVERY', serviceType: 'STANDARD', priority: 'NORMAL',
     weight: '0.5', pieces: '1', description: '',
-    codAmount: '0', shippingCost: '25',
+    codAmount: '0',
   })
 
   useEffect(() => {
@@ -44,9 +42,6 @@ export default function ClientNewShipmentPage() {
     })
   }, [])
 
-  useEffect(() => {
-    if (user?.clientId) setForm(prev => ({ ...prev, clientId: user.clientId }))
-  }, [user])
 
   function set(k: string, v: string) { setForm(prev => ({ ...prev, [k]: v })) }
 
@@ -225,11 +220,8 @@ export default function ClientNewShipmentPage() {
               <div className="text-muted-foreground">{L.codFee2}</div>
               <div className="font-bold">{Math.round(Number(form.codAmount) * 0.02 * 100) / 100} {dict.common.currency}</div>
             </div>
-            <div>
-              <div className="text-muted-foreground">{dict.common.total}</div>
-              <div className="font-bold text-primary text-lg">
-                {Number(form.serviceType === 'EXPRESS' ? 50 : 25) + Math.round(Number(form.codAmount) * 0.02 * 100) / 100} {dict.common.currency}
-              </div>
+            <div className="text-right text-muted-foreground text-xs max-w-48">
+              Shipping fees are calculated securely by Wslahali after the shipment details are validated.
             </div>
           </div>
         </Card>

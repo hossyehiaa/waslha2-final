@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Loader2, Lock, User, Eye, EyeOff, ArrowRight, Shield, Sparkles } from 'lucide-react'
+import { Loader2, Lock, User, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -61,11 +61,6 @@ export default function LoginPage() {
     }
   }
 
-  const demoAccounts = [
-    { role: L.admin, username: 'admin', password: 'admin123', desc: L.adminDesc },
-    { role: L.client, username: 'braa', password: 'client123', desc: L.clientDesc },
-  ]
-
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left - Hero / Branding */}
@@ -101,7 +96,7 @@ export default function LoginPage() {
               {L.badge}
             </span>
             <h2 className="text-4xl lg:text-5xl font-bold mb-4 leading-tight">
-              {L.title1}<br />{L.title2}
+              {L.title}<br />{L.title2}
             </h2>
             <p className="text-white/80 text-lg mb-8">
               {L.subtitle}
@@ -220,29 +215,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-8 pt-6 border-t">
-            <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-2">
-              <Shield className="w-3 h-3" />
-              {L.demoAccounts}
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {demoAccounts.map((acc) => (
-                <button
-                  key={acc.role}
-                  type="button"
-                  onClick={() => {
-                    setUsername(acc.username)
-                    setPassword(acc.password)
-                  }}
-                  className="text-left p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-accent/40 transition-all group"
-                >
-                  <div className="text-sm font-semibold group-hover:text-primary transition-colors">{acc.role}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{acc.desc}</div>
-                  <div className="text-xs text-muted-foreground mt-1 font-mono">{acc.username} / {acc.password}</div>
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div className="mt-6 text-center space-y-2">
             <a href="/" className="block text-sm text-muted-foreground hover:text-primary transition-colors">

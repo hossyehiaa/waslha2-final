@@ -31,7 +31,7 @@ export default function ClientInvoicesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/invoices')
+    fetch('/api/client/invoices')
       .then(r => r.json())
       .then(d => setInvoices(d.invoices || []))
       .catch(() => toast.error(dict.common.noData))

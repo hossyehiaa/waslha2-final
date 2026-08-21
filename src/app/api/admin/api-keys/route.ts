@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) return unauthorized()
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const requestedClientId = new URL(req.url).searchParams.get('clientId')
     const clientId = await resolveClientId(user, requestedClientId)
     if (!clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 400 })
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) return unauthorized()
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const body = await req.json()
     const clientId = await resolveClientId(user, body.clientId)
     if (!clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 400 })

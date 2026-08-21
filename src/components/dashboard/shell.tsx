@@ -207,8 +207,6 @@ function buildClientNav(dict: Dict): NavItem[] {
     { label: dict.nav.invoices, href: '/dashboard/invoices', icon: Receipt },
     { label: 'Loyalty', href: '/dashboard/loyalty', icon: Star },
     { label: 'Insurance Claims', href: '/dashboard/insurance-claims', icon: Shield },
-    { label: 'API Keys', href: '/dashboard/api-keys', icon: Key },
-    { label: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },
     { label: dict.nav.addresses, href: '/dashboard/addresses', icon: MapPin },
     { label: dict.nav.notifications, href: '/dashboard/notifications', icon: Bell },
     { label: dict.nav.profile, href: '/dashboard/profile', icon: User },

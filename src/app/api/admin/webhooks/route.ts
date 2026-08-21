@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const clientId = await resolveClientId(user, new URL(req.url).searchParams.get('clientId'))
     if (!clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 400 })
     const endpoints = await db.webhookEndpoint.findMany({
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const body = await req.json()
     const clientId = await resolveClientId(user, body.clientId)
     if (!clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 400 })

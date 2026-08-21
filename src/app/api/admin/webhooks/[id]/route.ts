@@ -18,6 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const { id } = await params
     const endpoint = await getOwnedEndpoint(user, id)
     if (!endpoint) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -47,6 +48,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const { id } = await params
     const endpoint = await getOwnedEndpoint(user, id)
     if (!endpoint) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const { id } = await params
     const endpoint = await getOwnedEndpoint(user, id)
     if (!endpoint) return NextResponse.json({ error: 'Not found' }, { status: 404 })
