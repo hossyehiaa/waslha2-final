@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { decryptWebhookSecret, processShopifyOrderCreated, verifyShopifyHmac, webhookPayloadHash } from '@/lib/shopify'
+import { decryptWebhookSecret, getShopifyAppClientSecret, processShopifyOrderCreated, verifyShopifyHmac, webhookPayloadHash } from '@/lib/shopify'
 
 export const runtime = 'nodejs'
 
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   let secret: string
   try {
-    secret = decryptWebhookSecret(installation.webhookSecretEncrypted)
+    secret = installation.authMode === 'OAUTH' ? getShopifyAppClientSecret() : decryptWebhookSecret(installation.webhookSecretEncrypted)
   } catch {
     return NextResponse.json({ error: 'Webhook configuration error' }, { status: 500 })
   }

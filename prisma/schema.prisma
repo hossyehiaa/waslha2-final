@@ -34,6 +34,7 @@ model User {
   shipments       Shipment[]     @relation("createdBy")
   auditActions    AuditLog[]     @relation("auditBy")
   sessions        Session[]
+  shopifyOAuthStates ShopifyOAuthState[]
 }
 
 // ============ CLIENTS (Merchants) ============
@@ -75,6 +76,7 @@ model Client {
   idempotencyKeys     IdempotencyKey[]
   requestLogs         ApiRequestLog[]
   shopifyInstallation ShopifyInstallation?
+  shopifyOAuthStates   ShopifyOAuthState[]
   loyaltyPoints       LoyaltyPoint[]
   insuranceClaims     InsuranceClaim[]
   logoUrl             String?
@@ -731,7 +733,12 @@ model ShopifyInstallation {
   id                     String    @id @default(cuid())
   clientId               String    @unique
   shopDomain             String    @unique
+  authMode               String    @default("OAUTH")
   accessTokenEncrypted   String
+  refreshTokenEncrypted  String?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  grantedScopes          String    @default("")
   webhookSecretEncrypted String
   ordersWebhookId        String?
   senderName             String?
@@ -788,6 +795,22 @@ model ShopifyWebhookEvent {
   @@unique([installationId, webhookId])
   @@index([status])
   @@index([createdAt])
+}
+
+model ShopifyOAuthState {
+  id         String   @id @default(cuid())
+  stateHash  String   @unique
+  clientId   String
+  userId     String
+  shopDomain String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([clientId])
 }
 
 // ============ LOYALTY PROGRAM ============

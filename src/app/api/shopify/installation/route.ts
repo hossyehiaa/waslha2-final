@@ -9,10 +9,12 @@ function canManage(user: Awaited<ReturnType<typeof getCurrentUser>>) {
   return Boolean(user && (user.role === 'CLIENT' || user.role === 'ADMIN' || user.role === 'EMPLOYEE'))
 }
 
-function responseFor(installation: { id: string; shopDomain: string; senderName: string | null; senderPhone: string | null; senderAddress: string | null; senderCityId: string | null; apiVersion: string; status: string; lastSyncAt: Date | null; lastError: string | null; createdAt: Date; updatedAt: Date }) {
+function responseFor(installation: { id: string; shopDomain: string; authMode: string; grantedScopes: string; senderName: string | null; senderPhone: string | null; senderAddress: string | null; senderCityId: string | null; apiVersion: string; status: string; lastSyncAt: Date | null; lastError: string | null; createdAt: Date; updatedAt: Date }) {
   return {
     id: installation.id,
     shopDomain: installation.shopDomain,
+    authMode: installation.authMode,
+    grantedScopes: installation.grantedScopes.split(',').filter(Boolean),
     senderName: installation.senderName,
     senderPhone: installation.senderPhone,
     senderAddress: installation.senderAddress,
@@ -31,6 +33,27 @@ export async function GET() {
   if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const installation = await db.shopifyInstallation.findUnique({ where: { clientId: user.clientId } })
   return NextResponse.json({ installation: installation ? responseFor(installation) : null })
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getCurrentUser()
+    if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const body = await req.json()
+    const senderName = String(body.senderName || '').trim()
+    const senderPhone = String(body.senderPhone || '').trim()
+    const senderAddress = String(body.senderAddress || '').trim()
+    const senderCityId = String(body.senderCityId || '').trim()
+    if (!senderName || !senderPhone || !senderAddress || !senderCityId) return NextResponse.json({ error: 'Sender settings are required' }, { status: 400 })
+    const city = await db.city.findFirst({ where: { id: senderCityId, status: 'ACTIVE' }, select: { id: true } })
+    if (!city) return NextResponse.json({ error: 'Sender city is invalid' }, { status: 400 })
+    const existing = await db.shopifyInstallation.findUnique({ where: { clientId: user.clientId } })
+    if (!existing) return NextResponse.json({ error: 'Connect Shopify before saving sender settings' }, { status: 404 })
+    const updated = await db.shopifyInstallation.update({ where: { id: existing.id }, data: { senderName, senderPhone, senderAddress, senderCityId, status: existing.ordersWebhookId ? 'ACTIVE' : 'ERROR', lastError: existing.ordersWebhookId ? null : 'Shopify webhook is not registered' } })
+    return NextResponse.json({ installation: responseFor(updated) })
+  } catch {
+    return NextResponse.json({ error: 'Sender settings could not be saved' }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -63,6 +86,7 @@ export async function POST(req: NextRequest) {
       create: {
         clientId,
         shopDomain,
+        authMode: 'MANUAL',
         accessTokenEncrypted: encryptWebhookSecret(accessToken),
         webhookSecretEncrypted: encryptWebhookSecret(webhookSecret),
         senderName,
@@ -73,7 +97,12 @@ export async function POST(req: NextRequest) {
       },
       update: {
         shopDomain,
+        authMode: 'MANUAL',
         accessTokenEncrypted: encryptWebhookSecret(accessToken),
+        refreshTokenEncrypted: null,
+        accessTokenExpiresAt: null,
+        refreshTokenExpiresAt: null,
+        grantedScopes: '',
         webhookSecretEncrypted: encryptWebhookSecret(webhookSecret),
         senderName,
         senderPhone,

@@ -6,6 +6,9 @@ import { decryptWebhookSecret, encryptWebhookSecret } from '@/lib/webhooks'
 
 const DEFAULT_API_VERSION = process.env.SHOPIFY_API_VERSION || '2026-04'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || ''
+const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CLIENT_ID || ''
+const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CLIENT_SECRET || ''
+const DEFAULT_SCOPES = 'read_orders,write_assigned_fulfillment_orders'
 
 export { decryptWebhookSecret, encryptWebhookSecret }
 
@@ -25,19 +28,103 @@ export function verifyShopifyHmac(rawBody: string, provided: string | null, secr
   return providedBuffer.length === computedBuffer.length && crypto.timingSafeEqual(providedBuffer, computedBuffer)
 }
 
+export function generateShopifyOAuthState() {
+  return crypto.randomBytes(32).toString('base64url')
+}
+
+export function hashShopifyOAuthState(state: string) {
+  return crypto.createHash('sha256').update(state, 'utf8').digest('hex')
+}
+
+export function shopifyOAuthCallbackUrl() {
+  if (!APP_URL || !APP_URL.startsWith('https://')) throw new Error('NEXT_PUBLIC_APP_URL must be configured with HTTPS')
+  return `${APP_URL.replace(/\/$/, '')}/api/shopify/oauth/callback`
+}
+
+export function getShopifyAppClientSecret() {
+  if (!SHOPIFY_CLIENT_SECRET) throw new Error('Shopify OAuth is not configured')
+  return SHOPIFY_CLIENT_SECRET
+}
+
+function requiredScopes() {
+  return (process.env.SHOPIFY_SCOPES || DEFAULT_SCOPES).split(',').map((scope) => scope.trim()).filter(Boolean)
+}
+
 function callbackUrl() {
   if (!APP_URL || !APP_URL.startsWith('https://')) throw new Error('NEXT_PUBLIC_APP_URL must be configured with HTTPS')
   return `${APP_URL.replace(/\/$/, '')}/api/shopify/webhooks`
 }
 
-function accessToken(installation: { accessTokenEncrypted: string }) {
+function constantTimeEqual(left: string, right: string) {
+  const leftBuffer = Buffer.from(left, 'utf8')
+  const rightBuffer = Buffer.from(right, 'utf8')
+  return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer)
+}
+
+export function verifyShopifyOAuthHmac(searchParams: URLSearchParams) {
+  if (!SHOPIFY_CLIENT_SECRET) throw new Error('Shopify OAuth is not configured')
+  const provided = searchParams.get('hmac')
+  if (!provided) return false
+  const message = Array.from(searchParams.entries())
+    .filter(([key]) => key !== 'hmac' && key !== 'signature')
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&')
+  const computed = crypto.createHmac('sha256', SHOPIFY_CLIENT_SECRET).update(message, 'utf8').digest('hex')
+  return constantTimeEqual(computed, provided)
+}
+
+export function createShopifyAuthorizationUrl(shopDomain: string, state: string) {
+  if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET) throw new Error('Shopify OAuth is not configured')
+  const url = new URL(`https://${shopDomain}/admin/oauth/authorize`)
+  url.searchParams.set('client_id', SHOPIFY_CLIENT_ID)
+  url.searchParams.set('scope', requiredScopes().join(','))
+  url.searchParams.set('redirect_uri', shopifyOAuthCallbackUrl())
+  url.searchParams.set('state', state)
+  return url.toString()
+}
+
+export async function exchangeShopifyCode(shopDomain: string, code: string) {
+  if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET) throw new Error('Shopify OAuth is not configured')
+  const response = await fetch(`https://${shopDomain}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: SHOPIFY_CLIENT_ID, client_secret: SHOPIFY_CLIENT_SECRET, code, expiring: 1 }),
+    cache: 'no-store',
+  })
+  const payload = await response.json().catch(() => null) as { access_token?: string; refresh_token?: string; expires_in?: number; refresh_token_expires_in?: number; scope?: string }
+  if (!response.ok || !payload?.access_token || !payload.refresh_token || !payload.expires_in || !payload.refresh_token_expires_in) throw new Error('Shopify OAuth token exchange failed')
+  const granted = (payload.scope || '').split(',').map((scope) => scope.trim()).filter(Boolean)
+  const missing = requiredScopes().filter((scope) => !granted.includes(scope) && !(scope.startsWith('read_') && granted.includes(scope.replace(/^read_/, 'write_'))))
+  if (missing.length) throw new Error('Shopify did not grant the required permissions')
+  return { accessToken: payload.access_token, refreshToken: payload.refresh_token, expiresAt: new Date(Date.now() + payload.expires_in * 1000), refreshTokenExpiresAt: new Date(Date.now() + payload.refresh_token_expires_in * 1000), grantedScopes: granted.join(',') }
+}
+
+async function refreshShopifyToken(installation: { id: string; shopDomain: string; refreshTokenEncrypted: string; apiVersion: string }) {
+  if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET) throw new Error('Shopify OAuth is not configured')
+  const response = await fetch(`https://${installation.shopDomain}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: SHOPIFY_CLIENT_ID, client_secret: SHOPIFY_CLIENT_SECRET, grant_type: 'refresh_token', refresh_token: decryptWebhookSecret(installation.refreshTokenEncrypted) }),
+    cache: 'no-store',
+  })
+  const payload = await response.json().catch(() => null) as { access_token?: string; refresh_token?: string; expires_in?: number; refresh_token_expires_in?: number }
+  if (!response.ok || !payload?.access_token || !payload.refresh_token || !payload.expires_in || !payload.refresh_token_expires_in) throw new Error('Shopify token refresh failed')
+  await db.shopifyInstallation.update({ where: { id: installation.id }, data: { accessTokenEncrypted: encryptWebhookSecret(payload.access_token), refreshTokenEncrypted: encryptWebhookSecret(payload.refresh_token), accessTokenExpiresAt: new Date(Date.now() + payload.expires_in * 1000), refreshTokenExpiresAt: new Date(Date.now() + payload.refresh_token_expires_in * 1000), lastError: null } })
+  return payload.access_token
+}
+
+async function accessToken(installation: { id?: string; accessTokenEncrypted: string; refreshTokenEncrypted?: string | null; accessTokenExpiresAt?: Date | null; shopDomain?: string; apiVersion?: string }) {
+  if (installation.accessTokenExpiresAt && installation.refreshTokenEncrypted && installation.id && installation.shopDomain && installation.apiVersion && installation.accessTokenExpiresAt.getTime() <= Date.now() + 5 * 60 * 1000) {
+    return refreshShopifyToken({ id: installation.id, shopDomain: installation.shopDomain, refreshTokenEncrypted: installation.refreshTokenEncrypted, apiVersion: installation.apiVersion })
+  }
   return decryptWebhookSecret(installation.accessTokenEncrypted)
 }
 
-async function shopifyGraphql<T>(installation: { shopDomain: string; accessTokenEncrypted: string; apiVersion: string }, query: string, variables: Record<string, unknown>) {
+async function shopifyGraphql<T>(installation: { id?: string; shopDomain: string; accessTokenEncrypted: string; refreshTokenEncrypted?: string | null; accessTokenExpiresAt?: Date | null; apiVersion: string }, query: string, variables: Record<string, unknown>) {
   const response = await fetch(`https://${installation.shopDomain}/admin/api/${installation.apiVersion || DEFAULT_API_VERSION}/graphql.json`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': accessToken(installation) },
+    headers: { 'Content-Type': 'application/json', 'X-Shopify-Access-Token': await accessToken(installation) },
     body: JSON.stringify({ query, variables }),
     cache: 'no-store',
   })
