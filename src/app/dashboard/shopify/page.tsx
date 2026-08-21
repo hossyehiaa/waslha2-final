@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Store, ShieldCheck, Unplug, Save, ExternalLink } from 'lucide-react'
+import { Store, ShieldCheck, Unplug, Save } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,24 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 
-const initialForm = { shopDomain: '', senderName: '', senderPhone: '', senderAddress: '', senderCityId: '' }
+const initialForm = { shopDomain: '', accessToken: '', webhookSecret: '', senderName: '', senderPhone: '', senderAddress: '', senderCityId: '' }
 
 export default function ShopifyIntegrationPage() {
   const [form, setForm] = useState(initialForm)
   const [installation, setInstallation] = useState<any>(null)
   const [cities, setCities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [connecting, setConnecting] = useState(false)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    const result = new URLSearchParams(window.location.search).get('shopify')
-    if (result === 'connected') toast.success('Shopify connected successfully')
-    if (result === 'configure') toast.success('Shopify connected. Add your pickup settings to activate shipments.')
-    if (result === 'denied') toast.error('Shopify authorization was cancelled')
-    if (result === 'invalid' || result === 'expired') toast.error('Shopify authorization expired. Please try again.')
-    if (result === 'error') toast.error('Shopify connection could not be completed')
-
     Promise.all([
       fetch('/api/shopify/installation').then((response) => response.json()),
       fetch('/api/admin/cities').then((response) => response.json()),
@@ -53,26 +45,21 @@ export default function ShopifyIntegrationPage() {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
-  function connectShopify() {
-    if (!form.shopDomain.trim()) { toast.error('Enter your Shopify store domain first'); return }
-    setConnecting(true)
-    window.location.href = `/api/shopify/oauth/start?shop=${encodeURIComponent(form.shopDomain.trim())}`
-  }
-
-  async function saveSettings() {
+  async function save() {
     setSaving(true)
     try {
       const response = await fetch('/api/shopify/installation', {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senderName: form.senderName, senderPhone: form.senderPhone, senderAddress: form.senderAddress, senderCityId: form.senderCityId }),
+        body: JSON.stringify(form),
       })
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Pickup settings could not be saved')
+      if (!response.ok) throw new Error(data.error || 'Shopify connection failed')
       setInstallation(data.installation)
-      toast.success('Pickup settings saved. Shopify orders are now ready to become shipments.')
+      setForm((current) => ({ ...current, accessToken: '', webhookSecret: '' }))
+      toast.success('Shopify connected securely')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Pickup settings could not be saved')
+      toast.error(error instanceof Error ? error.message : 'Shopify connection failed')
     } finally {
       setSaving(false)
     }
@@ -87,54 +74,56 @@ export default function ShopifyIntegrationPage() {
     toast.success('Shopify disconnected')
   }
 
-  const active = installation?.status === 'ACTIVE'
   return (
     <div className="space-y-6 max-w-4xl">
-      <PageHeader title="Shopify Integration" subtitle="Connect your store in one step and sync orders, shipments, and tracking" icon={Store} />
+      <PageHeader title="Shopify Integration" subtitle="Connect your Shopify store and automatically create Wslahali shipments from new orders" icon={Store} />
       <Card className="p-6 border-primary/20 bg-primary/5">
         <div className="flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-primary mt-0.5" />
           <div className="text-sm text-muted-foreground space-y-1">
-            <p>Click Connect Shopify to authorize Wslahali directly in Shopify. You will not need to copy an access token or client secret.</p>
-            <p>Credentials are encrypted on the server. Wslahali requests only the order and fulfillment permissions needed for shipment synchronization.</p>
+            <p>Use the permanent `*.myshopify.com` domain, not the store's custom public domain.</p>
+            <p>Your Access Token and Client Secret are encrypted on the server and cleared from the browser after saving. They are never returned in API responses.</p>
           </div>
         </div>
       </Card>
 
-      {installation ? (
+      {installation && (
         <Card className="p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="font-semibold">{installation.shopDomain}</p>
-              <p className="text-sm text-muted-foreground">{active ? 'Orders and tracking synchronization is active' : 'Complete pickup settings to activate automatic shipments'}</p>
+              <p className="text-sm text-muted-foreground">Webhook: {installation.status === 'ACTIVE' ? 'orders/create active' : installation.status}</p>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant={active ? 'default' : installation.status === 'ERROR' ? 'destructive' : 'secondary'}>{installation.status}</Badge>
+              <Badge variant={installation.status === 'ACTIVE' ? 'default' : 'destructive'}>{installation.status}</Badge>
               <Button variant="outline" onClick={() => void disconnect()}><Unplug className="w-4 h-4 mr-2" />Disconnect</Button>
             </div>
           </div>
-          {installation.grantedScopes?.length > 0 && <p className="text-xs text-muted-foreground mt-3">Authorized permissions: {installation.grantedScopes.join(', ')}</p>}
           {installation.lastError && <p className="text-sm text-destructive mt-3">Last sync issue: {installation.lastError}</p>}
-        </Card>
-      ) : (
-        <Card className="p-6 space-y-4">
-          <div><h2 className="text-lg font-semibold">Connect your Shopify store</h2><p className="text-sm text-muted-foreground">Use the permanent `*.myshopify.com` domain, not the storefront custom domain.</p></div>
-          <div className="flex flex-col sm:flex-row gap-3"><Input value={form.shopDomain} onChange={(event) => setField('shopDomain', event.target.value)} placeholder="brand.myshopify.com" /><Button onClick={connectShopify} disabled={loading || connecting}><ExternalLink className="w-4 h-4 mr-2" />{connecting ? 'Opening Shopify...' : 'Connect Shopify'}</Button></div>
         </Card>
       )}
 
-      {installation && (
-        <Card className="p-6 space-y-5">
-          <div><h2 className="text-lg font-semibold">Default pickup settings</h2><p className="text-sm text-muted-foreground">Every Shopify order uses these sender details. The recipient city comes from the order shipping address.</p></div>
+      <Card className="p-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold">{installation ? 'Update Shopify connection' : 'Connect a Shopify store'}</h2>
+          <p className="text-sm text-muted-foreground">The store owner creates a Shopify App, then enters the three connection values here.</p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2"><Label>Shop domain</Label><Input value={form.shopDomain} onChange={(event) => setField('shopDomain', event.target.value)} placeholder="brand.myshopify.com" /></div>
+          <div className="space-y-2"><Label>Admin API Access Token</Label><Input type="password" value={form.accessToken} onChange={(event) => setField('accessToken', event.target.value)} placeholder={installation ? 'Enter a new token to rotate' : 'Paste the Shopify token'} /></div>
+          <div className="space-y-2 md:col-span-2"><Label>Shopify App Client Secret</Label><Input type="password" value={form.webhookSecret} onChange={(event) => setField('webhookSecret', event.target.value)} placeholder={installation ? 'Enter again to rotate' : 'Used for webhook signature verification'} /></div>
+        </div>
+        <div className="border-t pt-5 space-y-4">
+          <div><h3 className="font-semibold">Default pickup settings</h3><p className="text-sm text-muted-foreground">Every Shopify order uses these sender details. The recipient city comes from the order shipping address.</p></div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Sender name</Label><Input value={form.senderName} onChange={(event) => setField('senderName', event.target.value)} /></div>
             <div className="space-y-2"><Label>Sender phone</Label><Input value={form.senderPhone} onChange={(event) => setField('senderPhone', event.target.value)} /></div>
             <div className="space-y-2"><Label>Sender city</Label><Select value={form.senderCityId} onValueChange={(value) => setField('senderCityId', value)}><SelectTrigger><SelectValue placeholder="Select a city" /></SelectTrigger><SelectContent>{cities.map((city) => <SelectItem key={city.id} value={city.id}>{city.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-2"><Label>Sender address</Label><Input value={form.senderAddress} onChange={(event) => setField('senderAddress', event.target.value)} /></div>
           </div>
-          <div className="flex justify-end"><Button onClick={() => void saveSettings()} disabled={loading || saving}><Save className="w-4 h-4 mr-2" />{saving ? 'Saving...' : 'Save pickup settings'}</Button></div>
-        </Card>
-      )}
+        </div>
+        <div className="flex justify-end"><Button onClick={() => void save()} disabled={loading || saving}><Save className="w-4 h-4 mr-2" />{saving ? 'Saving...' : 'Save and connect'}</Button></div>
+      </Card>
     </div>
   )
 }

@@ -1,46 +1,42 @@
-# Wslahali Shopify Integration
+# Wslahali Shopify Integration — Manual Setup
 
-## Overview
+## What this integration does
 
-Wslahali connects one Shopify store to one Wslahali client account through a standalone Shopify OAuth app. The merchant clicks **Connect Shopify** in the Wslahali client dashboard, approves the requested permissions in Shopify, and returns to Wslahali without copying an Admin API token or client secret.
+The merchant keeps using Shopify as the storefront and order system. Wslahali connects to that store through a Shopify app created for the merchant's store. After the merchant enters the store domain, Admin API access token, app client secret, and pickup settings in **Dashboard → Shopify Integration**, Wslahali registers an `orders/create` webhook and turns new Shopify orders into Wslahali shipments.
 
-After authorization, Wslahali stores the expiring offline access token and refresh token encrypted on the server, registers the shop-specific `orders/create` webhook, and asks the merchant only for default pickup settings. New Shopify orders are verified, deduplicated, and converted into Wslahali shipments. Shipment pricing is calculated on the Wslahali server; Shopify and browser requests cannot provide `shippingCost`.
+Wslahali calculates shipping price on the server. Shopify and browser requests cannot provide `shippingCost`. Shipment statuses are synchronized to Shopify fulfillment events for `PICKED_UP`, `IN_TRANSIT`, `OUT_FOR_DELIVERY`, and `DELIVERED`.
 
-When the Wslahali shipment moves through `PICKED_UP`, `IN_TRANSIT`, `OUT_FOR_DELIVERY`, or `DELIVERED`, the integration creates the corresponding Shopify fulfillment event. The first supported lifecycle event creates the Shopify fulfillment and attaches the Wslahali tracking number.
+## What the Wslahali operator does
 
-## One-time platform setup
+Create the merchant's client account, configure the merchant's allowed service cities and pricing rules, then create a dedicated Partner API key only if the merchant also needs a separate API integration. For this Shopify connection, the merchant uses the Shopify Integration page rather than the Partner API key.
 
-The Wslahali operator creates one public Shopify app in the Shopify Dev Dashboard. Configure the production app URL and the exact OAuth callback URL:
+Before activating the connection, confirm that the merchant has a valid pickup name, phone, address, and active Wslahali city. Run one test order after the connection and confirm that the order appears as a shipment with a tracking number.
 
-`https://wsalhali.vercel.app/api/shopify/oauth/callback`
+## What the Shopify merchant does
 
-Store the app's client ID and client secret only in Vercel environment variables named `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET`. Configure `SHOPIFY_SCOPES` with the minimum order and fulfillment scopes approved for the app, and keep `SHOPIFY_API_VERSION` on a supported stable version. The app must also have permission to create fulfillments and fulfillment events; Shopify may require the store's `fulfill_and_ship_orders` permission.
+The merchant signs in to the Shopify Admin for the store, creates or opens a Shopify app for that store, and grants the minimum permissions required to read orders and fulfillment orders and create fulfillments and fulfillment events. Shopify may require the store's `fulfill_and_ship_orders` permission in addition to the relevant Admin API scopes.[1]
 
-The production app URL must also be present as `NEXT_PUBLIC_APP_URL=https://wsalhali.vercel.app`. The app secret is never sent to the browser or included in a Shopify installation response.
+The merchant then copies the following values into **Dashboard → Shopify Integration**:
 
-## Merchant setup
+| Value | Purpose |
+| --- | --- |
+| Permanent `*.myshopify.com` domain | Identifies the Shopify store; the custom storefront domain is not used |
+| Admin API Access Token | Allows Wslahali to query orders and update fulfillment tracking |
+| Shopify App Client Secret | Allows Wslahali to verify the HMAC signature on webhook deliveries |
+| Sender name, phone, address, and city | Provides the pickup origin for created Wslahali shipments |
 
-The merchant opens **Dashboard → Shopify Integration**, enters the permanent `*.myshopify.com` domain, and clicks **Connect Shopify**. Wslahali generates a short-lived random state, binds its hash to the authenticated client and user, and redirects the merchant to Shopify. The callback validates the state, Shopify HMAC, strict shop-domain format, callback code, and granted scopes before exchanging the code for expiring offline access and refresh tokens.
+The merchant must not send these secrets through WhatsApp, email, support chat, Git, or frontend code. They should be entered only in the authenticated Wslahali dashboard. Wslahali encrypts the token and client secret with AES-256-GCM and never returns them in API responses.
 
-After authorization, the merchant enters the default sender name, phone, address, and active Wslahali city, then clicks **Save pickup settings**. The installation becomes active only after the orders webhook has been registered and sender settings are valid. The browser never receives the access token or refresh token.
+## Connection sequence
 
-## OAuth security and token lifecycle
+1. The merchant enters the store domain and Shopify credentials in the authenticated Wslahali client dashboard.
+2. Wslahali validates the domain and sender city, encrypts the credentials, and registers the `orders/create` subscription through the Shopify Admin GraphQL API.
+3. Shopify sends each new order to `https://wsalhali.vercel.app/api/shopify/webhooks`.
+4. Wslahali verifies the raw-body `X-Shopify-Hmac-SHA256` signature before parsing the payload, deduplicates the delivery by `X-Shopify-Webhook-Id`, and maps the order's shipping address to an active Wslahali city.
+5. Wslahali creates one shipment per Shopify order, calculates the shipping price server-side, and stores the mapping with a unique installation/order constraint.
+6. When the shipment status changes, Wslahali creates the corresponding Shopify fulfillment event and attaches the Wslahali tracking number.
 
-OAuth callback state is stored as a hash with a ten-minute expiry and is deleted after use. OAuth query HMAC is checked using a constant-time comparison and the shop domain is anchored to `^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$`. Granted scopes are checked before token storage. Access tokens are refreshed server-side before expiry using the rotating refresh token; a refresh failure marks the installation for reauthorization without exposing provider errors or token values.
-
-## Webhook security and processing
-
-Shopify sends the raw JSON body with `X-Shopify-Hmac-SHA256`, `X-Shopify-Shop-Domain`, `X-Shopify-Topic`, and `X-Shopify-Webhook-Id` headers. OAuth installations are verified with the app client secret; legacy manual installations continue to use their encrypted per-installation secret. Wslahali verifies HMAC before parsing the payload and records each delivery ID per installation with a unique database constraint, so retries do not create duplicate shipments.
-
-The webhook handler returns structured errors for invalid signatures, unknown stores, oversized bodies, and failed processing. Shopify can retry a failed processing response. The persistent `ShopifyWebhookEvent` record exposes the failure state without storing access tokens or refresh tokens.
-
-## Order mapping
-
-The webhook processor uses `shipping_address`, falling back to `billing_address` only when a shipping address is unavailable. The destination city must match an active Wslahali city by code or case-insensitive name. COD is inferred only for payment gateways whose names contain `cash`, `cod`, or `delivery`; prepaid orders receive a zero COD amount. Each Shopify order is mapped to one Wslahali shipment through `ShopifyOrder` with a unique `(installationId, shopifyOrderId)` constraint.
-
-## Fulfillment permissions and statuses
-
-The Shopify app must be allowed to read orders and fulfillment orders and to create fulfillments and fulfillment events. Wslahali does not mark a Shopify order as fulfilled until it has an open fulfillment order and can attach the Wslahali tracking number.
+## Supported status mapping
 
 | Wslahali status | Shopify action |
 | --- | --- |
@@ -48,22 +44,33 @@ The Shopify app must be allowed to read orders and fulfillment orders and to cre
 | `IN_TRANSIT` | Create `IN_TRANSIT` event |
 | `OUT_FOR_DELIVERY` | Create `OUT_FOR_DELIVERY` event |
 | `DELIVERED` | Create `DELIVERED` event |
-| `RETURNED`, `FAILED`, `CANCELLED` | Keep the Wslahali state; no unsupported fulfillment event is emitted |
+| `RETURNED`, `FAILED`, `CANCELLED` | Keep the Wslahali state; no unsupported event is emitted |
 
-## Operational requirements
+## Security and tenant isolation
 
-The production deployment must define `NEXT_PUBLIC_APP_URL`, `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`, `SHOPIFY_SCOPES`, `SHOPIFY_API_VERSION`, and the existing Wslahali encryption secret. The Shopify receiver should remain fast and deterministic. Long-running reconciliation is intentionally separate from the synchronous webhook path; Shopify recommends reconciliation because webhook delivery is not guaranteed. A future reconciliation job can query updated orders and compare the `ShopifyOrder` mapping table.
+Each Shopify installation belongs to exactly one Wslahali client. Client users can manage only their own Shopify installation and pickup settings. API Keys, Wslahali Webhooks, Integration Logs, pricing administration, and other administrative features remain unavailable to client users.
 
-## Security checklist
+The webhook receiver rejects unknown stores, inactive installations, missing headers, oversized payloads, invalid HMAC signatures, and duplicate delivery IDs. Access tokens, client secrets, and raw credentials are not written to logs or returned to browsers. If a token is rotated, the merchant should update it through the dashboard; if access is revoked in Shopify, the Wslahali installation must be reconnected with a new token.
 
-The app client secret and merchant tokens must never be placed in Git, browser local storage, frontend source, logs, database plaintext columns, or webhook payloads. The client dashboard can manage its own Shopify installation and sender settings but cannot access API Keys, Wslahali Webhooks, Integration Logs, or any other administrative feature. Disconnecting a store removes its Wslahali installation and unregisters the tracked webhook subscription.
+## Customer message template
+
+> لربط متجرك Shopify مع Wslahali، افتح Shopify Admin الخاص بمتجرك وأنشئ Shopify App أو افتح التطبيق الموجود لديك. فعّل الصلاحيات المطلوبة لقراءة الطلبات وطلبات التنفيذ وإنشاء التتبع والـ fulfillment.
+>
+> بعد ذلك ادخل إلى حسابك في Wslahali وافتح **Dashboard → Shopify Integration**، ثم أدخل:
+>
+> - رابط المتجر بصيغة `your-store.myshopify.com`
+> - Admin API Access Token
+> - Shopify App Client Secret
+> - اسم ورقم هاتف وعنوان ومكان استلام الشحنات
+>
+> اضغط **Save and connect**. بعد نجاح الحفظ، أي طلب جديد في Shopify سيتم تحويله تلقائياً إلى شحنة في Wslahali، وسيتم تحديث رقم التتبع وحالة الشحنة في Shopify.
+>
+> لا ترسل Access Token أو Client Secret في WhatsApp أو البريد، ولا تضعهما في كود الموقع. أدخلهما فقط داخل صفحة Shopify Integration في Wslahali.
 
 ## References
 
-1. [Authenticate a standalone or API-only app](https://shopify.dev/docs/apps/build/authentication-authorization/authenticate-standalone-apps)
-2. [Authorization code grant](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant)
-3. [Shopify webhook delivery verification](https://shopify.dev/docs/apps/build/webhooks/verify-deliveries)
-4. [Shopify webhook subscriptions](https://shopify.dev/docs/apps/build/webhooks/subscribe)
-5. [Shopify Admin GraphQL `webhookSubscriptionCreate`](https://shopify.dev/docs/api/admin-graphql/latest/mutations/webhookSubscriptionCreate)
-6. [Shopify Admin GraphQL `fulfillmentCreate`](https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentCreate)
-7. [Shopify Admin GraphQL `fulfillmentEventCreate`](https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentEventCreate)
+1. [Shopify webhook subscriptions and custom apps](https://shopify.dev/docs/apps/build/webhooks/subscribe)
+2. [Shopify webhook delivery verification](https://shopify.dev/docs/apps/build/webhooks/verify-deliveries)
+3. [Shopify Admin GraphQL `webhookSubscriptionCreate`](https://shopify.dev/docs/api/admin-graphql/latest/mutations/webhookSubscriptionCreate)
+4. [Shopify Admin GraphQL `fulfillmentCreate`](https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentCreate)
+5. [Shopify Admin GraphQL `fulfillmentEventCreate`](https://shopify.dev/docs/api/admin-graphql/latest/mutations/fulfillmentEventCreate)
