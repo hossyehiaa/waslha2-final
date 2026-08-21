@@ -15,7 +15,7 @@ export default function ClientLoyaltyPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/loyalty')
+    fetch('/api/client/loyalty')
       .then(r => r.json())
       .then(d => setData(d))
       .catch(() => toast.error('Failed to load'))

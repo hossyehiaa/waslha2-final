@@ -12,21 +12,32 @@ type Message = {
   content: string
 }
 
-const SUGGESTED_QUESTIONS = [
+const ADMIN_SUGGESTED_QUESTIONS = [
   'How many shipments today?',
   'What is the total COD pending?',
   'Show me the top clients',
-  'كم شحنة تم توصيلها اليوم؟',
   'What is the financial summary?',
   'Which drivers have the most deliveries?',
 ]
 
-export function AIChatbot() {
+const CLIENT_SUGGESTED_QUESTIONS = [
+  'How many of my shipments are active?',
+  'What is my COD balance?',
+  'كم شحنة تم توصيلها اليوم؟',
+  'ما هي آخر حالة لشحناتي؟',
+]
+
+type ChatScope = 'admin' | 'client'
+
+export function AIChatbot({ scope = 'admin' }: { scope?: ChatScope }) {
   const [open, setOpen] = useState(false)
+  const suggestions = scope === 'client' ? CLIENT_SUGGESTED_QUESTIONS : ADMIN_SUGGESTED_QUESTIONS
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I am Wslahali AI Assistant. I can see your dashboard data in real-time. Ask me anything about shipments, clients, drivers, COD, finances, and more!\n\nTry one of the suggested questions below to get started.',
+      content: scope === 'client'
+        ? 'Hello! I am Wslahali AI. I can help with your shipments, COD balance, pickup requests, invoices, and tracking. I cannot access other clients or administration data.\n\nTry one of the suggested questions below to get started.'
+        : 'Hello! I am Wslahali AI Assistant. I can see the administration dashboard data in real-time. Ask me about shipments, clients, drivers, COD, finances, and more!\n\nTry one of the suggested questions below to get started.',
     },
   ])
   const [input, setInput] = useState('')
@@ -122,7 +133,7 @@ export function AIChatbot() {
                   </div>
                   <div className="text-xs text-white/70 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Connected to dashboard
+                    {scope === 'client' ? 'Connected to your client dashboard' : 'Connected to admin dashboard'}
                   </div>
                 </div>
               </div>
@@ -177,7 +188,7 @@ export function AIChatbot() {
                 <div className="pt-2">
                   <div className="text-xs text-muted-foreground mb-2 px-1">Suggested questions:</div>
                   <div className="flex flex-wrap gap-2">
-                    {SUGGESTED_QUESTIONS.map((q) => (
+                    {suggestions.map((q) => (
                       <button
                         key={q}
                         onClick={() => sendMessage(q)}

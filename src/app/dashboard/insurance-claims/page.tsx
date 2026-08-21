@@ -36,7 +36,7 @@ export default function ClientInsuranceClaimsPage() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/insurance-claims')
+      const res = await fetch('/api/client/insurance-claims')
       const data = await res.json()
       setClaims(data.claims || [])
       // Load shipments for dropdown
@@ -62,7 +62,7 @@ export default function ClientInsuranceClaimsPage() {
   ]
 
   async function handleSubmit(data: Record<string, any>) {
-    const res = await fetch('/api/admin/insurance-claims', {
+    const res = await fetch('/api/client/insurance-claims', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

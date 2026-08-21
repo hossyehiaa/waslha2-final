@@ -7,15 +7,15 @@ export const runtime = 'nodejs'
 export async function GET() {
   try {
     const user = await getCurrentUser()
-    if (!user || (user.role !== 'CLIENT' && user.role !== 'ADMIN')) {
+    if (!user || user.role !== 'CLIENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const clientId = user.role === 'CLIENT' ? user.clientId : undefined
-    if (user.role === 'CLIENT' && !clientId) {
+    const clientId = user.clientId
+    if (!clientId) {
       return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
     }
-    const where = clientId ? { clientId } : {}
+    const where = { clientId }
 
     const [
       totalShipments,
@@ -39,13 +39,13 @@ export async function GET() {
         },
       }),
       db.codSettlement.findMany({
-        where: clientId ? { clientId } : {},
+        where: { clientId },
         take: 5,
         orderBy: { createdAt: 'desc' },
       }),
     ])
 
-    const days = []
+    const days: Array<{ date: string; label: string; shipments: number }> = []
     for (let i = 6; i >= 0; i--) {
       const d = new Date()
       d.setHours(0, 0, 0, 0)

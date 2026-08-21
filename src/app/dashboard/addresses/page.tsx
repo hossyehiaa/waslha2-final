@@ -36,7 +36,7 @@ export default function ClientAddressesPage() {
 
   useEffect(() => {
     load()
-    fetch('/api/admin/cities').then(r => r.json()).then(d => setCities(d.cities || []))
+    fetch('/api/client/cities').then(async (r) => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Unable to load cities'); return d }).then(d => setCities(d.cities || [])).catch(() => toast.error(dict.common.noData))
   }, [])
 
   async function load() {
@@ -74,7 +74,7 @@ export default function ClientAddressesPage() {
       setOpen(false)
       load()
     } catch {
-      toast.error(dict.common.networkError)
+      toast.error(dict.auth.networkError)
     }
   }
 

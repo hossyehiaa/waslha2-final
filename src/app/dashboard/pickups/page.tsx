@@ -27,7 +27,7 @@ export default function ClientPickupsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/pickups')
+    fetch('/api/client/pickups')
       .then(r => r.json())
       .then(d => setPickups(d.pickups || []))
       .catch(() => toast.error(dict.common.noData))

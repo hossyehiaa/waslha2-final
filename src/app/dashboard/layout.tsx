@@ -1,32 +1,28 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard/shell'
 import { AIChatbot } from '@/components/ai-chatbot'
+import { useAuth } from '@/components/auth-context'
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading, refresh } = useAuth()
 
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then(r => r.json())
-      .then(d => {
-        if (!d.user) {
-          router.push('/login')
-          return
-        }
-        if (d.user.role !== 'CLIENT' && d.user.role !== 'ADMIN') {
-          router.push('/admin')
-          return
-        }
-        setUser(d.user)
-      })
-      .finally(() => setLoading(false))
-  }, [router])
+    void refresh()
+  }, [refresh])
+
+  useEffect(() => {
+    if (loading) return
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    if (user.role !== 'CLIENT') router.push('/admin')
+  }, [loading, router, user])
 
   if (loading || !user) {
     return (
@@ -42,7 +38,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <DashboardShell variant="client" user={user}>{children}</DashboardShell>
-      <AIChatbot />
+      <AIChatbot scope="client" />
     </>
   )
 }

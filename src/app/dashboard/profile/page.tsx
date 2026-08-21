@@ -52,7 +52,7 @@ export default function ClientProfilePage() {
       toast.success(L.profileUpdated)
       refresh?.()
     } catch {
-      toast.error(dict.common.networkError)
+      toast.error(dict.auth.networkError)
     } finally {
       setSaving(false)
     }
@@ -83,7 +83,7 @@ export default function ClientProfilePage() {
       toast.success('Password changed successfully')
       setPwd({ currentPassword: '', newPassword: '', confirmPassword: '' })
     } catch {
-      toast.error(dict.common.networkError)
+      toast.error(dict.auth.networkError)
     } finally {
       setChangingPassword(false)
     }
@@ -100,7 +100,7 @@ export default function ClientProfilePage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold">{authUser?.fullName}</h2>
-            <p className="text-sm text-muted-foreground">@{authUser?.username} • {authUser?.role}</p>
+            <p className="text-sm text-muted-foreground">@{authUser?.username} {authUser?.role === 'CLIENT' ? '• Client account' : `• ${authUser?.role || ''}`}</p>
           </div>
         </div>
       </Card>

@@ -792,6 +792,7 @@ export const translations = {
         twoFactorDesc: 'Add an extra layer of security',
         enable2fa: 'Enable 2FA',
         profileUpdated: 'Profile updated successfully',
+        saveChanges: 'Save Changes',
       },
     },
 
@@ -1579,6 +1580,7 @@ export const translations = {
         twoFactorDesc: 'أضف طبقة أمان إضافية',
         enable2fa: 'تفعيل 2FA',
         profileUpdated: 'تم تحديث الملف الشخصي بنجاح',
+        saveChanges: 'حفظ التغييرات',
       },
     },
 

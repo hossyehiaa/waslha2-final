@@ -32,7 +32,7 @@ export default function ClientCodPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/finance')
+    fetch('/api/client/finance')
       .then(r => r.json())
       .then(d => {
         setSettlements(d.settlements || [])

@@ -52,8 +52,7 @@ export default function LoginPage() {
         return
       }
       toast.success(`${A.welcomeBack}, ${data.user.fullName}!`)
-      router.push(data.redirect)
-      router.refresh()
+      window.location.assign(data.redirect)
     } catch {
       toast.error(A.networkError)
     } finally {

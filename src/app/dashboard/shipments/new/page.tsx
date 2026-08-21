@@ -30,7 +30,7 @@ export default function ClientNewShipmentPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/admin/cities').then(r => r.json()),
+      fetch('/api/client/cities').then(async (r) => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Unable to load cities'); return d }),
       fetch('/api/client/addresses').then(r => r.json()),
     ]).then(([c, a]) => {
       setCities(c.cities || [])
