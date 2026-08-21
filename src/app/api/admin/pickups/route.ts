@@ -10,7 +10,10 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const where: any = {}
-    if (user.role === 'CLIENT') where.clientId = user.clientId
+    if (user.role === 'CLIENT') {
+      if (!user.clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
+      where.clientId = user.clientId
+    }
 
     const pickups = await db.pickupRequest.findMany({
       where,
@@ -105,7 +108,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pickup }, { status: 201 })
   } catch (e: any) {
-    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
 
@@ -181,6 +184,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ pickup: updated })
   } catch (e: any) {
-    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

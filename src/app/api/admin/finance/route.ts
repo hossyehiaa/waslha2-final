@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role === 'CLIENT' && !user.clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
@@ -32,11 +33,11 @@ export async function GET(req: NextRequest) {
 
     const totalPending = await db.codSettlement.aggregate({
       _sum: { netAmount: true },
-      where: { status: 'PENDING' },
+      where: { ...where, status: 'PENDING' },
     })
     const totalPaid = await db.codSettlement.aggregate({
       _sum: { netAmount: true },
-      where: { status: 'PAID' },
+      where: { ...where, status: 'PAID' },
     })
 
     return NextResponse.json({
@@ -241,6 +242,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (e: any) {
     console.error('Finance PATCH error:', e)
-    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

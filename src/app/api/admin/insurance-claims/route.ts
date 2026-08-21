@@ -14,7 +14,12 @@ export async function GET(req: NextRequest) {
 
     const where: any = {}
     if (status && status !== 'all') where.status = status
-    if (user.role === 'CLIENT') where.clientId = user.clientId
+    if (user.role === 'CLIENT') {
+      if (!user.clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
+      where.clientId = user.clientId
+    } else if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const claims = await db.insuranceClaim.findMany({
       where,
@@ -52,6 +57,8 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'CLIENT' && user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (user.role === 'CLIENT' && !user.clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
 
     const body = await req.json()
     const { shipmentId, type, description, claimedAmount, evidenceUrls } = body

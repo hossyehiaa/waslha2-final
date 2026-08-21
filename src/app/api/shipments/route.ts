@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser, generateTrackingNumber } from '@/lib/auth-helpers'
+import { calculateShippingCost } from '@/lib/partner-api'
 
 export const runtime = 'nodejs'
 
@@ -30,9 +31,13 @@ export async function GET(req: NextRequest) {
 
     // Role-based filtering
     if (user.role === 'CLIENT') {
+      if (!user.clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
       where.clientId = user.clientId
     } else if (user.role === 'DRIVER') {
+      if (!user.driverId) return NextResponse.json({ error: 'Driver account is required' }, { status: 403 })
       where.driverId = user.driverId
+    } else if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const [shipments, total] = await Promise.all([
@@ -90,25 +95,42 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
+    if (user.role === 'DRIVER' || (user.role !== 'CLIENT' && user.role !== 'ADMIN' && user.role !== 'EMPLOYEE')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
-    // Validate required fields
-    const required = ['clientId', 'senderName', 'senderPhone', 'senderCityId', 'recipientName', 'recipientPhone', 'recipientAddress', 'recipientCityId']
+    const clientId = user.role === 'CLIENT' ? user.clientId : body.clientId
+    if (!clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 400 })
+
+    // Validate required fields. clientId is always derived from the session for CLIENT accounts.
+    const required = ['senderName', 'senderPhone', 'senderCityId', 'recipientName', 'recipientPhone', 'recipientAddress', 'recipientCityId']
     for (const f of required) {
       if (!body[f]) return NextResponse.json({ error: `Missing field: ${f}` }, { status: 400 })
     }
 
-    const trackingNumber = generateTrackingNumber()
-
-    // Calculate pricing
+    const serviceType = body.serviceType === 'EXPRESS' || body.serviceType === 'SAME_DAY' ? body.serviceType : 'STANDARD'
+    const priority = body.priority === 'LOW' || body.priority === 'HIGH' || body.priority === 'URGENT' ? body.priority : 'NORMAL'
+    const weight = Number(body.weight) || 0.5
+    const pieces = Number(body.pieces) || 1
     const codAmount = Number(body.codAmount) || 0
-    const shippingCost = Number(body.shippingCost) || 25
-    const codFee = Math.round(codAmount * 0.02 * 100) / 100
-    const totalCost = shippingCost + codFee
+    const quote = await calculateShippingCost({
+      sender: { name: body.senderName, phone: body.senderPhone, address: body.senderAddress || '', cityCode: body.senderCityId },
+      recipient: { name: body.recipientName, phone: body.recipientPhone, address: body.recipientAddress, cityCode: body.recipientCityId },
+      serviceType,
+      priority,
+      weight,
+      pieces,
+      description: body.description || null,
+      codAmount,
+    }, body.senderCityId, body.recipientCityId)
+
+    const trackingNumber = generateTrackingNumber()
+    const { shippingCost, codFee, totalCost } = quote
 
     const shipment = await db.shipment.create({
       data: {
         trackingNumber,
-        clientId: body.clientId,
+        clientId,
         createdById: user.id,
         senderName: body.senderName,
         senderPhone: body.senderPhone,
@@ -121,9 +143,9 @@ export async function POST(req: NextRequest) {
         recipientCityId: body.recipientCityId,
         toBranchId: body.toBranchId || null,
         type: body.type || 'DELIVERY',
-        serviceType: body.serviceType || 'STANDARD',
-        weight: Number(body.weight) || 0.5,
-        pieces: Number(body.pieces) || 1,
+        serviceType,
+        weight,
+        pieces,
         description: body.description || null,
         shippingCost,
         codAmount,
@@ -149,7 +171,7 @@ export async function POST(req: NextRequest) {
 
     // Update client counters
     await db.client.update({
-      where: { id: body.clientId },
+      where: { id: clientId },
       data: { totalShipments: { increment: 1 }, activeShipments: { increment: 1 } },
     })
 
@@ -167,6 +189,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ shipment, trackingNumber }, { status: 201 })
   } catch (e: any) {
     console.error('Shipment create error:', e)
-    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

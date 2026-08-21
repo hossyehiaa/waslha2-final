@@ -7,7 +7,7 @@ export const runtime = 'nodejs'
 export async function GET() {
   try {
     const user = await getCurrentUser()
-    if (!user || (user.role !== 'CLIENT' && user.role !== 'ADMIN')) {
+    if (!user || user.role !== 'CLIENT' || !user.clientId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -37,7 +37,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
+    if (!user || user.role !== 'CLIENT' || !user.clientId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
+    if (!user || user.role !== 'CLIENT' || !user.clientId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

@@ -43,13 +43,15 @@ export async function PATCH(
     })
     if (!shipment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Permission check
-    if (user.role === 'CLIENT' && shipment.clientId !== user.clientId) {
+    // Permission check: only operations staff and the assigned driver can change lifecycle state.
+    if (user.role === 'CLIENT') {
+      if (!user.clientId || shipment.clientId !== user.clientId || status !== 'CANCELLED' || shipment.status !== 'PENDING') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    } else if (user.role === 'DRIVER') {
+      if (!user.driverId || shipment.driverId !== user.driverId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    } else if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-    // Clients can only view, not change status (except cancel their own pending)
-    if (user.role === 'CLIENT' && status !== 'CANCELLED') {
-      return NextResponse.json({ error: 'Clients cannot change shipment status' }, { status: 403 })
     }
 
     const { shipment: updated } = await updateShipmentStatus({
@@ -176,6 +178,6 @@ export async function PATCH(
     return NextResponse.json({ shipment: updated })
   } catch (e: any) {
     console.error('Status update error:', e)
-    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

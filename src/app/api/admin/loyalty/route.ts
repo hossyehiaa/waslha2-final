@@ -11,7 +11,12 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
-    const clientId = searchParams.get('clientId') || (user.role === 'CLIENT' ? user.clientId : null)
+    const requestedClientId = searchParams.get('clientId')
+    const clientId = user.role === 'CLIENT' ? user.clientId : requestedClientId
+
+    if (user.role === 'CLIENT' && !clientId) {
+      return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
+    }
 
     if (!clientId) {
       // Admin: list all clients with their points

@@ -12,6 +12,9 @@ export async function GET() {
     }
 
     const clientId = user.role === 'CLIENT' ? user.clientId : undefined
+    if (user.role === 'CLIENT' && !clientId) {
+      return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
+    }
     const where = clientId ? { clientId } : {}
 
     const [

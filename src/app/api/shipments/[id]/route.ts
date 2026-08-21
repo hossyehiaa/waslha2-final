@@ -47,7 +47,9 @@ export async function PATCH(
 ) {
   try {
     const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const { id } = await params
     const body = await req.json()
@@ -55,10 +57,7 @@ export async function PATCH(
     const shipment = await db.shipment.findUnique({ where: { id } })
     if (!shipment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Permission check - clients can only edit their own shipments
-    if (user.role === 'CLIENT' && shipment.clientId !== user.clientId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    // This route is restricted to operations staff; client edits are intentionally disabled.
 
     const updateData: any = {}
 
@@ -90,11 +89,6 @@ export async function PATCH(
       updateData.totalCost = shipment.shippingCost + codFee
     }
 
-    if (body.shippingCost !== undefined) {
-      const shippingCost = Number(body.shippingCost) || 0
-      updateData.shippingCost = shippingCost
-      updateData.totalCost = shippingCost + (updateData.codFee ?? shipment.codFee)
-    }
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
@@ -115,6 +109,6 @@ export async function PATCH(
     return NextResponse.json({ shipment: updated })
   } catch (e: any) {
     console.error('Shipment update error:', e)
-    return NextResponse.json({ error: 'Server error', details: e.message }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
