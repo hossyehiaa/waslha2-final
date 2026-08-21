@@ -66,7 +66,7 @@ export default function ClientNewShipmentPage() {
       toast.success(`${L.createShipment}: ${data.trackingNumber}`)
       router.push('/dashboard/shipments')
     } catch {
-      toast.error(dict.common.networkError)
+      toast.error(dict.auth.networkError)
     } finally {
       setLoading(false)
     }
