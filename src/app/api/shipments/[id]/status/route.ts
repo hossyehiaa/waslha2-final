@@ -5,6 +5,7 @@ import { sendShipmentNotification } from '@/lib/notification-service'
 import { dispatchWebhookEvent } from '@/lib/webhooks'
 import type { WebhookEvent } from '@/lib/partner-api'
 import { updateShipmentStatus } from '@/lib/partner-api'
+import { syncShopifyShipmentStatus } from '@/lib/shopify'
 
 export const runtime = 'nodejs'
 
@@ -154,6 +155,9 @@ export async function PATCH(
       void dispatchWebhookEvent(shipment.clientId, 'shipment.status_changed', webhookData).catch((error) => console.error('Shipment status webhook error:', error))
       const webhookEvent = `shipment.${status.toLowerCase()}` as WebhookEvent
       if (webhookEvent !== 'shipment.status_changed') void dispatchWebhookEvent(shipment.clientId, webhookEvent, webhookData).catch((error) => console.error('Shipment status webhook error:', error))
+      void syncShopifyShipmentStatus(id, status).catch(async () => {
+        await db.shopifyInstallation.updateMany({ where: { clientId: shipment.clientId }, data: { lastError: 'Shopify fulfillment sync failed' } }).catch(() => undefined)
+      })
     }
 
     // Award loyalty points on delivery

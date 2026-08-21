@@ -9,7 +9,7 @@ import {
   FileText, Settings, Bell, Search, LogOut, Menu, X, ChevronDown,
   UserCog, PackageCheck, ArrowLeftRight, Receipt, BarChart3,
   Star, User, Key, Shield, Wrench, ClipboardList, RotateCcw,
-  RefreshCw, TrendingDown, Webhook,
+  RefreshCw, TrendingDown, Webhook, Store,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -207,6 +207,7 @@ function buildClientNav(dict: Dict): NavItem[] {
     { label: dict.nav.invoices, href: '/dashboard/invoices', icon: Receipt },
     { label: 'Loyalty', href: '/dashboard/loyalty', icon: Star },
     { label: 'Insurance Claims', href: '/dashboard/insurance-claims', icon: Shield },
+    { label: 'Shopify Integration', href: '/dashboard/shopify', icon: Store },
     { label: dict.nav.addresses, href: '/dashboard/addresses', icon: MapPin },
     { label: dict.nav.notifications, href: '/dashboard/notifications', icon: Bell },
     { label: dict.nav.profile, href: '/dashboard/profile', icon: User },

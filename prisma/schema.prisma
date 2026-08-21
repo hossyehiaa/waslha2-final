@@ -12,18 +12,18 @@ datasource db {
 
 // ============ AUTH & USERS ============
 model User {
-  id            String   @id @default(cuid())
-  username      String   @unique
-  email         String?  @unique
-  passwordHash  String
-  fullName      String
-  phone         String?
-  role          String   @default("CLIENT") // ADMIN, EMPLOYEE, DRIVER, CLIENT
-  avatar        String?
-  status        String   @default("ACTIVE") // ACTIVE, SUSPENDED, INACTIVE
-  lastLoginAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String?   @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  role         String    @default("CLIENT") // ADMIN, EMPLOYEE, DRIVER, CLIENT
+  avatar       String?
+  status       String    @default("ACTIVE") // ACTIVE, SUSPENDED, INACTIVE
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Relations
   clientProfile   Client?
@@ -31,8 +31,8 @@ model User {
   driverProfile   Driver?
   notifications   Notification[]
   activityLogs    ActivityLog[]
-  shipments       Shipment[]      @relation("createdBy")
-  auditActions    AuditLog[]      @relation("auditBy")
+  shipments       Shipment[]     @relation("createdBy")
+  auditActions    AuditLog[]     @relation("auditBy")
   sessions        Session[]
 }
 
@@ -63,28 +63,29 @@ model Client {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  shipments       Shipment[]
-  addresses       ClientAddress[]
-  invoices        Invoice[]
-  codSettlements  CodSettlement[]
-  pickupRequests  PickupRequest[]
-  payoutRequests  PayoutRequest[]
-  flyerRequests   FlyerRequest[]
-  apiKeys         ApiKey[]
-  webhooks        WebhookEndpoint[]
-  idempotencyKeys IdempotencyKey[]
-  requestLogs     ApiRequestLog[]
-  loyaltyPoints   LoyaltyPoint[]
-  insuranceClaims InsuranceClaim[]
-  logoUrl         String?
-  preferredCurrency String @default("EGP")
+  shipments           Shipment[]
+  addresses           ClientAddress[]
+  invoices            Invoice[]
+  codSettlements      CodSettlement[]
+  pickupRequests      PickupRequest[]
+  payoutRequests      PayoutRequest[]
+  flyerRequests       FlyerRequest[]
+  apiKeys             ApiKey[]
+  webhooks            WebhookEndpoint[]
+  idempotencyKeys     IdempotencyKey[]
+  requestLogs         ApiRequestLog[]
+  shopifyInstallation ShopifyInstallation?
+  loyaltyPoints       LoyaltyPoint[]
+  insuranceClaims     InsuranceClaim[]
+  logoUrl             String?
+  preferredCurrency   String               @default("EGP")
 }
 
 model ClientAddress {
   id          String   @id @default(cuid())
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  label       String   // "Office", "Warehouse", "Home"
+  label       String // "Office", "Warehouse", "Home"
   contactName String
   phone       String
   cityId      String
@@ -96,66 +97,66 @@ model ClientAddress {
 
 // ============ EMPLOYEES ============
 model Employee {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  employeeCode String  @unique
-  position    String   // MANAGER, SUPERVISOR, CLERK, AGENT
-  branchId    String?
-  branch      Branch?  @relation(fields: [branchId], references: [id])
-  salary      Float    @default(0)
-  hireDate    DateTime @default(now())
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode String   @unique
+  position     String // MANAGER, SUPERVISOR, CLERK, AGENT
+  branchId     String?
+  branch       Branch?  @relation(fields: [branchId], references: [id])
+  salary       Float    @default(0)
+  hireDate     DateTime @default(now())
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ============ DRIVERS (Couriers) ============
 model Driver {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  driverCode    String   @unique
-  vehicleType   String   @default("MOTORCYCLE") // MOTORCYCLE, CAR, VAN, TRUCK
-  vehiclePlate  String?
-  licenseNumber String?
-  branchId      String?
-  branch        Branch?  @relation(fields: [branchId], references: [id])
-  zoneId        String?
-  zone          Zone?    @relation(fields: [zoneId], references: [id])
-  rating        Float    @default(5)
-  totalDeliveries Int    @default(0)
-  totalEarnings Float    @default(0)
-  pendingEarnings Float  @default(0)
-  status        String   @default("ACTIVE") // ACTIVE, OFFLINE, SUSPENDED
-  joinDate      DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driverCode      String   @unique
+  vehicleType     String   @default("MOTORCYCLE") // MOTORCYCLE, CAR, VAN, TRUCK
+  vehiclePlate    String?
+  licenseNumber   String?
+  branchId        String?
+  branch          Branch?  @relation(fields: [branchId], references: [id])
+  zoneId          String?
+  zone            Zone?    @relation(fields: [zoneId], references: [id])
+  rating          Float    @default(5)
+  totalDeliveries Int      @default(0)
+  totalEarnings   Float    @default(0)
+  pendingEarnings Float    @default(0)
+  status          String   @default("ACTIVE") // ACTIVE, OFFLINE, SUSPENDED
+  joinDate        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  shipments     Shipment[]
+  shipments      Shipment[]
   pickupRequests PickupRequest[]
 }
 
 // ============ BRANCHES ============
 model Branch {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  code        String   @unique
-  phone       String?
-  address     String?
-  cityId      String?
-  city        City?    @relation(fields: [cityId], references: [id])
-  managerId   String?
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  phone     String?
+  address   String?
+  cityId    String?
+  city      City?    @relation(fields: [cityId], references: [id])
+  managerId String?
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   clients       Client[]
   employees     Employee[]
   drivers       Driver[]
   warehouses    Warehouse[]
-  shipmentsFrom Shipment[]     @relation("shipmentFromBranch")
-  shipmentsTo   Shipment[]     @relation("shipmentToBranch")
+  shipmentsFrom Shipment[]       @relation("shipmentFromBranch")
+  shipmentsTo   Shipment[]       @relation("shipmentToBranch")
   transfersFrom BranchTransfer[] @relation("transferFrom")
   transfersTo   BranchTransfer[] @relation("transferTo")
   accounts      Account[]
@@ -184,97 +185,99 @@ model City {
   status      String   @default("ACTIVE")
   createdAt   DateTime @default(now())
 
-  zones        Zone[]
-  branches     Branch[]
-  clients      Client[]
-  addresses    ClientAddress[]
-  shipmentsFrom Shipment[] @relation("shipmentFromCity")
-  shipmentsTo   Shipment[] @relation("shipmentToCity")
-  pricingFrom   PricingRule[] @relation("pricingFromCity")
-  pricingTo     PricingRule[] @relation("pricingToCity")
+  zones         Zone[]
+  branches      Branch[]
+  clients       Client[]
+  addresses     ClientAddress[]
+  shipmentsFrom Shipment[]      @relation("shipmentFromCity")
+  shipmentsTo   Shipment[]      @relation("shipmentToCity")
+  pricingFrom   PricingRule[]   @relation("pricingFromCity")
+  pricingTo     PricingRule[]   @relation("pricingToCity")
 }
 
 model Zone {
-  id          String   @id @default(cuid())
-  name        String
-  code        String   @unique
-  cityId      String
-  city        City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  cityId    String
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
 
-  drivers     Driver[]
+  drivers Driver[]
 }
 
 // ============ SHIPMENTS ============
 model Shipment {
-  id                String   @id @default(cuid())
-  trackingNumber    String   @unique
-  clientId          String
-  client            Client   @relation(fields: [clientId], references: [id])
-  createdById       String
-  createdBy         User     @relation("createdBy", fields: [createdById], references: [id])
+  id             String @id @default(cuid())
+  trackingNumber String @unique
+  clientId       String
+  client         Client @relation(fields: [clientId], references: [id])
+  createdById    String
+  createdBy      User   @relation("createdBy", fields: [createdById], references: [id])
 
   // Sender
-  senderName        String
-  senderPhone       String
-  senderAddress     String
-  senderCityId      String
-  senderCity        City     @relation("shipmentFromCity", fields: [senderCityId], references: [id])
-  fromBranchId      String?
-  fromBranch        Branch?  @relation("shipmentFromBranch", fields: [fromBranchId], references: [id])
+  senderName    String
+  senderPhone   String
+  senderAddress String
+  senderCityId  String
+  senderCity    City    @relation("shipmentFromCity", fields: [senderCityId], references: [id])
+  fromBranchId  String?
+  fromBranch    Branch? @relation("shipmentFromBranch", fields: [fromBranchId], references: [id])
 
   // Recipient
-  recipientName     String
-  recipientPhone    String
-  recipientAddress  String
-  recipientCityId   String
-  recipientCity     City     @relation("shipmentToCity", fields: [recipientCityId], references: [id])
-  toBranchId        String?
-  toBranch          Branch?  @relation("shipmentToBranch", fields: [toBranchId], references: [id])
+  recipientName    String
+  recipientPhone   String
+  recipientAddress String
+  recipientCityId  String
+  recipientCity    City    @relation("shipmentToCity", fields: [recipientCityId], references: [id])
+  toBranchId       String?
+  toBranch         Branch? @relation("shipmentToBranch", fields: [toBranchId], references: [id])
 
   // Shipment details
-  type              String   @default("DELIVERY") // DELIVERY, RETURN, EXCHANGE
-  serviceType       String   @default("STANDARD") // STANDARD, EXPRESS, SAME_DAY
-  weight            Float    @default(0.5)
-  pieces            Int      @default(1)
-  description       String?
+  type        String  @default("DELIVERY") // DELIVERY, RETURN, EXCHANGE
+  serviceType String  @default("STANDARD") // STANDARD, EXPRESS, SAME_DAY
+  weight      Float   @default(0.5)
+  pieces      Int     @default(1)
+  description String?
 
   // Pricing
-  shippingCost      Float    @default(0)
-  codAmount         Float    @default(0) // Cash on Delivery amount
-  codFee            Float    @default(0) // Fee charged for COD service
-  insuranceFee      Float    @default(0)
-  totalCost         Float    @default(0)
-  currency          String   @default("EGP")
+  shippingCost Float  @default(0)
+  codAmount    Float  @default(0) // Cash on Delivery amount
+  codFee       Float  @default(0) // Fee charged for COD service
+  insuranceFee Float  @default(0)
+  totalCost    Float  @default(0)
+  currency     String @default("EGP")
 
   // Assignment & status
-  driverId          String?
-  driver            Driver?  @relation(fields: [driverId], references: [id])
-  status            String   @default("PENDING") // PENDING, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, RETURNED, CANCELLED, FAILED
-  deliveryStatus    String?  // DELIVERED, FAILED_ATTEMPT, REFUSED, POSTPONED
-  failureReason     String?
-  priority          String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
-  isFavorite        Boolean  @default(false)
+  driverId       String?
+  driver         Driver? @relation(fields: [driverId], references: [id])
+  status         String  @default("PENDING") // PENDING, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, RETURNED, CANCELLED, FAILED
+  deliveryStatus String? // DELIVERED, FAILED_ATTEMPT, REFUSED, POSTPONED
+  failureReason  String?
+  priority       String  @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  isFavorite     Boolean @default(false)
+
+  shopifyOrder ShopifyOrder?
 
   // Payment status (COD)
-  paymentStatus     String   @default("PENDING") // PENDING, COLLECTED, SETTLED
-  codCollectedAt    DateTime?
-  codSettledAt      DateTime?
-  settlementId      String?
+  paymentStatus  String    @default("PENDING") // PENDING, COLLECTED, SETTLED
+  codCollectedAt DateTime?
+  codSettledAt   DateTime?
+  settlementId   String?
 
   // Timestamps
-  pickupAt          DateTime?
-  deliveredAt       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  pickupAt    DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
-  statusHistory     ShipmentStatus[]
-  pickupRequest     PickupRequest?
-  returns           Return[]
-  labels            ShippingLabel[]
-  insuranceClaims   InsuranceClaim[]
+  statusHistory   ShipmentStatus[]
+  pickupRequest   PickupRequest?
+  returns         Return[]
+  labels          ShippingLabel[]
+  insuranceClaims InsuranceClaim[]
 
   @@index([clientId])
   @@index([driverId])
@@ -283,38 +286,38 @@ model Shipment {
 }
 
 model ShipmentStatus {
-  id          String   @id @default(cuid())
-  shipmentId  String
-  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-  status      String
-  note        String?
-  location    String?
-  lat         Float?
-  lng         Float?
-  createdBy   String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status     String
+  note       String?
+  location   String?
+  lat        Float?
+  lng        Float?
+  createdBy  String?
+  createdAt  DateTime @default(now())
 
   @@index([shipmentId])
 }
 
 model ShippingLabel {
-  id          String   @id @default(cuid())
-  shipmentId  String
-  shipment    Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-  barcode     String
-  qrCode      String?
-  printedAt   DateTime?
-  printedBy   String?
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  shipmentId String
+  shipment   Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  barcode    String
+  qrCode     String?
+  printedAt  DateTime?
+  printedBy  String?
+  createdAt  DateTime  @default(now())
 }
 
 // ============ PICKUP REQUESTS ============
 model PickupRequest {
-  id          String   @id @default(cuid())
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  driverId    String?
-  driver      Driver?  @relation(fields: [driverId], references: [id])
+  id       String  @id @default(cuid())
+  clientId String
+  client   Client  @relation(fields: [clientId], references: [id])
+  driverId String?
+  driver   Driver? @relation(fields: [driverId], references: [id])
 
   pickupAddress String
   pickupCityId  String
@@ -325,16 +328,16 @@ model PickupRequest {
   scheduledDate DateTime?
   completedDate DateTime?
 
-  packagesCount Int    @default(1)
-  totalWeight   Float  @default(0)
+  packagesCount Int     @default(1)
+  totalWeight   Float   @default(0)
   notes         String?
 
-  status      String   @default("PENDING") // PENDING, CONFIRMED, ASSIGNED, PICKED_UP, CANCELLED
-  shipmentId  String?  @unique
-  shipment    Shipment? @relation(fields: [shipmentId], references: [id])
+  status     String    @default("PENDING") // PENDING, CONFIRMED, ASSIGNED, PICKED_UP, CANCELLED
+  shipmentId String?   @unique
+  shipment   Shipment? @relation(fields: [shipmentId], references: [id])
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clientId])
   @@index([status])
@@ -342,109 +345,109 @@ model PickupRequest {
 
 // ============ RETURNS ============
 model Return {
-  id          String   @id @default(cuid())
-  shipmentId  String
-  shipment    Shipment @relation(fields: [shipmentId], references: [id])
-  reason      String
-  status      String   @default("PENDING") // PENDING, IN_TRANSIT, RETURNED_TO_CLIENT, DISPOSED
-  condition   String?  // GOOD, DAMAGED, LOST
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
+  reason     String
+  status     String   @default("PENDING") // PENDING, IN_TRANSIT, RETURNED_TO_CLIENT, DISPOSED
+  condition  String? // GOOD, DAMAGED, LOST
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // ============ FINANCE - COD SETTLEMENTS ============
 model CodSettlement {
-  id          String   @id @default(cuid())
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  reference   String   @unique
-  period      String   // e.g., "2026-06"
-  totalAmount Float    // total COD collected
-  fees        Float    // total COD fees
-  netAmount   Float    // net to be paid to client
+  id            String    @id @default(cuid())
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id])
+  reference     String    @unique
+  period        String // e.g., "2026-06"
+  totalAmount   Float // total COD collected
+  fees          Float // total COD fees
+  netAmount     Float // net to be paid to client
   shipmentCount Int
-  status      String   @default("PENDING") // PENDING, APPROVED, PAID, CANCELLED
-  paidAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status        String    @default("PENDING") // PENDING, APPROVED, PAID, CANCELLED
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([clientId])
 }
 
 model PayoutRequest {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
+  client      Client    @relation(fields: [clientId], references: [id])
   amount      Float
-  method      String   @default("BANK_TRANSFER") // BANK_TRANSFER, CASH, WALLET
+  method      String    @default("BANK_TRANSFER") // BANK_TRANSFER, CASH, WALLET
   bankAccount String?
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, PAID
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED, PAID
   notes       String?
   processedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Invoice {
-  id          String   @id @default(cuid())
-  invoiceNumber String @unique
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  type        String   @default("SHIPPING") // SHIPPING, COD_FEES, INSURANCE
-  amount      Float
-  tax         Float    @default(0)
-  total       Float
-  status      String   @default("UNPAID") // UNPAID, PAID, OVERDUE
-  dueDate     DateTime?
-  paidAt      DateTime?
-  period      String?
-  createdAt   DateTime @default(now())
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id])
+  type          String    @default("SHIPPING") // SHIPPING, COD_FEES, INSURANCE
+  amount        Float
+  tax           Float     @default(0)
+  total         Float
+  status        String    @default("UNPAID") // UNPAID, PAID, OVERDUE
+  dueDate       DateTime?
+  paidAt        DateTime?
+  period        String?
+  createdAt     DateTime  @default(now())
 }
 
 // ============ BRANCH TRANSFERS ============
 model BranchTransfer {
-  id          String   @id @default(cuid())
-  reference   String   @unique
+  id           String @id @default(cuid())
+  reference    String @unique
   fromBranchId String
-  fromBranch   Branch   @relation("transferFrom", fields: [fromBranchId], references: [id])
+  fromBranch   Branch @relation("transferFrom", fields: [fromBranchId], references: [id])
   toBranchId   String
-  toBranch     Branch   @relation("transferTo", fields: [toBranchId], references: [id])
+  toBranch     Branch @relation("transferTo", fields: [toBranchId], references: [id])
 
   shipmentCount Int
   totalValue    Float
-  status        String  @default("PENDING_RECEIPT") // PENDING_RECEIPT, RECEIVED, CANCELLED
+  status        String    @default("PENDING_RECEIPT") // PENDING_RECEIPT, RECEIVED, CANCELLED
   sentAt        DateTime
   receivedAt    DateTime?
   notes         String?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============ PRICING ============
 model PricingRule {
-  id          String   @id @default(cuid())
-  name        String
-  fromCityId  String?
-  fromCity    City?    @relation("pricingFromCity", fields: [fromCityId], references: [id])
-  toCityId    String?
-  toCity      City?    @relation("pricingToCity", fields: [toCityId], references: [id])
+  id         String  @id @default(cuid())
+  name       String
+  fromCityId String?
+  fromCity   City?   @relation("pricingFromCity", fields: [fromCityId], references: [id])
+  toCityId   String?
+  toCity     City?   @relation("pricingToCity", fields: [toCityId], references: [id])
 
-  serviceType String   @default("STANDARD")
-  baseWeight  Float    @default(0.5) // kg
-  basePrice   Float    @default(0)
-  perKgPrice  Float    @default(0)
-  codFeePercent Float  @default(2) // % of COD amount
-  insuranceFeePercent Float @default(0)
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
+  serviceType         String   @default("STANDARD")
+  baseWeight          Float    @default(0.5) // kg
+  basePrice           Float    @default(0)
+  perKgPrice          Float    @default(0)
+  codFeePercent       Float    @default(2) // % of COD amount
+  insuranceFeePercent Float    @default(0)
+  status              String   @default("ACTIVE")
+  createdAt           DateTime @default(now())
 }
 
 // ============ EXPENSES ============
 model Expense {
   id          String   @id @default(cuid())
-  category    String   // SALARIES, FUEL, MAINTENANCE, RENT, UTILITIES, OTHER
+  category    String // SALARIES, FUEL, MAINTENANCE, RENT, UTILITIES, OTHER
   description String
   amount      Float
   branchId    String?
@@ -455,59 +458,59 @@ model Expense {
 
 // ============ FLYER REQUESTS (customer wants flyers/materials) ============
 model FlyerRequest {
-  id          String   @id @default(cuid())
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  quantity    Int
-  type        String   @default("STANDARD") // STANDARD, BRANDED
-  notes       String?
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, FULFILLED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  quantity  Int
+  type      String   @default("STANDARD") // STANDARD, BRANDED
+  notes     String?
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED, FULFILLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============ NOTIFICATIONS ============
 model Notification {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // SHIPMENT, PAYMENT, SYSTEM, PICKUP, ALERT
-  title       String
-  message     String
-  isRead      Boolean  @default(false)
-  link        String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // SHIPMENT, PAYMENT, SYSTEM, PICKUP, ALERT
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
 
   @@index([userId])
 }
 
 // ============ ACTIVITY LOGS & AUDIT ============
 model ActivityLog {
-  id          String   @id @default(cuid())
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  action      String
-  entity      String?
-  entityId    String?
-  details     String?
-  ipAddress   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  userId      String?
-  user        User?    @relation("auditBy", fields: [userId], references: [id])
-  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
-  entity      String
-  entityId    String?
-  beforeData  String?
-  afterData   String?
-  ipAddress   String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation("auditBy", fields: [userId], references: [id])
+  action     String // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  entity     String
+  entityId   String?
+  beforeData String?
+  afterData  String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
 
   @@index([userId])
 }
@@ -527,18 +530,18 @@ model PermissionTemplate {
   id          String   @id @default(cuid())
   name        String   @unique
   description String?
-  permissions String   // JSON array of permission keys
+  permissions String // JSON array of permission keys
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
 
 // ============ CANCEL/POSTPONE REASONS ============
 model CancelReason {
-  id          String   @id @default(cuid())
-  reason      String   @unique
-  type        String   @default("CANCEL") // CANCEL, POSTPONE
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  reason    String   @unique
+  type      String   @default("CANCEL") // CANCEL, POSTPONE
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 // ============ EXPENSE TYPES ============
@@ -552,15 +555,15 @@ model ExpenseType {
 
 // ============ ACCOUNTS (Financial) ============
 model Account {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  type        String   @default("BANK") // BANK, CASH, WALLET
-  balance     Float    @default(0)
-  branchId    String?
-  branch      Branch?  @relation(fields: [branchId], references: [id])
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  type      String   @default("BANK") // BANK, CASH, WALLET
+  balance   Float    @default(0)
+  branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   transfersFrom AccountTransfer[] @relation("transferFrom")
   transfersTo   AccountTransfer[] @relation("transferTo")
@@ -569,44 +572,44 @@ model Account {
 
 // ============ CASH ORDERS (صرف/قبض) ============
 model CashOrder {
-  id          String   @id @default(cuid())
-  reference   String   @unique
-  type        String   // CASH_OUT, CASH_IN
-  amount      Float
-  accountId   String
-  account     Account  @relation(fields: [accountId], references: [id])
-  reason      String
-  recipient   String
-  approvedBy  String?
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  reference  String   @unique
+  type       String // CASH_OUT, CASH_IN
+  amount     Float
+  accountId  String
+  account    Account  @relation(fields: [accountId], references: [id])
+  reason     String
+  recipient  String
+  approvedBy String?
+  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // ============ ACCOUNT TRANSFERS ============
 model AccountTransfer {
-  id          String   @id @default(cuid())
-  reference   String   @unique
+  id            String   @id @default(cuid())
+  reference     String   @unique
   fromAccountId String
-  fromAccount   Account @relation("transferFrom", fields: [fromAccountId], references: [id])
+  fromAccount   Account  @relation("transferFrom", fields: [fromAccountId], references: [id])
   toAccountId   String
-  toAccount     Account @relation("transferTo", fields: [toAccountId], references: [id])
-  amount      Float
-  reason      String?
-  status      String   @default("COMPLETED")
-  createdAt   DateTime @default(now())
+  toAccount     Account  @relation("transferTo", fields: [toAccountId], references: [id])
+  amount        Float
+  reason        String?
+  status        String   @default("COMPLETED")
+  createdAt     DateTime @default(now())
 }
 
 model Session {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token       String   @unique
-  expiresAt   DateTime
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([token])
@@ -614,20 +617,20 @@ model Session {
 
 // ============ API KEYS (Third-party integration) ============
 model ApiKey {
-  id          String   @id @default(cuid())
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  clientId   String
+  client     Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   // Legacy plaintext key column is retained as nullable for safe one-time migration.
-  key         String?  @unique
-  keyHash     String?  @unique
-  keyPrefix   String?
-  name        String
-  scopes      String   @default("shipments:read,shipments:write") // comma-separated; colon/underscore forms accepted
-  isTestMode  Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  lastUsedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  key        String?   @unique
+  keyHash    String?   @unique
+  keyPrefix  String?
+  name       String
+  scopes     String    @default("shipments:read,shipments:write") // comma-separated; colon/underscore forms accepted
+  isTestMode Boolean   @default(false)
+  isActive   Boolean   @default(true)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   requestLogs ApiRequestLog[]
 
@@ -658,22 +661,22 @@ model IdempotencyKey {
 }
 
 model WebhookEndpoint {
-  id             String   @id @default(cuid())
-  clientId       String
-  url            String
-  secretHash     String
+  id              String    @id @default(cuid())
+  clientId        String
+  url             String
+  secretHash      String
   secretEncrypted String?
-  secretPrefix   String
-  name           String?
-  events         String   // JSON array of event names
-  isActive       Boolean  @default(true)
-  description    String?
-  lastSuccessAt  DateTime?
-  lastFailureAt  DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  secretPrefix    String
+  name            String?
+  events          String // JSON array of event names
+  isActive        Boolean   @default(true)
+  description     String?
+  lastSuccessAt   DateTime?
+  lastFailureAt   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  client    Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client     Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
   deliveries WebhookDelivery[]
 
   @@index([clientId])
@@ -681,19 +684,19 @@ model WebhookEndpoint {
 }
 
 model WebhookDelivery {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   webhookEndpointId String
   event             String
   payload           String
   responseStatus    Int?
   responseBody      String?
-  attemptNumber     Int      @default(1)
-  status            String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  attemptNumber     Int       @default(1)
+  status            String    @default("PENDING") // PENDING, SUCCESS, FAILED
   error             String?
   nextAttemptAt     DateTime?
   deliveredAt       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   webhookEndpoint WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
 
@@ -703,16 +706,16 @@ model WebhookDelivery {
 }
 
 model ApiRequestLog {
-  id          String   @id @default(cuid())
-  clientId    String?
-  apiKeyId    String?
-  method      String
-  path        String
-  query       String?
-  statusCode  Int
+  id           String   @id @default(cuid())
+  clientId     String?
+  apiKeyId     String?
+  method       String
+  path         String
+  query        String?
+  statusCode   Int
   errorMessage String?
-  requestId   String
-  createdAt   DateTime @default(now())
+  requestId    String
+  createdAt    DateTime @default(now())
 
   client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   apiKey ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
@@ -723,47 +726,111 @@ model ApiRequestLog {
   @@index([requestId])
 }
 
+// ============ SHOPIFY INTEGRATION ============
+model ShopifyInstallation {
+  id                     String    @id @default(cuid())
+  clientId               String    @unique
+  shopDomain             String    @unique
+  accessTokenEncrypted   String
+  webhookSecretEncrypted String
+  ordersWebhookId        String?
+  senderName             String?
+  senderPhone            String?
+  senderAddress          String?
+  senderCityId           String?
+  apiVersion             String    @default("2026-04")
+  status                 String    @default("ACTIVE")
+  lastSyncAt             DateTime?
+  lastError              String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  client        Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  orders        ShopifyOrder[]
+  webhookEvents ShopifyWebhookEvent[]
+
+  @@index([status])
+}
+
+model ShopifyOrder {
+  id                 String   @id @default(cuid())
+  installationId     String
+  shopifyOrderId     String
+  shopifyOrderName   String?
+  shipmentId         String?  @unique
+  fulfillmentOrderId String?
+  fulfillmentId      String?
+  trackingNumber     String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  installation ShopifyInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  shipment     Shipment?           @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+
+  @@unique([installationId, shopifyOrderId])
+  @@index([shopifyOrderId])
+  @@index([trackingNumber])
+}
+
+model ShopifyWebhookEvent {
+  id             String    @id @default(cuid())
+  installationId String
+  webhookId      String
+  topic          String
+  payloadHash    String
+  status         String    @default("RECEIVED")
+  error          String?
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  installation ShopifyInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+
+  @@unique([installationId, webhookId])
+  @@index([status])
+  @@index([createdAt])
+}
+
 // ============ LOYALTY PROGRAM ============
 model LoyaltyPoint {
-  id          String   @id @default(cuid())
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  points      Int      // positive = earned, negative = redeemed
-  reason      String   // e.g., "Shipment delivered", "Redeemed for discount"
-  shipmentId  String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  points     Int // positive = earned, negative = redeemed
+  reason     String // e.g., "Shipment delivered", "Redeemed for discount"
+  shipmentId String?
+  createdAt  DateTime @default(now())
 
   @@index([clientId])
 }
 
 model LoyaltyTier {
-  id          String   @id @default(cuid())
-  name        String   @unique // Bronze, Silver, Gold, Platinum
-  minPoints   Int
-  discountPercent Float @default(0) // e.g., 5 = 5% discount on shipping
-  color       String   @default("#888888")
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  name            String   @unique // Bronze, Silver, Gold, Platinum
+  minPoints       Int
+  discountPercent Float    @default(0) // e.g., 5 = 5% discount on shipping
+  color           String   @default("#888888")
+  createdAt       DateTime @default(now())
 }
 
 // ============ INSURANCE CLAIMS ============
 model InsuranceClaim {
-  id          String   @id @default(cuid())
-  shipmentId  String
-  shipment    Shipment @relation(fields: [shipmentId], references: [id])
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  claimNumber String   @unique
-  type        String   // DAMAGED, LOST, PARTIAL_DAMAGE
-  description String
-  claimedAmount Float
+  id             String    @id @default(cuid())
+  shipmentId     String
+  shipment       Shipment  @relation(fields: [shipmentId], references: [id])
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id])
+  claimNumber    String    @unique
+  type           String // DAMAGED, LOST, PARTIAL_DAMAGE
+  description    String
+  claimedAmount  Float
   approvedAmount Float?
-  status      String   @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED, PAID
-  evidenceUrls String  // JSON array of image URLs
-  notes       String?
-  processedBy String?
-  processedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status         String    @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED, PAID
+  evidenceUrls   String // JSON array of image URLs
+  notes          String?
+  processedBy    String?
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([clientId])
   @@index([shipmentId])
@@ -772,16 +839,16 @@ model InsuranceClaim {
 
 // ============ NOTIFICATION LOG (Email/SMS/WhatsApp) ============
 model NotificationLog {
-  id          String   @id @default(cuid())
-  userId      String?
-  recipient   String   // email or phone
-  channel     String   // EMAIL, SMS, WHATSAPP
-  subject     String?
-  body        String
-  status      String   @default("PENDING") // PENDING, SENT, FAILED
+  id           String   @id @default(cuid())
+  userId       String?
+  recipient    String // email or phone
+  channel      String // EMAIL, SMS, WHATSAPP
+  subject      String?
+  body         String
+  status       String   @default("PENDING") // PENDING, SENT, FAILED
   errorMessage String?
-  metadata    String?  // JSON
-  createdAt   DateTime @default(now())
+  metadata     String? // JSON
+  createdAt    DateTime @default(now())
 
   @@index([recipient])
   @@index([channel])
@@ -789,15 +856,15 @@ model NotificationLog {
 
 // ============ BULK IMPORT LOG ============
 model BulkImport {
-  id          String   @id @default(cuid())
-  filename    String
-  uploadedBy  String
-  totalCount  Int
-  successCount Int     @default(0)
-  failCount   Int      @default(0)
-  errors      String?  // JSON array of error details
-  status      String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  filename     String
+  uploadedBy   String
+  totalCount   Int
+  successCount Int      @default(0)
+  failCount    Int      @default(0)
+  errors       String? // JSON array of error details
+  status       String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
+  createdAt    DateTime @default(now())
 
   @@index([uploadedBy])
 }
