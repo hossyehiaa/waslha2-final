@@ -22,8 +22,16 @@ export default function ShopifyIntegrationPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/shopify/installation').then((response) => response.json()),
-      fetch('/api/admin/cities').then((response) => response.json()),
+      fetch('/api/shopify/installation').then(async (response) => {
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Unable to load Shopify connection')
+        return data
+      }),
+      fetch('/api/client/cities').then(async (response) => {
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Unable to load cities')
+        return data
+      }),
     ]).then(([connection, cityData]) => {
       setInstallation(connection.installation || null)
       setCities(cityData.cities || [])
@@ -37,7 +45,7 @@ export default function ShopifyIntegrationPage() {
           senderCityId: connection.installation.senderCityId || '',
         }))
       }
-    }).catch(() => toast.error('Unable to load Shopify connection'))
+    }).catch((error) => toast.error(error instanceof Error ? error.message : 'Unable to load Shopify connection'))
       .finally(() => setLoading(false))
   }, [])
 
