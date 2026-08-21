@@ -188,6 +188,7 @@ function buildAdminNav(dict: Dict): NavItem[] {
     { label: 'مطالبات التأمين', href: '/admin/insurance-claims', icon: Shield },
     { label: 'استيراد جماعي', href: '/admin/bulk-import', icon: PackageCheck },
     { label: 'API Keys', href: '/admin/api-keys', icon: Key },
+    { label: 'Webhooks', href: '/admin/webhooks', icon: Webhook },
     { label: 'Integration Logs', href: '/admin/integration-logs', icon: Activity },
     { label: 'الإشعارات', href: '/admin/notifications', icon: Bell },
     { label: 'سجل العمليات', href: '/admin/audit-logs', icon: FileText },
