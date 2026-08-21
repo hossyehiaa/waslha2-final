@@ -55,6 +55,9 @@ export async function POST(req: NextRequest) {
     if (!city) return NextResponse.json({ error: 'Sender city is invalid' }, { status: 400 })
 
     const existing = await db.shopifyInstallation.findUnique({ where: { clientId } })
+    if (existing && existing.shopDomain !== shopDomain && existing.ordersWebhookId) {
+      await unregisterWebhook(existing, existing.ordersWebhookId).catch(() => undefined)
+    }
     const installation = await db.shopifyInstallation.upsert({
       where: { clientId },
       create: {

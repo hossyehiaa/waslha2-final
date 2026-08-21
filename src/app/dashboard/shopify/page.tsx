@@ -118,7 +118,7 @@ export default function ShopifyIntegrationPage() {
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2"><Label>Shop domain</Label><Input value={form.shopDomain} onChange={(event) => setField('shopDomain', event.target.value)} placeholder="brand.myshopify.com" /></div>
-          <div className="space-y-2"><Label>Admin API access token</Label><Input type="password" value={form.accessToken} onChange={(event) => setField('accessToken', event.target.value)} placeholder={installation ? 'Enter a new token to rotate' : 'shpat_...'} /></div>
+          <div className="space-y-2"><Label>Admin API access token</Label><Input type="password" value={form.accessToken} onChange={(event) => setField('accessToken', event.target.value)} placeholder={installation ? 'Enter a new token to rotate' : 'Paste the Shopify token'} /></div>
           <div className="space-y-2"><Label>Shopify app client secret</Label><Input type="password" value={form.webhookSecret} onChange={(event) => setField('webhookSecret', event.target.value)} placeholder={installation ? 'Enter again to rotate' : 'Required for HMAC verification'} /></div>
         </div>
         <div className="border-t pt-5 space-y-4">
