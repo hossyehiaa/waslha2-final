@@ -36,7 +36,7 @@ export default function ShopifyIntegrationPage() {
     Promise.all([
       fetch('/api/shopify/installation').then(async (response) => {
         const data = await readJsonResponse(response)
-        if (!response.ok) throw new Error(data.error || 'Unable to load Shopify connection')
+        if (!response.ok) throw new Error(data.code ? `${data.error || 'Unable to load Shopify connection'} (${data.code})` : data.error || 'Unable to load Shopify connection')
         return data
       }),
       fetch('/api/client/cities').then(async (response) => {

@@ -29,14 +29,18 @@ function responseFor(installation: { id: string; shopDomain: string; authMode: s
 }
 
 export async function GET() {
+  let stage = 'session'
   try {
     const user = await getCurrentUser()
     if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    stage = 'database'
     const installation = await db.shopifyInstallation.findUnique({ where: { clientId: user.clientId } })
+    stage = 'serialize'
     return NextResponse.json({ installation: installation ? responseFor(installation) : null })
   } catch (error) {
-    console.error('[Shopify] Failed to load installation:', error instanceof Error ? error.message : 'unknown error')
-    return NextResponse.json({ error: 'Unable to load Shopify connection' }, { status: 500 })
+    const safeCode = `SHOPIFY_CONNECTION_${stage.toUpperCase()}_FAILED`
+    console.error(`[Shopify] ${safeCode}:`, error instanceof Error ? error.message : 'unknown error')
+    return NextResponse.json({ error: 'Unable to load Shopify connection', code: safeCode }, { status: 500 })
   }
 }
 
