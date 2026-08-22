@@ -14,7 +14,7 @@ function responseFor(installation: { id: string; shopDomain: string; authMode: s
     id: installation.id,
     shopDomain: installation.shopDomain,
     authMode: installation.authMode,
-    grantedScopes: installation.grantedScopes.split(',').filter(Boolean),
+    grantedScopes: String(installation.grantedScopes || '').split(',').map((scope) => scope.trim()).filter(Boolean),
     senderName: installation.senderName,
     senderPhone: installation.senderPhone,
     senderAddress: installation.senderAddress,
@@ -34,7 +34,8 @@ export async function GET() {
     if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const installation = await db.shopifyInstallation.findUnique({ where: { clientId: user.clientId } })
     return NextResponse.json({ installation: installation ? responseFor(installation) : null })
-  } catch {
+  } catch (error) {
+    console.error('[Shopify] Failed to load installation:', error instanceof Error ? error.message : 'unknown error')
     return NextResponse.json({ error: 'Unable to load Shopify connection' }, { status: 500 })
   }
 }
