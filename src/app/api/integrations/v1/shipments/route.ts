@@ -47,14 +47,18 @@ export async function POST(req: NextRequest) {
     const { shipment } = await createPartnerShipment(body, auth.clientId, auth.apiKey.client.userId)
     const responseBody = { data: shipmentResponse(shipment) }
     await storeAndLog(auth, req, idempotencyKey, hash, 201, responseBody)
-    void dispatchWebhookEvent(auth.clientId, 'shipment.created', {
-      shipmentId: shipment.id,
-      trackingNumber: shipment.trackingNumber,
-      status: shipment.status,
-      codAmount: shipment.codAmount,
-      totalCost: shipment.totalCost,
-      updatedAt: shipment.updatedAt.toISOString(),
-    }).catch((error) => console.error('shipment.created webhook failed', error))
+    try {
+      await dispatchWebhookEvent(auth.clientId, 'shipment.created', {
+        shipmentId: shipment.id,
+        trackingNumber: shipment.trackingNumber,
+        status: shipment.status,
+        codAmount: shipment.codAmount,
+        totalCost: shipment.totalCost,
+        updatedAt: shipment.updatedAt.toISOString(),
+      })
+    } catch (error) {
+      console.error('shipment.created webhook failed', error)
+    }
     return NextResponse.json(responseBody, { status: 201, headers: { 'X-Request-ID': auth.requestId } })
   } catch (error) {
     const response = jsonError(error, auth?.requestId)

@@ -80,7 +80,11 @@ export async function POST(req: NextRequest) {
     const responseBody = { success: true, data: { id: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, totalCost: shipment.totalCost } }
     if (idempotencyKey) await storeIdempotentResponse(idempotencyKey, auth.clientId, path, hash, 201, responseBody)
     await logPartnerRequest({ clientId: auth.clientId, apiKeyId: auth.apiKey.id, method: req.method, path, query: new URL(req.url).search, statusCode: 201, requestId: auth.requestId })
-    void dispatchWebhookEvent(auth.clientId, 'shipment.created', { shipmentId: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, codAmount: shipment.codAmount, totalCost: shipment.totalCost, updatedAt: shipment.updatedAt.toISOString() }).catch((error) => console.error('legacy shipment webhook failed', error))
+    try {
+      await dispatchWebhookEvent(auth.clientId, 'shipment.created', { shipmentId: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, codAmount: shipment.codAmount, totalCost: shipment.totalCost, updatedAt: shipment.updatedAt.toISOString() })
+    } catch (error) {
+      console.error('legacy shipment webhook failed', error)
+    }
     return legacyResponse(responseBody, 201, auth.requestId)
   } catch (error) {
     const response = jsonError(error, auth?.requestId || requestId(req))

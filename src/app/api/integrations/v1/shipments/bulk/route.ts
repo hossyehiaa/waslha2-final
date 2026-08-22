@@ -42,7 +42,11 @@ export async function POST(req: NextRequest) {
       try {
         const { shipment } = await createPartnerShipment(parsed.data, auth.clientId, auth.apiKey.client.userId)
         results.push({ index, success: true, id: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, totalCost: shipment.totalCost })
-        void dispatchWebhookEvent(auth.clientId, 'shipment.created', { shipmentId: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, codAmount: shipment.codAmount, totalCost: shipment.totalCost, updatedAt: shipment.updatedAt.toISOString() }).catch((error) => console.error('bulk shipment webhook failed', error))
+        try {
+          await dispatchWebhookEvent(auth.clientId, 'shipment.created', { shipmentId: shipment.id, trackingNumber: shipment.trackingNumber, status: shipment.status, codAmount: shipment.codAmount, totalCost: shipment.totalCost, updatedAt: shipment.updatedAt.toISOString() })
+        } catch (error) {
+          console.error('bulk shipment webhook failed', error)
+        }
       } catch (error) {
         results.push({ index, success: false, error: { code: 'CREATE_FAILED', message: error instanceof Error ? error.message : 'Shipment could not be created' } })
       }

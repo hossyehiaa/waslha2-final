@@ -153,9 +153,13 @@ export async function PATCH(
       updatedAt: updated.updatedAt.toISOString(),
     }
     if (status !== shipment.status) {
-      void dispatchWebhookEvent(shipment.clientId, 'shipment.status_changed', webhookData).catch((error) => console.error('Shipment status webhook error:', error))
       const webhookEvent = `shipment.${status.toLowerCase()}` as WebhookEvent
-      if (webhookEvent !== 'shipment.status_changed') void dispatchWebhookEvent(shipment.clientId, webhookEvent, webhookData).catch((error) => console.error('Shipment status webhook error:', error))
+      try {
+        await dispatchWebhookEvent(shipment.clientId, 'shipment.status_changed', webhookData)
+        if (webhookEvent !== 'shipment.status_changed') await dispatchWebhookEvent(shipment.clientId, webhookEvent, webhookData)
+      } catch (error) {
+        console.error('Shipment status webhook error:', error)
+      }
       void syncShopifyShipmentStatus(id, status).catch(async () => {
         await db.shopifyInstallation.updateMany({ where: { clientId: shipment.clientId }, data: { lastError: 'Shopify fulfillment sync failed' } }).catch(() => undefined)
       })
