@@ -13,6 +13,8 @@ export async function GET() {
     if (user.role === 'CLIENT') {
       if (!user.clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
       where.clientId = user.clientId
+    } else if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const pickups = await db.pickupRequest.findMany({
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
 
     // Clients can create their own pickup requests
     if (user.role === 'CLIENT') {
+      if (!user.clientId) return NextResponse.json({ error: 'Client account is required' }, { status: 403 })
       body.clientId = user.clientId
     } else if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
