@@ -29,10 +29,14 @@ function responseFor(installation: { id: string; shopDomain: string; authMode: s
 }
 
 export async function GET() {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const installation = await db.shopifyInstallation.findUnique({ where: { clientId: user.clientId } })
-  return NextResponse.json({ installation: installation ? responseFor(installation) : null })
+  try {
+    const user = await getCurrentUser()
+    if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const installation = await db.shopifyInstallation.findUnique({ where: { clientId: user.clientId } })
+    return NextResponse.json({ installation: installation ? responseFor(installation) : null })
+  } catch {
+    return NextResponse.json({ error: 'Unable to load Shopify connection' }, { status: 500 })
+  }
 }
 
 export async function PATCH(req: NextRequest) {

@@ -13,6 +13,18 @@ import { toast } from 'sonner'
 
 const initialForm = { shopDomain: '', accessToken: '', webhookSecret: '', senderName: '', senderPhone: '', senderAddress: '', senderCityId: '' }
 
+async function readJsonResponse(response: Response) {
+  const body = await response.text()
+  if (!body.trim()) {
+    throw new Error(response.ok ? 'The server returned an empty response' : `Request failed (${response.status})`)
+  }
+  try {
+    return JSON.parse(body)
+  } catch {
+    throw new Error(response.ok ? 'The server returned an invalid response' : `Request failed (${response.status})`)
+  }
+}
+
 export default function ShopifyIntegrationPage() {
   const [form, setForm] = useState(initialForm)
   const [installation, setInstallation] = useState<any>(null)
@@ -23,12 +35,12 @@ export default function ShopifyIntegrationPage() {
   useEffect(() => {
     Promise.all([
       fetch('/api/shopify/installation').then(async (response) => {
-        const data = await response.json()
+        const data = await readJsonResponse(response)
         if (!response.ok) throw new Error(data.error || 'Unable to load Shopify connection')
         return data
       }),
       fetch('/api/client/cities').then(async (response) => {
-        const data = await response.json()
+        const data = await readJsonResponse(response)
         if (!response.ok) throw new Error(data.error || 'Unable to load cities')
         return data
       }),
@@ -61,7 +73,7 @@ export default function ShopifyIntegrationPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      const data = await response.json()
+      const data = await readJsonResponse(response)
       if (!response.ok) throw new Error(data.error || 'Shopify connection failed')
       setInstallation(data.installation)
       setForm((current) => ({ ...current, accessToken: '', webhookSecret: '' }))
