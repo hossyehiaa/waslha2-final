@@ -1,0 +1,2 @@
+ALTER TABLE "ShopifyInstallation"
+  ADD COLUMN IF NOT EXISTS "authMode" TEXT NOT NULL DEFAULT 'MANUAL';

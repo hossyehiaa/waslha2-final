@@ -733,7 +733,7 @@ model ShopifyInstallation {
   id                     String    @id @default(cuid())
   clientId               String    @unique
   shopDomain             String    @unique
-  authMode               String    @default("OAUTH")
+  authMode               String    @default("MANUAL")
   accessTokenEncrypted   String
   refreshTokenEncrypted  String?
   accessTokenExpiresAt   DateTime?

@@ -9,11 +9,11 @@ function canManage(user: Awaited<ReturnType<typeof getCurrentUser>>) {
   return Boolean(user && (user.role === 'CLIENT' || user.role === 'ADMIN' || user.role === 'EMPLOYEE'))
 }
 
-function responseFor(installation: { id: string; shopDomain: string; authMode: string; grantedScopes: string; senderName: string | null; senderPhone: string | null; senderAddress: string | null; senderCityId: string | null; apiVersion: string; status: string; lastSyncAt: Date | null; lastError: string | null; createdAt: Date; updatedAt: Date }) {
+function responseFor(installation: { id: string; shopDomain: string; authMode?: string | null; grantedScopes: string; senderName: string | null; senderPhone: string | null; senderAddress: string | null; senderCityId: string | null; apiVersion: string; status: string; lastSyncAt: Date | null; lastError: string | null; createdAt: Date; updatedAt: Date }) {
   return {
     id: installation.id,
     shopDomain: installation.shopDomain,
-    authMode: installation.authMode,
+    authMode: installation.authMode || 'MANUAL',
     grantedScopes: String(installation.grantedScopes || '').split(',').map((scope) => scope.trim()).filter(Boolean),
     senderName: installation.senderName,
     senderPhone: installation.senderPhone,
@@ -34,7 +34,25 @@ export async function GET() {
     const user = await getCurrentUser()
     if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     stage = 'database'
-    const installation = await db.shopifyInstallation.findUnique({ where: { clientId: user.clientId } })
+    const installation = await db.shopifyInstallation.findUnique({
+      where: { clientId: user.clientId },
+      select: {
+        id: true,
+        shopDomain: true,
+        authMode: true,
+        grantedScopes: true,
+        senderName: true,
+        senderPhone: true,
+        senderAddress: true,
+        senderCityId: true,
+        apiVersion: true,
+        status: true,
+        lastSyncAt: true,
+        lastError: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
     stage = 'serialize'
     return NextResponse.json({ installation: installation ? responseFor(installation) : null })
   } catch (error) {
