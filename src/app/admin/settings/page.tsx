@@ -22,7 +22,7 @@ export default function AdminSettingsPage() {
       .then(r => r.json())
       .then(d => {
         const map: Record<string, string> = {}
-        (d.settings || []).forEach((s: any) => map[s.key] = s.value)
+        ;(d.settings || []).forEach((s: any) => { map[s.key] = s.value })
         setSettings(map)
       })
       .finally(() => setLoading(false))

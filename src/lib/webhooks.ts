@@ -120,6 +120,7 @@ async function deliver(deliveryId: string, endpoint: { id: string; url: string; 
       attemptNumber,
       nextAttemptAt,
       deliveredAt: status === 'SUCCESS' ? new Date() : null,
+      processingStartedAt: null,
       updatedAt: new Date(),
     },
   })
@@ -136,28 +137,57 @@ export async function dispatchWebhookEvent(clientId: string, event: WebhookEvent
   for (const endpoint of endpoints) {
     if (!webhookEvents(endpoint.events).includes(event)) continue
     const delivery = await db.webhookDelivery.create({
-      data: { webhookEndpointId: endpoint.id, event, payload, status: 'PENDING', attemptNumber: 1 },
+      data: { webhookEndpointId: endpoint.id, event, payload, status: 'PROCESSING', processingStartedAt: new Date(), attemptNumber: 1 },
     })
     await deliver(delivery.id, endpoint, payload, event, 1)
   }
 }
 
+const DELIVERY_LEASE_MS = 10 * 60 * 1000
+
+async function claimDelivery(deliveryId: string, force = false) {
+  const now = new Date()
+  const staleBefore = new Date(now.getTime() - DELIVERY_LEASE_MS)
+  return db.webhookDelivery.updateMany({
+    where: {
+      id: deliveryId,
+      OR: force
+        ? [{ status: { in: ['PENDING', 'FAILED'] } }, { status: 'PROCESSING', processingStartedAt: { lte: staleBefore } }]
+        : [{ status: 'PENDING', OR: [{ nextAttemptAt: null }, { nextAttemptAt: { lte: now } }] }, { status: 'PROCESSING', processingStartedAt: { lte: staleBefore } }],
+    },
+    data: { status: 'PROCESSING', processingStartedAt: now },
+  })
+}
+
 export async function retryWebhookDelivery(deliveryId: string, clientId: string) {
   const delivery = await db.webhookDelivery.findFirst({ where: { id: deliveryId, webhookEndpoint: { clientId } }, include: { webhookEndpoint: true } })
   if (!delivery) throw new PartnerApiError(404, 'NOT_FOUND', 'Webhook delivery not found')
+  const claimed = await claimDelivery(delivery.id, true)
+  if (claimed.count !== 1) throw new PartnerApiError(409, 'DELIVERY_IN_PROGRESS', 'Webhook delivery is already being processed')
   const attemptNumber = Math.min(delivery.attemptNumber + 1, MAX_ATTEMPTS)
   return deliver(delivery.id, delivery.webhookEndpoint, delivery.payload, delivery.event as WebhookEvent, attemptNumber)
 }
 
 export async function processPendingWebhookDeliveries(limit = 50) {
+  const now = new Date()
+  const staleBefore = new Date(now.getTime() - DELIVERY_LEASE_MS)
   const pending = await db.webhookDelivery.findMany({
-    where: { status: 'PENDING', OR: [{ nextAttemptAt: null }, { nextAttemptAt: { lte: new Date() } }] },
+    where: {
+      OR: [
+        { status: 'PENDING', OR: [{ nextAttemptAt: null }, { nextAttemptAt: { lte: now } }] },
+        { status: 'PROCESSING', processingStartedAt: { lte: staleBefore } },
+      ],
+    },
     include: { webhookEndpoint: true },
     orderBy: { createdAt: 'asc' },
     take: limit,
   })
+  let claimedCount = 0
   for (const delivery of pending) {
+    const claimed = await claimDelivery(delivery.id)
+    if (claimed.count !== 1) continue
+    claimedCount += 1
     await deliver(delivery.id, delivery.webhookEndpoint, delivery.payload, delivery.event as WebhookEvent, delivery.attemptNumber)
   }
-  return pending.length
+  return claimedCount
 }

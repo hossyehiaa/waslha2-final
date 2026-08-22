@@ -11,10 +11,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const expenses = await db.expense.findMany({
-      include: { branch: { select: { name: true } } },
-      orderBy: { date: 'desc' },
-    })
+    const expenses = await db.expense.findMany({ orderBy: { date: 'desc' } })
+    const branchIds = expenses.flatMap((expense) => expense.branchId ? [expense.branchId] : [])
+    const branches = branchIds.length
+      ? await db.branch.findMany({ where: { id: { in: branchIds } }, select: { id: true, name: true } })
+      : []
+    const branchNames = new Map(branches.map((branch) => [branch.id, branch.name]))
 
     return NextResponse.json({
       expenses: expenses.map((e) => ({
@@ -22,7 +24,7 @@ export async function GET() {
         category: e.category,
         description: e.description,
         amount: e.amount,
-        branch: e.branch?.name,
+        branch: e.branchId ? branchNames.get(e.branchId) || null : null,
         branchId: e.branchId,
         date: e.date,
       })),

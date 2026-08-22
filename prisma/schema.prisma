@@ -700,6 +700,7 @@ model WebhookDelivery {
   deliveredAt       DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  processingStartedAt DateTime?
 
   webhookEndpoint WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
 

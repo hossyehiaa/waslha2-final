@@ -52,7 +52,7 @@ export async function GET() {
     ])
 
     // Shipment movement chart data (last 7 days)
-    const days = []
+    const days: Array<{ date: string; label: string; shipments: number; delivered: number }> = []
     for (let i = 6; i >= 0; i--) {
       const d = new Date()
       d.setHours(0, 0, 0, 0)

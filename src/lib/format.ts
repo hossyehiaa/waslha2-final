@@ -63,6 +63,11 @@ export function formatDateTime(date: string | Date): string {
   })
 }
 
+export function formatAddress(address: string | null | undefined, city?: string | null): string {
+  const parts = [address?.trim(), city?.trim()].filter(Boolean)
+  return parts.join(', ')
+}
+
 export function formatWeight(kg: number): string {
   const isAr = getLocale().startsWith('ar')
   return isAr ? `${kg.toFixed(1)} كجم` : `${kg.toFixed(1)} kg`

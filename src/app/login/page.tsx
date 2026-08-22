@@ -7,7 +7,6 @@ import { Loader2, Lock, User, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-r
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
@@ -19,7 +18,6 @@ export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
 
   const L = dict.login
@@ -159,10 +157,7 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium">{L.password}</Label>
-                <button type="button" className="text-xs text-primary hover:underline">
-                  {L.forgotPassword}
-                </button>
+                <Label htmlFor="username" className="text-sm font-medium">{L.username}</Label>
               </div>
               <div className="relative">
                 <Lock className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
@@ -186,14 +181,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(!!v)} />
-                <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                  {L.rememberMe}
-                </Label>
-              </div>
-            </div>
 
             <Button
               type="submit"

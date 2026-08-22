@@ -1608,7 +1608,13 @@ export const translations = {
 } as const
 
 // ============ HELPERS ============
-export type Dict = typeof translations.en
+type LooseDictionary<T> = T extends readonly unknown[]
+  ? T
+  : T extends object
+    ? { [K in keyof T]: LooseDictionary<T[K]> } & Record<string, any>
+    : T
+
+export type Dict = LooseDictionary<typeof translations.en>
 
 export function getDict(locale: Locale): Dict {
   return translations[locale] as Dict

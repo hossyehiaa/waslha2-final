@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser, generateTrackingNumber } from '@/lib/auth-helpers'
+import { calculateShippingCost } from '@/lib/partner-api'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -16,13 +17,17 @@ export async function POST(req: NextRequest) {
     if (!shipments || !Array.isArray(shipments) || shipments.length === 0) {
       return NextResponse.json({ error: 'No shipments data provided' }, { status: 400 })
     }
+    if (shipments.length > 1000) return NextResponse.json({ error: 'Bulk import is limited to 1000 shipments per request' }, { status: 400 })
+    if (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE' && user.role !== 'CLIENT') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const targetClientId = user.role === 'CLIENT' ? user.clientId : clientId
     if (!targetClientId) {
       return NextResponse.json({ error: 'Client ID required' }, { status: 400 })
     }
 
-    const client = await db.client.findUnique({ where: { id: targetClientId } })
+    const client = await db.client.findUnique({ where: { id: targetClientId }, include: { user: { select: { phone: true } } } })
     if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 })
 
     // Create bulk import log
@@ -50,7 +55,7 @@ export async function POST(req: NextRequest) {
 
         // Find city by name
         const city = await db.city.findFirst({
-          where: { name: { contains: row.recipientCity, mode: 'insensitive' } },
+          where: { status: 'ACTIVE', OR: [{ id: String(row.recipientCity) }, { code: String(row.recipientCity).trim().toUpperCase() }, { name: { contains: String(row.recipientCity), mode: 'insensitive' } }] },
         })
         if (!city) throw new Error(`Row ${i + 1}: City "${row.recipientCity}" not found`)
 
@@ -58,14 +63,29 @@ export async function POST(req: NextRequest) {
         let senderCityId = client.cityId
         if (row.senderCity) {
           const senderCity = await db.city.findFirst({
-            where: { name: { contains: row.senderCity, mode: 'insensitive' } },
+            where: { status: 'ACTIVE', OR: [{ id: String(row.senderCity) }, { code: String(row.senderCity).trim().toUpperCase() }, { name: { contains: String(row.senderCity), mode: 'insensitive' } }] },
           })
-          if (senderCity) senderCityId = senderCity.id
+          if (!senderCity) throw new Error(`Row ${i + 1}: Sender city not found`)
+          senderCityId = senderCity.id
         }
+        if (!senderCityId) throw new Error(`Row ${i + 1}: Sender city is required for pricing`)
 
-        const codAmount = Number(row.codAmount) || 0
-        const shippingCost = Number(row.shippingCost) || 25
-        const codFee = Math.round(codAmount * 0.02 * 100) / 100
+        const codAmount = Math.min(100000000, Math.max(0, Number(row.codAmount) || 0))
+        const weight = Math.min(1000, Math.max(0.1, Number(row.weight) || 0.5))
+        const pieces = Math.min(1000, Math.max(1, Math.floor(Number(row.pieces) || 1)))
+        const serviceType = row.serviceType === 'EXPRESS' || row.serviceType === 'SAME_DAY' ? row.serviceType : 'STANDARD'
+        const priority = row.priority === 'LOW' || row.priority === 'HIGH' || row.priority === 'URGENT' ? row.priority : 'NORMAL'
+        const quote = await calculateShippingCost({
+          sender: { name: row.senderName || client.companyName, phone: row.senderPhone || client.user?.phone || '', address: row.senderAddress || client.address || '', cityCode: String(senderCityId) },
+          recipient: { name: row.recipientName, phone: row.recipientPhone, address: row.recipientAddress, cityCode: city.code },
+          serviceType,
+          priority,
+          weight,
+          pieces,
+          description: row.description || null,
+          codAmount,
+        }, senderCityId, city.id)
+        const { shippingCost, codFee, totalCost } = quote
         const trackingNumber = generateTrackingNumber()
 
         const shipment = await db.shipment.create({
@@ -81,15 +101,16 @@ export async function POST(req: NextRequest) {
             recipientPhone: row.recipientPhone,
             recipientAddress: row.recipientAddress,
             recipientCityId: city.id,
-            type: row.type || 'DELIVERY',
-            serviceType: row.serviceType || 'STANDARD',
-            weight: Number(row.weight) || 0.5,
-            pieces: Number(row.pieces) || 1,
+            type: row.type === 'RETURN' || row.type === 'EXCHANGE' ? row.type : 'DELIVERY',
+            serviceType,
+            priority,
+            weight,
+            pieces,
             description: row.description || null,
             shippingCost,
             codAmount,
             codFee,
-            totalCost: shippingCost + codFee,
+            totalCost,
             status: 'PENDING',
             paymentStatus: 'PENDING',
           },
