@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "prisma generate && if [ \"$VERCEL\" = \"1\" ]; then prisma migrate deploy; fi && next build",
+    "build": "prisma generate && if [ \"$VERCEL\" = \"1\" ]; then for attempt in 1 2 3 4; do prisma migrate deploy && break; [ \"$attempt\" -eq 4 ] && exit 1; sleep 15; done; fi && next build",
     "start": "next start",
     "lint": "eslint .",
     "postinstall": "prisma generate",
