@@ -43,6 +43,7 @@ export async function PATCH(
       include: { client: { include: { user: true } } },
     })
     if (!shipment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (shipment.status === status) return NextResponse.json({ error: 'Shipment already has this status' }, { status: 409 })
 
     // Permission check: only operations staff and the assigned driver can change lifecycle state.
     if (user.role === 'CLIENT') {

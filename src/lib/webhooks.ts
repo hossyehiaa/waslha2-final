@@ -15,7 +15,7 @@ const TIMEOUT_MS = Number(process.env.WEBHOOK_TIMEOUT_MS || 8000)
 const MAX_ATTEMPTS = Number(process.env.WEBHOOK_RETRY_ATTEMPTS || 3)
 
 function encryptionKey() {
-  const seed = process.env.WEBHOOK_SECRET_ENCRYPTION_KEY || process.env.ADMIN_SESSION_SECRET
+  const seed = process.env.WEBHOOK_SECRET_ENCRYPTION_KEY
   if (!seed) throw new PartnerApiError(500, 'CONFIGURATION_ERROR', 'Webhook secret encryption is not configured')
   return crypto.createHash('sha256').update(seed).digest()
 }

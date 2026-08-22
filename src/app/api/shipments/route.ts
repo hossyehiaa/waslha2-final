@@ -108,82 +108,76 @@ export async function POST(req: NextRequest) {
       if (!body[f]) return NextResponse.json({ error: `Missing field: ${f}` }, { status: 400 })
     }
 
+    const [senderCity, recipientCity] = await Promise.all([
+      db.city.findFirst({ where: { status: 'ACTIVE', OR: [{ id: String(body.senderCityId) }, { code: String(body.senderCityId).trim().toUpperCase() }] } }),
+      db.city.findFirst({ where: { status: 'ACTIVE', OR: [{ id: String(body.recipientCityId) }, { code: String(body.recipientCityId).trim().toUpperCase() }] } }),
+    ])
+    if (!senderCity || !recipientCity) return NextResponse.json({ error: 'Sender or recipient city is invalid' }, { status: 400 })
+
     const serviceType = body.serviceType === 'EXPRESS' || body.serviceType === 'SAME_DAY' ? body.serviceType : 'STANDARD'
     const priority = body.priority === 'LOW' || body.priority === 'HIGH' || body.priority === 'URGENT' ? body.priority : 'NORMAL'
-    const weight = Number(body.weight) || 0.5
-    const pieces = Number(body.pieces) || 1
-    const codAmount = Number(body.codAmount) || 0
+    const shipmentType = body.type === 'RETURN' || body.type === 'EXCHANGE' ? body.type : 'DELIVERY'
+    const weight = Math.min(1000, Math.max(0.1, Number(body.weight) || 0.5))
+    const pieces = Math.min(1000, Math.max(1, Math.floor(Number(body.pieces) || 1)))
+    const codAmount = Math.min(100000000, Math.max(0, Number(body.codAmount) || 0))
     const quote = await calculateShippingCost({
-      sender: { name: body.senderName, phone: body.senderPhone, address: body.senderAddress || '', cityCode: body.senderCityId },
-      recipient: { name: body.recipientName, phone: body.recipientPhone, address: body.recipientAddress, cityCode: body.recipientCityId },
+      sender: { name: body.senderName, phone: body.senderPhone, address: body.senderAddress || '', cityCode: senderCity.code },
+      recipient: { name: body.recipientName, phone: body.recipientPhone, address: body.recipientAddress, cityCode: recipientCity.code },
       serviceType,
       priority,
       weight,
       pieces,
       description: body.description || null,
       codAmount,
-    }, body.senderCityId, body.recipientCityId)
+    }, senderCity.id, recipientCity.id)
 
     const trackingNumber = generateTrackingNumber()
     const { shippingCost, codFee, totalCost } = quote
+    const allowOperationalAssignments = user.role === 'ADMIN' || user.role === 'EMPLOYEE'
+    const shipment = await db.$transaction(async (tx) => {
+      const created = await tx.shipment.create({
+        data: {
+          trackingNumber,
+          clientId,
+          createdById: user.id,
+          senderName: body.senderName,
+          senderPhone: body.senderPhone,
+          senderAddress: body.senderAddress || '',
+          senderCityId: senderCity.id,
+          fromBranchId: allowOperationalAssignments ? body.fromBranchId || null : null,
+          recipientName: body.recipientName,
+          recipientPhone: body.recipientPhone,
+          recipientAddress: body.recipientAddress,
+          recipientCityId: recipientCity.id,
+          toBranchId: allowOperationalAssignments ? body.toBranchId || null : null,
+          type: shipmentType,
+          serviceType,
+          weight,
+          pieces,
+          description: body.description || null,
+          shippingCost,
+          codAmount,
+          codFee,
+          insuranceFee: 0,
+          totalCost,
+          driverId: allowOperationalAssignments ? body.driverId || null : null,
+          status: 'PENDING',
+          paymentStatus: 'PENDING',
+          priority,
+        },
+      })
 
-    const shipment = await db.shipment.create({
-      data: {
-        trackingNumber,
-        clientId,
-        createdById: user.id,
-        senderName: body.senderName,
-        senderPhone: body.senderPhone,
-        senderAddress: body.senderAddress || '',
-        senderCityId: body.senderCityId,
-        fromBranchId: body.fromBranchId || null,
-        recipientName: body.recipientName,
-        recipientPhone: body.recipientPhone,
-        recipientAddress: body.recipientAddress,
-        recipientCityId: body.recipientCityId,
-        toBranchId: body.toBranchId || null,
-        type: body.type || 'DELIVERY',
-        serviceType,
-        weight,
-        pieces,
-        description: body.description || null,
-        shippingCost,
-        codAmount,
-        codFee,
-        insuranceFee: 0,
-        totalCost,
-        driverId: body.driverId || null,
-        status: 'PENDING',
-        paymentStatus: 'PENDING',
-        priority: body.priority || 'NORMAL',
-      },
-    })
-
-    // Initial status history
-    await db.shipmentStatus.create({
-      data: {
-        shipmentId: shipment.id,
-        status: 'PENDING',
-        note: 'Shipment created',
-        createdBy: user.id,
-      },
-    })
-
-    // Update client counters
-    await db.client.update({
-      where: { id: clientId },
-      data: { totalShipments: { increment: 1 }, activeShipments: { increment: 1 } },
-    })
-
-    // Audit log
-    await db.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'CREATE',
-        entity: 'Shipment',
-        entityId: shipment.id,
-        afterData: JSON.stringify({ trackingNumber }),
-      },
+      await tx.shipmentStatus.create({
+        data: { shipmentId: created.id, status: 'PENDING', note: 'Shipment created', createdBy: user.id },
+      })
+      await tx.client.update({
+        where: { id: clientId },
+        data: { totalShipments: { increment: 1 }, activeShipments: { increment: 1 } },
+      })
+      await tx.auditLog.create({
+        data: { userId: user.id, action: 'CREATE', entity: 'Shipment', entityId: created.id, afterData: JSON.stringify({ trackingNumber }) },
+      })
+      return created
     })
 
     return NextResponse.json({ shipment, trackingNumber }, { status: 201 })

@@ -515,6 +515,7 @@ model AuditLog {
   createdAt  DateTime @default(now())
 
   @@index([userId])
+  @@index([ipAddress, action, createdAt])
 }
 
 // ============ SETTINGS ============

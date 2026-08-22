@@ -4,6 +4,17 @@ import { verifyPassword, sanitizeInput, createSession, setSessionCookie } from '
 
 export const runtime = 'nodejs'
 
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
+const MAX_FAILED_LOGINS_PER_IP = 10
+
+function requestIp(req: NextRequest) {
+  return req.headers.get('x-vercel-forwarded-for')?.trim() || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+}
+
+async function recordFailedLogin(ipAddress: string) {
+  await db.auditLog.create({ data: { action: 'LOGIN_FAILED', entity: 'Auth', ipAddress } }).catch(() => undefined)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -14,7 +25,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 })
     }
 
-    const ip = req.headers.get('x-forwarded-for') || 'unknown'
+    const ip = requestIp(req)
+    const recentFailures = await db.auditLog.count({
+      where: { action: 'LOGIN_FAILED', entity: 'Auth', ipAddress: ip, createdAt: { gte: new Date(Date.now() - LOGIN_WINDOW_MS) } },
+    })
+    if (recentFailures >= MAX_FAILED_LOGINS_PER_IP) {
+      return NextResponse.json({ error: 'Too many login attempts. Try again later.' }, { status: 429, headers: { 'Retry-After': '900' } })
+    }
 
     const user = await db.user.findFirst({
       where: {
@@ -26,15 +43,18 @@ export async function POST(req: NextRequest) {
     })
 
     if (!user) {
+      await recordFailedLogin(ip)
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     if (user.status !== 'ACTIVE') {
+      await recordFailedLogin(ip)
       return NextResponse.json({ error: 'Account suspended. Contact administrator.' }, { status: 403 })
     }
 
     const valid = await verifyPassword(password, user.passwordHash)
     if (!valid) {
+      await recordFailedLogin(ip)
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
