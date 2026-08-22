@@ -203,16 +203,13 @@ export async function getActiveCityByCode(code: string) {
 export type ShippingQuote = { shippingCost: number; codFee: number; totalCost: number }
 
 export async function calculateShippingCost(input: PartnerShipmentInput, senderCityId: string, recipientCityId: string): Promise<ShippingQuote> {
-  const rule = await db.pricingRule.findFirst({
-    where: {
-      status: 'ACTIVE',
-      serviceType: input.serviceType,
-      OR: [
-        { fromCityId: senderCityId, toCityId: recipientCityId },
-        { fromCityId: null, toCityId: null },
-      ],
-    },
-    orderBy: [{ fromCityId: 'desc' }, { toCityId: 'desc' }],
+  const routeRule = await db.pricingRule.findFirst({
+    where: { status: 'ACTIVE', serviceType: input.serviceType, fromCityId: senderCityId, toCityId: recipientCityId },
+    orderBy: { createdAt: 'asc' },
+  })
+  const rule = routeRule || await db.pricingRule.findFirst({
+    where: { status: 'ACTIVE', serviceType: input.serviceType, fromCityId: null, toCityId: null },
+    orderBy: { createdAt: 'asc' },
   })
 
   let shippingCost: number
