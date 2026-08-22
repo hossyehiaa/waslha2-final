@@ -223,7 +223,8 @@ export async function calculateShippingCost(input: PartnerShipmentInput, senderC
     codFee = input.codAmount > 0 ? Math.max(5, input.codAmount * (rule.codFeePercent / 100)) : 0
     if (input.priority === 'HIGH') shippingCost += 10
     if (input.priority === 'URGENT') shippingCost += 20
-    if (senderCityId !== recipientCityId) shippingCost += 15
+    // Standard pricing is configured as a flat base rate across routes; express keeps the inter-city surcharge.
+    if (input.serviceType !== 'STANDARD' && senderCityId !== recipientCityId) shippingCost += 15
   } else {
     const multiplier = input.serviceType === 'EXPRESS' ? 1.5 : input.serviceType === 'SAME_DAY' ? 2 : 1
     const priorityFee = input.priority === 'HIGH' ? 10 : input.priority === 'URGENT' ? 20 : 0

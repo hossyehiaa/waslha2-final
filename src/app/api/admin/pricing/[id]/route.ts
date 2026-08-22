@@ -23,6 +23,8 @@ export async function PATCH(
     const updateData: any = {}
     if (body.name) updateData.name = sanitizeInput(body.name)
     if (body.serviceType) updateData.serviceType = body.serviceType
+    if (body.fromCityId !== undefined) updateData.fromCityId = body.fromCityId ? String(body.fromCityId) : null
+    if (body.toCityId !== undefined) updateData.toCityId = body.toCityId ? String(body.toCityId) : null
     if (body.baseWeight !== undefined) updateData.baseWeight = Number(body.baseWeight)
     if (body.basePrice !== undefined) updateData.basePrice = Number(body.basePrice)
     if (body.perKgPrice !== undefined) updateData.perKgPrice = Number(body.perKgPrice)

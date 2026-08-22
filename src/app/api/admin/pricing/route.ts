@@ -10,6 +10,10 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const rules = await db.pricingRule.findMany({
+      include: {
+        fromCity: { select: { id: true, code: true, name: true } },
+        toCity: { select: { id: true, code: true, name: true } },
+      },
       orderBy: { createdAt: 'asc' },
     })
 
@@ -18,6 +22,10 @@ export async function GET() {
         id: r.id,
         name: r.name,
         serviceType: r.serviceType,
+        fromCityId: r.fromCityId,
+        toCityId: r.toCityId,
+        fromCity: r.fromCity,
+        toCity: r.toCity,
         baseWeight: r.baseWeight,
         basePrice: r.basePrice,
         perKgPrice: r.perKgPrice,
@@ -41,6 +49,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const name = sanitizeInput(body.name || '')
     const serviceType = body.serviceType || 'STANDARD'
+    const fromCityId = body.fromCityId ? String(body.fromCityId) : null
+    const toCityId = body.toCityId ? String(body.toCityId) : null
     const baseWeight = Number(body.baseWeight) || 0.5
     const basePrice = Number(body.basePrice) || 0
     const perKgPrice = Number(body.perKgPrice) || 0
@@ -52,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     const rule = await db.pricingRule.create({
-      data: { name, serviceType, baseWeight, basePrice, perKgPrice, codFeePercent, insuranceFeePercent, status: 'ACTIVE' },
+      data: { name, serviceType, fromCityId, toCityId, baseWeight, basePrice, perKgPrice, codFeePercent, insuranceFeePercent, status: 'ACTIVE' },
     })
 
     await db.auditLog.create({

@@ -25,6 +25,10 @@ type Pricing = {
   codFeePercent: number
   insuranceFeePercent: number
   status: string
+  fromCityId: string | null
+  toCityId: string | null
+  fromCity: { id: string; code: string; name: string } | null
+  toCity: { id: string; code: string; name: string } | null
 }
 
 export default function AdminPricingPage() {
@@ -35,6 +39,7 @@ export default function AdminPricingPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<Pricing | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Pricing | null>(null)
+  const [cities, setCities] = useState<Array<{ id: string; code: string; name: string }>>([])
 
   async function load() {
     setLoading(true)
@@ -49,7 +54,17 @@ export default function AdminPricingPage() {
     }
   }
 
-  useEffect(() => { load() }, [dict])
+  async function loadCities() {
+    try {
+      const res = await fetch('/api/admin/cities')
+      const data = await res.json()
+      if (res.ok) setCities(data.cities || [])
+    } catch {
+      // Pricing remains usable even if city metadata temporarily fails to load.
+    }
+  }
+
+  useEffect(() => { void load(); void loadCities() }, [dict])
 
   const serviceOptions = [
     { label: dict.pages.shipments.new.standard, value: 'STANDARD' },
@@ -60,6 +75,8 @@ export default function AdminPricingPage() {
   const formFields = [
     { key: 'name', label: dict.common.appName, type: 'text' as const, placeholder: 'Standard Domestic', required: true },
     { key: 'serviceType', label: dict.pages.shipments.new.serviceType, type: 'select' as const, options: serviceOptions, required: true, defaultValue: 'STANDARD' },
+    { key: 'fromCityId', label: 'From city (optional)', type: 'select' as const, options: [{ label: 'All cities', value: 'ALL' }, ...cities.map((city) => ({ label: `${city.name} (${city.code})`, value: city.id }))], defaultValue: 'ALL' },
+    { key: 'toCityId', label: 'To city (optional)', type: 'select' as const, options: [{ label: 'All cities', value: 'ALL' }, ...cities.map((city) => ({ label: `${city.name} (${city.code})`, value: city.id }))], defaultValue: 'ALL' },
     { key: 'baseWeight', label: L.kgIncluded, type: 'number' as const, placeholder: '0.5', required: true, defaultValue: 0.5 },
     { key: 'basePrice', label: L.basePrice, type: 'number' as const, placeholder: '25', required: true, defaultValue: 25 },
     { key: 'perKgPrice', label: L.perKg, type: 'number' as const, placeholder: '8', required: true, defaultValue: 8 },
@@ -74,6 +91,8 @@ export default function AdminPricingPage() {
     // Convert numbers
     const payload = {
       ...data,
+      fromCityId: data.fromCityId && data.fromCityId !== 'ALL' ? data.fromCityId : null,
+      toCityId: data.toCityId && data.toCityId !== 'ALL' ? data.toCityId : null,
       baseWeight: Number(data.baseWeight),
       basePrice: Number(data.basePrice),
       perKgPrice: Number(data.perKgPrice),
@@ -127,6 +146,7 @@ export default function AdminPricingPage() {
                     <div>
                       <div className="font-semibold">{r.name}</div>
                       <div className="text-xs text-muted-foreground">{serviceOptions.find(o => o.value === r.serviceType)?.label || r.serviceType}</div>
+                      <div className="text-xs text-muted-foreground">{r.fromCity || r.toCity ? `${r.fromCity?.name || 'Any'} → ${r.toCity?.name || 'Any'}` : 'All routes'}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
