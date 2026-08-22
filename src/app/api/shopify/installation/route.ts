@@ -9,7 +9,7 @@ function canManage(user: Awaited<ReturnType<typeof getCurrentUser>>) {
   return Boolean(user && (user.role === 'CLIENT' || user.role === 'ADMIN' || user.role === 'EMPLOYEE'))
 }
 
-function responseFor(installation: { id: string; shopDomain: string; authMode?: string | null; grantedScopes: string; senderName: string | null; senderPhone: string | null; senderAddress: string | null; senderCityId: string | null; apiVersion: string; status: string; lastSyncAt: Date | null; lastError: string | null; createdAt: Date; updatedAt: Date }) {
+function responseFor(installation: { id: string; shopDomain: string; authMode?: string | null; grantedScopes?: string | null; senderName: string | null; senderPhone: string | null; senderAddress: string | null; senderCityId: string | null; apiVersion: string; status: string; lastSyncAt: Date | null; lastError: string | null; createdAt: Date; updatedAt: Date }) {
   return {
     id: installation.id,
     shopDomain: installation.shopDomain,
@@ -39,8 +39,6 @@ export async function GET() {
       select: {
         id: true,
         shopDomain: true,
-        authMode: true,
-        grantedScopes: true,
         senderName: true,
         senderPhone: true,
         senderAddress: true,
