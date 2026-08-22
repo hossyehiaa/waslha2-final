@@ -9,22 +9,22 @@ async function main() {
 
   // ============ Geography ============
   const cairo = await db.city.create({
-    data: { name: 'Cairo', code: 'CAI', governorate: 'Cairo', status: 'ACTIVE' },
+    data: { name: 'Cairo', code: 'CAI', governorate: 'Cairo', pricingBand: 'LOCAL', standardPrice: 80, status: 'ACTIVE' },
   })
   const giza = await db.city.create({
-    data: { name: 'Giza', code: 'GIZ', governorate: 'Giza', status: 'ACTIVE' },
+    data: { name: 'Giza', code: 'GIZ', governorate: 'Giza', pricingBand: 'LOCAL', standardPrice: 80, status: 'ACTIVE' },
   })
   const alex = await db.city.create({
-    data: { name: 'Alexandria', code: 'ALX', governorate: 'Alexandria', status: 'ACTIVE' },
+    data: { name: 'Alexandria', code: 'ALX', governorate: 'Alexandria', pricingBand: 'IMAGE_85', standardPrice: 85, status: 'ACTIVE' },
   })
   const mansoura = await db.city.create({
-    data: { name: 'Mansoura', code: 'MAN', governorate: 'Dakahlia', status: 'ACTIVE' },
+    data: { name: 'Mansoura', code: 'MAN', governorate: 'Dakahlia', pricingBand: 'IMAGE_85', standardPrice: 85, status: 'ACTIVE' },
   })
   const tanta = await db.city.create({
-    data: { name: 'Tanta', code: 'TAN', governorate: 'Gharbia', status: 'ACTIVE' },
+    data: { name: 'Tanta', code: 'TAN', governorate: 'Gharbia', pricingBand: 'IMAGE_85', standardPrice: 85, status: 'ACTIVE' },
   })
   const aswan = await db.city.create({
-    data: { name: 'Aswan', code: 'ASW', governorate: 'Aswan', status: 'ACTIVE' },
+    data: { name: 'Aswan', code: 'ASW', governorate: 'Aswan', pricingBand: 'UPPER_EGYPT', standardPrice: 100, status: 'ACTIVE' },
   })
 
   const zones = await db.zone.createMany({
@@ -255,7 +255,7 @@ async function main() {
     const status = statuses[Math.floor(Math.random() * statuses.length)]
     const codAmount = Math.floor(100 + Math.random() * 4900)
     const shippingCost = Math.floor(25 + Math.random() * 75)
-    const codFee = Math.round(codAmount * 0.02 * 100) / 100
+    const codFee = 0
     const driver = status !== 'PENDING' && status !== 'CANCELLED' ? drivers[Math.floor(Math.random() * drivers.length)] : null
 
     const trackingNumber = `WSL${Date.now().toString(36).toUpperCase().slice(-6)}${Math.random().toString(16).slice(2, 6).toUpperCase()}`
@@ -461,7 +461,7 @@ async function main() {
       baseWeight: 0.5,
       basePrice: 25,
       perKgPrice: 8,
-      codFeePercent: 2,
+      codFeePercent: 0,
       insuranceFeePercent: 0.5,
       status: 'ACTIVE',
     },
@@ -473,7 +473,7 @@ async function main() {
       baseWeight: 0.5,
       basePrice: 50,
       perKgPrice: 15,
-      codFeePercent: 2,
+      codFeePercent: 0,
       insuranceFeePercent: 0.5,
       status: 'ACTIVE',
     },

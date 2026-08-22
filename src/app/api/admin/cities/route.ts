@@ -26,11 +26,11 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user || user.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    const { name, code, governorate } = await req.json()
+    const { name, code, governorate, pricingBand, standardPrice } = await req.json()
     if (!name || !code) return NextResponse.json({ error: 'Name and code required' }, { status: 400 })
     const existing = await db.city.findFirst({ where: { OR: [{ name }, { code }] } })
     if (existing) return NextResponse.json({ error: 'City already exists' }, { status: 400 })
-    const city = await db.city.create({ data: { name: sanitizeInput(name), code: sanitizeInput(code).toUpperCase(), governorate: governorate || null, status: 'ACTIVE' } })
+    const city = await db.city.create({ data: { name: sanitizeInput(name), code: sanitizeInput(code).toUpperCase(), governorate: governorate || null, pricingBand: pricingBand || 'UNPRICED', standardPrice: standardPrice === undefined || standardPrice === null ? null : Number(standardPrice), status: 'ACTIVE' } })
     return NextResponse.json({ city }, { status: 201 })
   } catch (e: any) { return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
@@ -40,12 +40,14 @@ export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser()
     if (!user || user.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    const { id, name, code, governorate, status } = await req.json()
+    const { id, name, code, governorate, pricingBand, standardPrice, status } = await req.json()
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
     const updateData: any = {}
     if (name) updateData.name = sanitizeInput(name)
     if (code) updateData.code = sanitizeInput(code).toUpperCase()
     if (governorate !== undefined) updateData.governorate = governorate
+    if (pricingBand !== undefined) updateData.pricingBand = pricingBand
+    if (standardPrice !== undefined) updateData.standardPrice = standardPrice === null ? null : Number(standardPrice)
     if (status) updateData.status = status
     const city = await db.city.update({ where: { id }, data: updateData })
     return NextResponse.json({ city })

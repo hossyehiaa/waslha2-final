@@ -78,9 +78,9 @@ export default function AdminPricingPage() {
     { key: 'fromCityId', label: 'From city (optional)', type: 'select' as const, options: [{ label: 'All cities', value: 'ALL' }, ...cities.map((city) => ({ label: `${city.name} (${city.code})`, value: city.id }))], defaultValue: 'ALL' },
     { key: 'toCityId', label: 'To city (optional)', type: 'select' as const, options: [{ label: 'All cities', value: 'ALL' }, ...cities.map((city) => ({ label: `${city.name} (${city.code})`, value: city.id }))], defaultValue: 'ALL' },
     { key: 'baseWeight', label: L.kgIncluded, type: 'number' as const, placeholder: '0.5', required: true, defaultValue: 0.5 },
-    { key: 'basePrice', label: L.basePrice, type: 'number' as const, placeholder: '25', required: true, defaultValue: 25 },
+    { key: 'basePrice', label: L.basePrice, type: 'number' as const, placeholder: '80', required: true, defaultValue: 80 },
     { key: 'perKgPrice', label: L.perKg, type: 'number' as const, placeholder: '8', required: true, defaultValue: 8 },
-    { key: 'codFeePercent', label: L.codFee, type: 'number' as const, placeholder: '2', required: true, defaultValue: 2 },
+    { key: 'codFeePercent', label: L.codFee, type: 'number' as const, placeholder: '0', required: true, defaultValue: 0 },
     { key: 'insuranceFeePercent', label: L.insurance, type: 'number' as const, placeholder: '0.5', defaultValue: 0.5 },
   ]
 
