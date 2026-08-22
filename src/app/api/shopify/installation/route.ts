@@ -28,12 +28,19 @@ function responseFor(installation: { id: string; shopDomain: string; authMode?: 
   }
 }
 
+function safePrismaCode(error: unknown) {
+  const code = typeof error === 'object' && error !== null && 'code' in error ? String((error as { code?: unknown }).code || '') : ''
+  return /^P20(00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48|49|50)$/.test(code) ? code : 'UNKNOWN'
+}
+
 export async function GET() {
   let stage = 'session'
   try {
     const user = await getCurrentUser()
     if (!user || user.role !== 'CLIENT' || !user.clientId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    stage = 'database'
+    stage = 'database_connection'
+    await db.$queryRaw`SELECT 1`
+    stage = 'database_table'
     const installation = await db.shopifyInstallation.findUnique({
       where: { clientId: user.clientId },
       select: {
@@ -54,7 +61,7 @@ export async function GET() {
     stage = 'serialize'
     return NextResponse.json({ installation: installation ? responseFor(installation) : null })
   } catch (error) {
-    const safeCode = `SHOPIFY_CONNECTION_${stage.toUpperCase()}_FAILED`
+    const safeCode = `SHOPIFY_CONNECTION_${stage.toUpperCase()}_${safePrismaCode(error)}_FAILED`
     console.error(`[Shopify] ${safeCode}:`, error instanceof Error ? error.message : 'unknown error')
     return NextResponse.json({ error: 'Unable to load Shopify connection', code: safeCode }, { status: 500 })
   }
