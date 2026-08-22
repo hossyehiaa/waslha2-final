@@ -202,35 +202,78 @@ export async function getActiveCityByCode(code: string) {
 
 export type ShippingQuote = { shippingCost: number; codFee: number; totalCost: number }
 
-export async function calculateShippingCost(input: PartnerShipmentInput, senderCityId: string, recipientCityId: string): Promise<ShippingQuote> {
-  const routeRule = await db.pricingRule.findFirst({
-    where: { status: 'ACTIVE', serviceType: input.serviceType, fromCityId: senderCityId, toCityId: recipientCityId },
-    orderBy: { createdAt: 'asc' },
-  })
-  const rule = routeRule || await db.pricingRule.findFirst({
-    where: { status: 'ACTIVE', serviceType: input.serviceType, fromCityId: null, toCityId: null },
-    orderBy: { createdAt: 'asc' },
-  })
+export const STANDARD_TARIFF = {
+  LOCAL: 80,
+  IMAGE_85: 85,
+  UPPER_EGYPT: 100,
+  NEW_VALLEY_HURGHADA: 110,
+  SHARM_EL_SHEIKH: 135,
+} as const
 
+type CityPricingData = { id: string; pricingBand: string | null; standardPrice: number | null }
+
+function standardBandPrice(city: CityPricingData) {
+  if (city.standardPrice !== null && Number.isFinite(city.standardPrice)) return city.standardPrice
+  return STANDARD_TARIFF[city.pricingBand as keyof typeof STANDARD_TARIFF] ?? null
+}
+
+async function calculateConfiguredStandardPrice(senderCityId: string, recipientCityId: string) {
+  const cities = await db.city.findMany({
+    where: { id: { in: [senderCityId, recipientCityId] }, status: 'ACTIVE' },
+    select: { id: true, pricingBand: true, standardPrice: true },
+  })
+  const sender = cities.find((city) => city.id === senderCityId)
+  const recipient = cities.find((city) => city.id === recipientCityId)
+  if (!sender || !recipient) throw new PartnerApiError(400, 'INVALID_CITY', 'Both cities must be active')
+  const senderPrice = standardBandPrice(sender)
+  const recipientPrice = standardBandPrice(recipient)
+  if (senderPrice === null || recipientPrice === null) {
+    throw new PartnerApiError(400, 'UNPRICED_CITY', 'This route is not covered by the active tariff yet', {
+      senderCityId,
+      recipientCityId,
+    })
+  }
+  // The tariff is symmetric: a route uses the higher priced band of its two endpoints.
+  return Math.max(senderPrice, recipientPrice)
+}
+
+export async function calculateShippingCost(input: PartnerShipmentInput, senderCityId: string, recipientCityId: string): Promise<ShippingQuote> {
   let shippingCost: number
-  let codFee: number
-  if (rule) {
-    const extraWeight = Math.max(0, input.weight - rule.baseWeight)
-    shippingCost = rule.basePrice + Math.ceil(extraWeight) * rule.perKgPrice
-    codFee = input.codAmount > 0 ? Math.max(5, input.codAmount * (rule.codFeePercent / 100)) : 0
-    if (input.priority === 'HIGH') shippingCost += 10
-    if (input.priority === 'URGENT') shippingCost += 20
-    // Standard pricing is configured as a flat base rate across routes; express keeps the inter-city surcharge.
-    if (input.serviceType !== 'STANDARD' && senderCityId !== recipientCityId) shippingCost += 15
+  let codFee = 0
+
+  if (input.serviceType === 'STANDARD') {
+    const basePrice = await calculateConfiguredStandardPrice(senderCityId, recipientCityId)
+    const extraWeight = Math.max(0, input.weight - 0.5)
+    shippingCost = basePrice + Math.ceil(extraWeight) * 8
   } else {
-    const multiplier = input.serviceType === 'EXPRESS' ? 1.5 : input.serviceType === 'SAME_DAY' ? 2 : 1
-    const priorityFee = input.priority === 'HIGH' ? 10 : input.priority === 'URGENT' ? 20 : 0
-    const weightFee = Math.max(0, Math.ceil(input.weight - 1)) * 5
-    const interCityFee = senderCityId !== recipientCityId ? 15 : 0
-    shippingCost = 30 * multiplier + priorityFee + weightFee + interCityFee
-    codFee = input.codAmount > 0 ? Math.max(5, input.codAmount * 0.01) : 0
+    const routeRule = await db.pricingRule.findFirst({
+      where: { status: 'ACTIVE', serviceType: input.serviceType, fromCityId: senderCityId, toCityId: recipientCityId },
+      orderBy: { createdAt: 'asc' },
+    })
+    const rule = routeRule || await db.pricingRule.findFirst({
+      where: { status: 'ACTIVE', serviceType: input.serviceType, fromCityId: null, toCityId: null },
+      orderBy: { createdAt: 'asc' },
+    })
+    if (rule) {
+      const extraWeight = Math.max(0, input.weight - rule.baseWeight)
+      shippingCost = rule.basePrice + Math.ceil(extraWeight) * rule.perKgPrice
+      codFee = rule.codFeePercent > 0 && input.codAmount > 0
+        ? Math.max(5, input.codAmount * (rule.codFeePercent / 100))
+        : 0
+      if (input.priority === 'HIGH') shippingCost += 10
+      if (input.priority === 'URGENT') shippingCost += 20
+      if (senderCityId !== recipientCityId) shippingCost += 15
+    } else {
+      const multiplier = input.serviceType === 'EXPRESS' ? 1.5 : 2
+      const priorityFee = input.priority === 'HIGH' ? 10 : input.priority === 'URGENT' ? 20 : 0
+      const weightFee = Math.max(0, Math.ceil(input.weight - 1)) * 5
+      shippingCost = 30 * multiplier + priorityFee + weightFee + (senderCityId !== recipientCityId ? 15 : 0)
+      codFee = 0
+    }
   }
 
+  if (input.priority === 'HIGH' && input.serviceType === 'STANDARD') shippingCost += 10
+  if (input.priority === 'URGENT' && input.serviceType === 'STANDARD') shippingCost += 20
   const round = (value: number) => Math.round(value * 100) / 100
   return { shippingCost: round(shippingCost), codFee: round(codFee), totalCost: round(shippingCost + codFee) }
 }

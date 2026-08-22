@@ -54,7 +54,34 @@ Returns active cities only:
 }
 ```
 
-Use `cityCode` when creating shipments. Internal city IDs are not a stable integration contract.
+Use `cityCode` when creating shipments. Internal city IDs are not a stable integration contract. The response also includes the governorate and the active tariff coverage is controlled by Wslahali; the merchant must not hardcode city names or prices.
+
+## Get a shipping quote
+
+```http
+POST /quotes
+Authorization: Bearer wsl_your_api_key
+Content-Type: application/json
+```
+
+The quote request uses the same shipment fields as `POST /shipments`, but it does not create a shipment and does not need an `Idempotency-Key`. It requires `shipments:read` and returns the current net Wslahali price so the merchant can display it during checkout.
+
+For Standard delivery, the current tariff is symmetric by route: Cairo/Giza local routes are 80 EGP; the governorates listed in the approved tariff image are 85 EGP; Upper Egypt is 100 EGP; New Valley and Hurghada are 110 EGP; and Sharm El Sheikh is 135 EGP. When two endpoints belong to different bands, the higher band applies. COD Fee is 0 EGP. The standard included weight is 0.5 kg and the configured additional-weight charge remains 8 EGP per kilogram increment.
+
+```json
+{
+  "data": {
+    "serviceType": "STANDARD",
+    "weight": 0.5,
+    "senderCityCode": "CAI",
+    "recipientCityCode": "ALX",
+    "shippingCost": 85,
+    "codFee": 0,
+    "totalCost": 85,
+    "currency": "EGP"
+  }
+}
+```
 
 ## Create a shipment
 
@@ -87,7 +114,7 @@ Idempotency-Key: 6bd36f7e-5c3f-42d9-9927-unique
 }
 ```
 
-`shippingCost` is rejected if supplied. Wslahali calculates shipping and COD charges server-side. A configured `PricingRule` is used when it matches the service and route; otherwise the fallback is base 30 EGP, service multipliers of 1/1.5/2, priority surcharges of 0/0/10/20, 5 EGP per additional kilogram or fraction, 15 EGP for an inter-city route, and a COD fee of `max(5, codAmount * 0.01)`.
+`shippingCost` is rejected if supplied. Wslahali calculates all charges server-side. Standard delivery follows the active net tariff described above and returns `codFee: 0`; the merchant must use the returned `totalCost` and must not calculate or add a COD percentage in its own code. Express and Same Day remain controlled by their separate active rules.
 
 ```json
 {
@@ -188,6 +215,15 @@ BASE_URL="https://wsalhali.vercel.app/api/integrations/v1"
 API_KEY="wsl_replace_me"
 
 curl "$BASE_URL/cities" -H "Authorization: Bearer $API_KEY"
+
+curl -X POST "$BASE_URL/quotes" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "sender":{"name":"Warehouse","phone":"01000000000","address":"Nasr City","cityCode":"CAI"},
+    "recipient":{"name":"Ahmed Ali","phone":"01111111111","address":"Smouha","cityCode":"ALX"},
+    "serviceType":"STANDARD","weight":0.5,"codAmount":750
+  }'
 
 curl -X POST "$BASE_URL/shipments" \
   -H "Authorization: Bearer $API_KEY" \

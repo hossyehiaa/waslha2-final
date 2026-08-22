@@ -184,6 +184,8 @@ model City {
   name        String   @unique
   code        String   @unique
   governorate String?
+  pricingBand String?  @default("UNPRICED")
+  standardPrice Float?
   status      String   @default("ACTIVE")
   createdAt   DateTime @default(now())
 
