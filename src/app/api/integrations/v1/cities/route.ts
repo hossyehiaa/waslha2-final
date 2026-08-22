@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     auth = await authenticatePartnerRequest(req, 'shipments_read')
     const cities = await db.city.findMany({
       where: { status: 'ACTIVE' },
-      select: { id: true, code: true, name: true, governorate: true },
+      select: { id: true, code: true, name: true, governorate: true, pricingBand: true, standardPrice: true },
       orderBy: { name: 'asc' },
     })
     const response = jsonSuccess(cities, 200, { 'X-Request-ID': auth.requestId })
