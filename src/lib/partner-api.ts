@@ -326,7 +326,9 @@ export async function updateShipmentStatus(params: {
   }
 
   const updated = await db.$transaction(async (tx) => {
-    const next = await tx.shipment.update({ where: { id: shipmentId }, data: updateData })
+    const claimed = await tx.shipment.updateMany({ where: { id: shipmentId, status: shipment.status }, data: updateData })
+    if (claimed.count !== 1) throw new PartnerApiError(409, 'STATUS_CONFLICT', 'Shipment status changed by another request')
+    const next = await tx.shipment.findUniqueOrThrow({ where: { id: shipmentId } })
     await tx.shipmentStatus.create({ data: { shipmentId, status, note: note || null, location: location || null, createdBy: changedBy || null } })
     return next
   })

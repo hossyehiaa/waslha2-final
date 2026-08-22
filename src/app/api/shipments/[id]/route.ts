@@ -29,8 +29,14 @@ export async function GET(
 
     if (!shipment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Permission check
+    // Permission check: clients can read their own shipments; drivers can read assigned shipments; staff can read all.
     if (user.role === 'CLIENT' && shipment.clientId !== user.clientId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (user.role === 'DRIVER' && shipment.driverId !== user.driverId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (user.role !== 'CLIENT' && user.role !== 'DRIVER' && user.role !== 'ADMIN' && user.role !== 'EMPLOYEE') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

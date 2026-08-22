@@ -62,7 +62,7 @@ export async function PATCH(
       note: note || `Status updated by ${user.fullName}`,
       location: body.location || null,
       changedBy: user.id,
-      driverId,
+      driverId: user.role === 'ADMIN' || user.role === 'EMPLOYEE' ? driverId : undefined,
       failureReason,
     })
 
@@ -183,6 +183,7 @@ export async function PATCH(
     return NextResponse.json({ shipment: updated })
   } catch (e: any) {
     console.error('Status update error:', e)
+    if (typeof e?.status === 'number' && typeof e?.message === 'string') return NextResponse.json({ error: e.message, code: e.code || 'REQUEST_FAILED' }, { status: e.status })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
