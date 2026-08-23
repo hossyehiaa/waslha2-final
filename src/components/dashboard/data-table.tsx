@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Download, Filter, FileText, FileSpreadsheet } from 'lucide-react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Download, Filter, FileText, FileSpreadsheet, X } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -36,6 +37,12 @@ export function DataTable<T extends { id: string }>({
   emptyMessage,
   pageSize = 10,
   exportFilename = 'export',
+  enableSelection = false,
+  selectedIds,
+  onSelectionChange,
+  bulkBar,
+  selectable,
+  selectionLabel,
 }: {
   data: T[]
   columns: Column<T>[]
@@ -47,12 +54,30 @@ export function DataTable<T extends { id: string }>({
   emptyMessage?: string
   pageSize?: number
   exportFilename?: string
+  /** Enable row selection with checkboxes */
+  enableSelection?: boolean
+  /** Controlled selection state */
+  selectedIds?: string[]
+  onSelectionChange?: (ids: string[]) => void
+  /** Custom content rendered inside the floating bulk-action bar when selection > 0 */
+  bulkBar?: React.ReactNode
+  /** Per-row selectability check. Defaults to all rows selectable */
+  selectable?: (row: T) => boolean
+  /** Label shown next to the selected count in the bulk bar */
+  selectionLabel?: string
 }) {
   const { dict, isRTL } = useLanguage()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  // ---- Selection state (controlled from parent when provided) ----
+  const [internalSelected, setInternalSelected] = useState<string[]>([])
+  const effectiveSelected = selectedIds ?? internalSelected
+  const setEffectiveSelected = onSelectionChange ?? setInternalSelected
+
+  const headerCheckboxRef = useRef<HTMLButtonElement>(null)
 
   // Helper to extract a cell value for export
   function getCellValue(row: T, key: string): string {
@@ -94,6 +119,42 @@ export function DataTable<T extends { id: string }>({
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const currentPage = Math.min(page, totalPages)
   const paged = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+  // ---- Selection derivations (must come after filtered/paged) ----
+  const selectableRows = useMemo(
+    () => (enableSelection ? (selectable ? filtered.filter(selectable) : filtered) : []),
+    [enableSelection, selectable, filtered]
+  )
+
+  const pageSelectableIds = useMemo(
+    () => paged.filter((r) => !selectable || selectable(r)).map((r) => r.id),
+    [paged, selectable]
+  )
+
+  const allPageSelected = enableSelection && pageSelectableIds.length > 0 && pageSelectableIds.every((id) => effectiveSelected.includes(id))
+  const somePageSelected = enableSelection && pageSelectableIds.some((id) => effectiveSelected.includes(id))
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.dataset.state = allPageSelected ? 'checked' : somePageSelected ? 'indeterminate' : 'unchecked'
+    }
+  }, [allPageSelected, somePageSelected])
+
+  function toggleSelectAllFiltered() {
+    const ids = selectableRows.map((r) => r.id)
+    const allSelected = ids.length > 0 && ids.every((id) => effectiveSelected.includes(id))
+    // Keep selections from other search/filter contexts, toggle only currently visible
+    const others = effectiveSelected.filter((id) => !ids.includes(id))
+    setEffectiveSelected(allSelected ? others : [...new Set([...others, ...ids])])
+  }
+
+  function toggleRowSelected(id: string) {
+    setEffectiveSelected(
+      effectiveSelected.includes(id)
+        ? effectiveSelected.filter((x) => x !== id)
+        : [...effectiveSelected, id]
+    )
+  }
 
   function toggleSort(key: string) {
     if (sortKey === key) {
@@ -172,6 +233,19 @@ export function DataTable<T extends { id: string }>({
         <table className="w-full text-sm">
           <thead className="bg-muted/30">
             <tr className="border-b text-xs text-muted-foreground">
+              {enableSelection && (
+                <th className="w-10 py-3 px-3">
+                  <div className="flex items-center gap-1">
+                    <Checkbox
+                      ref={headerCheckboxRef}
+                      checked={allPageSelected || (somePageSelected && 'indeterminate')}
+                      onCheckedChange={toggleSelectAllFiltered}
+                      aria-label="Select all"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </th>
+              )}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -196,6 +270,7 @@ export function DataTable<T extends { id: string }>({
             {loading ? (
               [...Array(5)].map((_, i) => (
                 <tr key={i} className="border-b last:border-0">
+                  {enableSelection && <td className="py-3 px-3"><Skeleton className="h-4 w-4" /></td>}
                   {columns.map((col) => (
                     <td key={col.key} className={`py-3 px-4 ${col.hideOnMobile ? 'hidden md:table-cell' : ''}`}>
                       <Skeleton className="h-5 w-full max-w-[100px]" />
@@ -205,31 +280,83 @@ export function DataTable<T extends { id: string }>({
               ))
             ) : paged.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-16 text-center text-muted-foreground">
+                <td colSpan={columns.length + (enableSelection ? 1 : 0)} className="py-16 text-center text-muted-foreground">
                   {emptyMsg}
                 </td>
               </tr>
             ) : (
-              paged.map((row, i) => (
-                <motion.tr
-                  key={row.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.02 }}
-                  className={`border-b last:border-0 hover:bg-accent/30 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
-                  onClick={() => onRowClick?.(row)}
-                >
-                  {columns.map((col) => (
-                    <td key={col.key} className={`py-3 px-4 ${col.className || ''} ${col.hideOnMobile ? 'hidden md:table-cell' : ''} ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {col.cell(row)}
-                    </td>
-                  ))}
-                </motion.tr>
-              ))
+              paged.map((row, i) => {
+                const rowSelectable = !selectable || selectable(row)
+                const rowSelected = effectiveSelected.includes(row.id)
+                return (
+                  <motion.tr
+                    key={row.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.02 }}
+                    className={`border-b last:border-0 hover:bg-accent/30 transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${rowSelected ? 'bg-primary/5' : ''}`}
+                    onClick={() => onRowClick?.(row)}
+                  >
+                    {enableSelection && (
+                      <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
+                        {rowSelectable ? (
+                          <Checkbox
+                            checked={rowSelected}
+                            onCheckedChange={() => toggleRowSelected(row.id)}
+                            aria-label="Select row"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    )}
+                    {columns.map((col) => (
+                      <td key={col.key} className={`py-3 px-4 ${col.className || ''} ${col.hideOnMobile ? 'hidden md:table-cell' : ''} ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {col.cell(row)}
+                      </td>
+                    ))}
+                  </motion.tr>
+                )
+              })
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Floating bulk-action bar */}
+      {enableSelection && effectiveSelected.length > 0 && (
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl"
+          >
+            <div className="rounded-2xl border shadow-2xl bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 px-4 py-3 flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2 text-sm font-bold whitespace-nowrap">
+                <span className="min-w-6 h-6 px-1.5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">
+                  {effectiveSelected.length}
+                </span>
+                <span className="text-muted-foreground font-medium">{selectionLabel || (isRTL ? 'محدد' : 'selected')}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap flex-1">
+                {bulkBar}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setEffectiveSelected([])}
+                aria-label={isRTL ? 'إلغاء التحديد' : 'Clear selection'}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      )}
 
       {/* Pagination */}
       {filtered.length > 0 && (

@@ -79,6 +79,7 @@ model Client {
   shopifyOAuthStates   ShopifyOAuthState[]
   loyaltyPoints       LoyaltyPoint[]
   insuranceClaims     InsuranceClaim[]
+  clientPayments      ClientPayment[]
   logoUrl             String?
   preferredCurrency   String               @default("EGP")
 }
@@ -402,11 +403,31 @@ model Invoice {
   amount        Float
   tax           Float     @default(0)
   total         Float
-  status        String    @default("UNPAID") // UNPAID, PAID, OVERDUE
+  status        String    @default("UNPAID") // UNPAID, PAID, OVERDUE, PENDING_PAYMENT
   dueDate       DateTime?
   paidAt        DateTime?
   period        String?
+  paymentId     String?
   createdAt     DateTime  @default(now())
+}
+
+// ============ CLIENT PAYMENTS (سداد العملاء) ============
+model ClientPayment {
+  id           String   @id @default(cuid())
+  reference    String   @unique
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id])
+  amount       Float
+  method       String   @default("BANK_TRANSFER") // BANK_TRANSFER, CASH, WALLET, OTHER
+  note         String?
+  proofUrl     String?  @db.Text // screenshot proof (data URL)
+  invoiceCount Int      @default(0)
+  invoiceIds   String   @default("[]") // JSON array of paid invoice ids
+  createdById  String?
+  createdAt    DateTime @default(now())
+
+  @@index([clientId])
+  @@index([createdAt])
 }
 
 // ============ BRANCH TRANSFERS ============

@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Package, Plus, Download, RefreshCw } from 'lucide-react'
+import { RefreshCw, Package, Clock, Banknote, Layers, FileText, CalendarClock, Truck } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { BulkStatusDialog } from '@/components/dashboard/bulk-status-dialog'
 import { useBulkStatus } from '@/components/dashboard/use-bulk-status'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
@@ -17,68 +19,90 @@ type Shipment = {
   id: string
   trackingNumber: string
   client: string
-  clientId: string
   senderCity: string
   recipientCity: string
   recipientName: string
   recipientPhone: string
   status: string
-  paymentStatus: string
-  serviceType: string
-  priority: string
-  weight: number
-  pieces: number
   codAmount: number
-  shippingCost: number
-  description: string | null
-  driver: { name: string; code: string } | null
   createdAt: string
-  deliveredAt: string | null
 }
 
-export default function AdminShipmentsPage() {
+/**
+ * Shared, selection-enabled shipments table used by every shipments sub-page
+ * (movement, deleted, pending, pending-api, delivery, postponed, collection).
+ * Staff can select any subset (or all) and force any lifecycle status.
+ */
+export function ShipmentsWorkTable({
+  title,
+  subtitle,
+  icon,
+  apiStatus,
+  limit = 200,
+}: {
+  title: string
+  subtitle: string
+  icon: 'movement' | 'deleted' | 'pending' | 'pending-api' | 'delivery' | 'postponed' | 'collection'
+  apiStatus: string
+  limit?: number
+}) {
   const router = useRouter()
   const { dict, isRTL } = useLanguage()
-  const L = dict.pages.shipments
   const [shipments, setShipments] = useState<Shipment[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState('all')
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch(`/api/shipments?status=${statusFilter}&limit=200`)
-      .then(r => r.json())
-      .then(d => setShipments(d.shipments || []))
+    fetch(`/api/shipments?status=${apiStatus}&limit=${limit}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setShipments(d.shipments || [])
+        setTotal(d.total || 0)
+      })
       .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
-  }, [statusFilter, dict])
+  }, [apiStatus, limit, dict])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+  }, [load])
 
   const { selectedIds, setSelectedIds, dialogOpen, setDialogOpen, loading: applying, applyStatus } = useBulkStatus(load)
+
+  const icons: Record<string, LucideIcon> = {
+    movement: RefreshCw,
+    deleted: FileText,
+    pending: Clock,
+    'pending-api': Layers,
+    delivery: Truck,
+    postponed: CalendarClock,
+    collection: Banknote,
+  }
+  const Icon = icons[icon] || Package
 
   const columns: Column<Shipment>[] = [
     {
       key: 'trackingNumber',
-      header: L.tracking || 'Tracking #',
+      header: isRTL ? 'رقم التتبع' : 'Tracking #',
       sortable: true,
       cell: (s) => <span className="font-mono font-medium text-xs">{s.trackingNumber}</span>,
     },
     {
       key: 'client',
-      header: L.client || 'Client',
+      header: isRTL ? 'العميل' : 'Client',
       sortable: true,
-      cell: (s) => <span className="font-medium">{s.client}</span>,
+      cell: (s) => <span className="font-medium text-xs">{s.client}</span>,
     },
     {
       key: 'route',
-      header: L.route || 'Route',
+      header: isRTL ? 'المسار' : 'Route',
       hideOnMobile: true,
       cell: (s) => <span className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</span>,
     },
     {
       key: 'recipient',
-      header: L.recipient || 'Recipient',
+      header: isRTL ? 'المستلم' : 'Recipient',
       hideOnMobile: true,
       cell: (s) => (
         <div>
@@ -93,51 +117,47 @@ export default function AdminShipmentsPage() {
       cell: (s) => <StatusBadge status={s.status} />,
     },
     {
-      key: 'paymentStatus',
-      header: dict.pages.shipments.paymentStatus,
-      hideOnMobile: true,
-      cell: (s) => <StatusBadge status={s.paymentStatus} />,
-    },
-    {
       key: 'codAmount',
-      header: L.cod || 'COD',
+      header: 'COD',
       sortable: true,
       cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.codAmount)}</span>,
     },
     {
       key: 'createdAt',
-      header: L.created || 'Created',
+      header: isRTL ? 'التاريخ' : 'Date',
       sortable: true,
       hideOnMobile: true,
       cell: (s) => <span className="text-xs text-muted-foreground">{formatTimeAgo(s.createdAt)}</span>,
     },
   ]
 
+  const totalCod = shipments.reduce((s, x) => s + x.codAmount, 0)
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={dict.nav.shipments}
-        subtitle={`${shipments.length} ${L.listSubtitle}`}
-        icon={Package}
-        actions={
-          <>
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              {dict.common.export}
-            </Button>
-            <Button onClick={() => router.push('/admin/shipments/new')} className="shadow-premium">
-              <Plus className="w-4 h-4 mr-2" />
-              {L.newShipment}
-            </Button>
-          </>
-        }
-      />
+      <PageHeader title={title} subtitle={subtitle} icon={Icon} />
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="text-xs text-muted-foreground">{isRTL ? 'العدد الإجمالي' : 'Total'}</div>
+          <div className="text-xl font-bold mt-1">{total}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs text-muted-foreground">{isRTL ? 'إجمالي COD' : 'Total COD'}</div>
+          <div className="text-xl font-bold text-amber-600 mt-1">{formatCurrency(totalCod)}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs text-muted-foreground">{isRTL ? 'في الصفحة' : 'In page'}</div>
+          <div className="text-xl font-bold mt-1">{shipments.length}</div>
+        </Card>
+      </div>
+
       <DataTable
         data={shipments}
         columns={columns}
         loading={loading}
-        searchPlaceholder={L.searchPlaceholder}
-        searchKeys={['trackingNumber', 'recipientName', 'recipientPhone']}
+        searchPlaceholder={isRTL ? 'بحث برقم التتبع أو العميل...' : 'Search tracking # or client...'}
+        searchKeys={['trackingNumber', 'client', 'recipientName', 'recipientPhone']}
         enableSelection
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
@@ -148,23 +168,6 @@ export default function AdminShipmentsPage() {
             {isRTL ? 'تغيير الحالة' : 'Change status'}
           </Button>
         }
-        filters={[
-          {
-            label: dict.common.status,
-            value: statusFilter,
-            options: [
-              { label: dict.statuses.PENDING, value: 'PENDING' },
-              { label: dict.statuses.PICKED_UP, value: 'PICKED_UP' },
-              { label: dict.statuses.IN_TRANSIT, value: 'IN_TRANSIT' },
-              { label: dict.statuses.OUT_FOR_DELIVERY, value: 'OUT_FOR_DELIVERY' },
-              { label: dict.statuses.DELIVERED, value: 'DELIVERED' },
-              { label: dict.statuses.RETURNED, value: 'RETURNED' },
-              { label: dict.statuses.FAILED, value: 'FAILED' },
-              { label: dict.statuses.CANCELLED, value: 'CANCELLED' },
-            ],
-            onChange: (v) => setStatusFilter(v),
-          },
-        ]}
         onRowClick={(s) => router.push(`/admin/shipments/${s.id}`)}
         pageSize={12}
       />

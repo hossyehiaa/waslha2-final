@@ -67,3 +67,26 @@ Stage Summary:
 - All demo accounts work on production
 - Note: GitHub push to hossyehiaa/waslha2-final requires GitHub PAT (not provided)
 - Project is live and fully functional
+
+---
+Task ID: 3
+Agent: Main (Super Z)
+Task: Bulk shipment selection + per-customer invoice payments with screenshot proof
+
+Work Log:
+- Extended DataTable with optional row selection (per-row checkboxes, select-all-page with indeterminate, floating bulk-action bar, per-row selectability)
+- Added PATCH /api/shipments/bulk: force any lifecycle status on up to 500 shipments, records ShipmentStatus history, COD balances, driver stats, notifications, loyalty, webhooks (bounded), audit log
+- Added BulkStatusDialog (all 8 statuses, bilingual) + useBulkStatus hook
+- All 8 shipment pages now support select + bulk status: manage, movement, deleted, pending, pending-api, delivery, postponed, collection (shared ShipmentsWorkTable component)
+- Finance: new ClientPayment model + Invoice.paymentId (migration 20260823120000_client_payments, applied to Neon — also caught up 3 pending migrations)
+- GET /api/admin/invoices extended (clientId filter + per-client unpaid summary); PATCH bulk actions: send_to_payment / unsend / mark_paid (creates ClientPayment with proof, single-client constraint)
+- GET /api/admin/client-payments history endpoint
+- Invoices page rebuilt: per-customer panel (search + unpaid badges) + selection + send-to-payments + instant pay
+- Payments page (سداد العملاء) rebuilt: 3 tabs (payment queue with client filter + mark-paid-with-screenshot, payments history with proof viewer, COD settlements)
+- PayInvoicesDialog with client-side image compression (1400px JPEG) + proof preview
+- E2E verified with isolated ZTEST data (all flows), then fully cleaned up (DB back to 60 shipments / 8 invoices / 0 payments)
+
+Stage Summary:
+- Bulk ops live on all shipments pages, any status customizable
+- سداد العملاء flow: select client invoices -> send -> pay with screenshot proof -> history with viewer
+- Lint clean (0 errors)
