@@ -24,8 +24,9 @@ type ClientSummary = { id: string; companyName: string }
 type Shipment = {
   id: string
   trackingNumber: string
-  senderCity: string
-  recipientCity: string
+  senderCity?: string
+  recipientCity?: string
+  route?: string
   codAmount: number
   shippingCost: number
 }
