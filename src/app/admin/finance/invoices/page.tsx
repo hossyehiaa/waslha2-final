@@ -1,12 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Receipt, Search, Send, BadgeDollarSign, ChevronLeft, ChevronRight, Users, Wallet, Clock } from 'lucide-react'
+import { Receipt, Search, Send, BadgeDollarSign, ChevronLeft, ChevronRight, Users, Wallet, Clock, FilePlus2, Package, Edit3 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { PayInvoicesDialog } from '@/components/dashboard/pay-invoices-dialog'
+import { CreateInvoiceDialog, EditInvoiceShipmentsDialog } from '@/components/dashboard/invoice-shipments-dialogs'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,7 @@ type Invoice = {
   status: string
   dueDate: string | null
   paidAt: string | null
+  shipmentCount: number
   createdAt: string
 }
 
@@ -49,6 +51,8 @@ export default function AdminInvoicesPage() {
   const [payOpen, setPayOpen] = useState(false)
   const [paying, setPaying] = useState(false)
   const [sending, setSending] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -159,6 +163,16 @@ export default function AdminInvoicesPage() {
       cell: (i) => <span className="font-bold text-xs">{formatCurrency(i.total)}</span>,
     },
     {
+      key: 'shipmentCount',
+      header: isRTL ? 'أوردرات' : 'Orders',
+      sortable: true,
+      cell: (i) => i.shipmentCount > 0 ? (
+        <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+          <Package className="w-3 h-3" />{i.shipmentCount}
+        </span>
+      ) : <span className="text-xs text-muted-foreground">—</span>,
+    },
+    {
       key: 'dueDate',
       header: isRTL ? 'تاريخ الاستحقاق' : 'Due date',
       hideOnMobile: true,
@@ -169,14 +183,30 @@ export default function AdminInvoicesPage() {
       header: dict.common.status,
       cell: (i) => <StatusBadge status={i.status} />,
     },
+    {
+      key: 'actions',
+      header: dict.common.actions,
+      cell: (i) => (
+        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setEditId(i.id) }}>
+          <Edit3 className="w-3.5 h-3.5 mr-1" />
+          {isRTL ? 'تحرير الأوردرات' : 'Edit orders'}
+        </Button>
+      ),
+    },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={isRTL ? 'فواتير العملاء' : 'Client Invoices'}
-        subtitle={isRTL ? 'كل عميل لوحده — اختر عميلاً وحدّد فواتيره للسداد' : 'Per-customer view — pick a client and select their invoices'}
+        subtitle={isRTL ? 'كل عميل لوحده — انشئ فاتورة من أوردراته ثم سددها' : 'Per-customer view — build an invoice from orders then settle it'}
         icon={Receipt}
+        actions={
+          <Button className="shadow-premium" onClick={() => setCreateOpen(true)}>
+            <FilePlus2 className="w-4 h-4 mr-2" />
+            {isRTL ? 'فاتورة جديدة من أوردرات' : 'New invoice from orders'}
+          </Button>
+        }
       />
 
       <div className="grid lg:grid-cols-[300px_1fr] gap-6">
@@ -306,6 +336,20 @@ export default function AdminInvoicesPage() {
         clientName={activeClient?.companyName || ''}
         loading={paying}
         onConfirm={(payload) => bulkAction('mark_paid', payload)}
+      />
+
+      <CreateInvoiceDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        clients={clients}
+        onCreated={load}
+      />
+
+      <EditInvoiceShipmentsDialog
+        open={!!editId}
+        onOpenChange={(v) => !v && setEditId(null)}
+        invoiceId={editId}
+        onSaved={load}
       />
     </div>
   )

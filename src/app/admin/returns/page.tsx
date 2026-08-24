@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { RotateCcw, RefreshCw, PackageCheck, Send, Trash2, History } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
 import { Card } from '@/components/ui/card'
-import { formatDateTime } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
 
@@ -14,6 +15,11 @@ type ReturnItem = {
   id: string
   shipmentId: string
   trackingNumber: string
+  client: string
+  route: string
+  recipient: string
+  phone: string
+  codAmount: number
   reason: string
   status: string
   condition: string | null
@@ -21,48 +27,174 @@ type ReturnItem = {
   createdAt: string
 }
 
-export default function AdminReturnsPage() {
-  const { dict } = useLanguage()
-  const L = dict.pages.returns
-  const [returns, setReturns] = useState<ReturnItem[]>([])
-  const [loading, setLoading] = useState(true)
+const STATUS_LABEL: Record<string, string> = {
+  PENDING: 'بانتظار الاستلام',
+  IN_TRANSIT: 'تم الاستلام — جاهز للتسليم',
+  RETURNED_TO_CLIENT: 'تم التسليم',
+  DISPOSED: 'تم التصرف',
+}
 
-  useEffect(() => {
+export default function AdminReturnsPage() {
+  const { dict, isRTL } = useLanguage()
+  const [items, setItems] = useState<ReturnItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [acting, setActing] = useState(false)
+
+  const load = useCallback(() => {
+    setLoading(true)
     fetch('/api/admin/returns')
       .then(r => r.json())
-      .then(d => setReturns(d.returns || []))
+      .then(d => setItems(d.returns || []))
       .catch(() => toast.error(dict.common.noData))
       .finally(() => setLoading(false))
   }, [dict])
 
+  useEffect(() => { load() }, [load])
+
+  async function applyAction(action: 'receive' | 'deliver' | 'dispose') {
+    if (selectedIds.length === 0) return
+    setActing(true)
+    try {
+      const res = await fetch('/api/admin/returns', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds, action }),
+      })
+      const d = await res.json()
+      if (!res.ok) {
+        toast.error(d.error || (isRTL ? 'فشل تنفيذ العملية' : 'Action failed'))
+        return
+      }
+      const parts: string[] = []
+      if (d.updated > 0) parts.push(isRTL ? `تم تحديث ${d.updated}` : `${d.updated} updated`)
+      if (d.skipped > 0) parts.push(isRTL ? `تخطي ${d.skipped}` : `${d.skipped} skipped`)
+      if (d.errors?.length > 0) parts.push(isRTL ? `${d.errors.length} فشلت` : `${d.errors.length} failed`)
+      toast.success(parts.join(' • ') || (isRTL ? 'تم' : 'Done'))
+      setSelectedIds([])
+      load()
+    } catch {
+      toast.error(isRTL ? 'خطأ في الشبكة' : 'Network error')
+    } finally {
+      setActing(false)
+    }
+  }
+
+  const stats = useMemo(() => {
+    return {
+      pending: items.filter(i => i.status === 'PENDING').length,
+      received: items.filter(i => i.status === 'IN_TRANSIT').length,
+      delivered: items.filter(i => i.status === 'RETURNED_TO_CLIENT').length,
+      disposed: items.filter(i => i.status === 'DISPOSED').length,
+      total: items.length,
+    }
+  }, [items])
+
   const columns: Column<ReturnItem>[] = [
-    { key: 'trackingNumber', header: L.tracking, sortable: true, cell: (r) => <span className="font-mono font-medium text-xs">{r.trackingNumber}</span> },
-    { key: 'reason', header: L.reason, cell: (r) => <span className="text-xs">{r.reason}</span> },
-    { key: 'condition', header: L.condition, hideOnMobile: true, cell: (r) => <span className="text-xs">{r.condition || '-'}</span> },
-    { key: 'createdAt', header: L.created, sortable: true, hideOnMobile: true, cell: (r) => <span className="text-xs text-muted-foreground">{formatDateTime(r.createdAt)}</span> },
-    { key: 'status', header: dict.common.status, cell: (r) => <StatusBadge status={r.status} /> },
+    {
+      key: 'trackingNumber',
+      header: isRTL ? 'رقم التتبع' : 'Tracking #',
+      sortable: true,
+      cell: (r) => <span className="font-mono font-medium text-xs">{r.trackingNumber}</span>,
+    },
+    {
+      key: 'client',
+      header: isRTL ? 'العميل' : 'Client',
+      sortable: true,
+      cell: (r) => <span className="font-medium text-xs">{r.client}</span>,
+    },
+    {
+      key: 'route',
+      header: isRTL ? 'المسار' : 'Route',
+      hideOnMobile: true,
+      cell: (r) => <span className="text-xs text-muted-foreground">{r.route}</span>,
+    },
+    {
+      key: 'reason',
+      header: isRTL ? 'السبب' : 'Reason',
+      hideOnMobile: true,
+      cell: (r) => <span className="text-xs">{r.reason}</span>,
+    },
+    {
+      key: 'condition',
+      header: isRTL ? 'الحالة الفنية' : 'Condition',
+      hideOnMobile: true,
+      cell: (r) => <span className="text-xs">{r.condition || '-'}</span>,
+    },
+    {
+      key: 'status',
+      header: dict.common.status,
+      cell: (r) => <StatusBadge status={r.status} />,
+    },
+    {
+      key: 'createdAt',
+      header: isRTL ? 'التاريخ' : 'Date',
+      sortable: true,
+      hideOnMobile: true,
+      cell: (r) => <span className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString(isRTL ? 'ar-EG' : 'en')}</span>,
+    },
   ]
+
+  const selectable = useCallback(
+    (r: ReturnItem) => r.status !== 'RETURNED_TO_CLIENT' && r.status !== 'DISPOSED',
+    []
+  )
 
   return (
     <div className="space-y-6">
-      <PageHeader title={L.title} icon={RotateCcw} />
+      <PageHeader
+        title={isRTL ? 'إدارة المرتجعات' : 'Returns Management'}
+        subtitle={isRTL ? 'استلام وتسليم المرتجعات من المناديب للعملاء' : 'Receive and deliver returns from drivers to clients'}
+        icon={RotateCcw}
+      />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: L.totalReturns, value: returns.length, color: 'bg-rose-100 text-rose-700' },
-          { label: L.pending, value: returns.filter(r => r.status === 'PENDING').length, color: 'bg-amber-100 text-amber-700' },
-          { label: L.inTransit, value: returns.filter(r => r.status === 'IN_TRANSIT').length, color: 'bg-blue-100 text-blue-700' },
-          { label: L.returned, value: returns.filter(r => r.status === 'RETURNED_TO_CLIENT').length, color: 'bg-emerald-100 text-emerald-700' },
-        ].map((s) => (
+          { label: isRTL ? 'بانتظار الاستلام' : 'Pending receipt', value: stats.pending, icon: PackageCheck, color: 'bg-amber-100 text-amber-700' },
+          { label: isRTL ? 'تم الاستلام' : 'Received', value: stats.received, icon: History, color: 'bg-cyan-100 text-cyan-700' },
+          { label: isRTL ? 'تم التسليم' : 'Delivered', value: stats.delivered, icon: Send, color: 'bg-emerald-100 text-emerald-700' },
+          { label: isRTL ? 'إجمالي المرتجعات' : 'Total returns', value: stats.total, icon: RotateCcw, color: 'bg-purple-100 text-purple-700' },
+        ].map((s, i) => (
           <Card key={s.label} className="p-4">
-            <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
-              <RotateCcw className="w-4 h-4" />
+            <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-2`}>
+              <s.icon className="w-4 h-4" />
             </div>
             <div className="text-xl font-bold">{s.value}</div>
             <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
           </Card>
         ))}
       </div>
-      <DataTable data={returns} columns={columns} loading={loading} searchPlaceholder={`${dict.common.search}...`} searchKeys={['trackingNumber', 'reason']} pageSize={10} />
+
+      <DataTable
+        data={items}
+        columns={columns}
+        loading={loading}
+        searchPlaceholder={isRTL ? 'بحث برقم التتبع أو العميل...' : 'Search tracking # or client...'}
+        searchKeys={['trackingNumber', 'client', 'recipient', 'phone']}
+        enableSelection
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        selectable={selectable}
+        selectionLabel={isRTL ? 'مرتجع محدد' : 'selected'}
+        bulkBar={
+          <>
+            <Button size="sm" variant="outline" disabled={acting} onClick={() => applyAction('receive')} className="border-amber-300 text-amber-700 hover:bg-amber-50">
+              <PackageCheck className="w-3.5 h-3.5 mr-1.5" />
+              {isRTL ? 'استلام من المنديب' : 'Receive'}
+            </Button>
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" disabled={acting} onClick={() => applyAction('deliver')}>
+              <Send className="w-3.5 h-3.5 mr-1.5" />
+              {isRTL ? 'تسليم للعميل' : 'Deliver'}
+            </Button>
+            <Button size="sm" variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/5" disabled={acting} onClick={() => applyAction('dispose')}>
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              {isRTL ? 'تصرف' : 'Dispose'}
+            </Button>
+          </>
+        }
+        emptyMessage={isRTL ? 'لا توجد مرتجعات بعد — أنشئ شحنة بنوع "مرتجع"' : 'No returns yet — create a shipment with type "Return"'}
+        pageSize={10}
+      />
     </div>
   )
 }

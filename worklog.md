@@ -90,3 +90,26 @@ Stage Summary:
 - Bulk ops live on all shipments pages, any status customizable
 - سداد العملاء flow: select client invoices -> send -> pay with screenshot proof -> history with viewer
 - Lint clean (0 errors)
+
+---
+Task ID: 5
+Agent: Main (Super Z)
+Task: Returns workflow + invoice↔shipments link
+
+Work Log:
+- Returns: POST /api/shipments now creates a Return record (status PENDING) when type=RETURN; reason from `returnReason` form field (falls back to description)
+- PATCH /api/admin/returns bulk actions: receive (PENDING→IN_TRANSIT, optional condition GOOD/DAMAGED/LOST), deliver (IN_TRANSIT→RETURNED_TO_CLIENT), dispose (→DISPOSED); per-shipment transitions validated, terminal-state rows skipped
+- Returns page rebuilt: stat cards + selection + bulk action bar (استلام/تسليم/تصرف) + reason + condition columns
+- Returns/receive page rebuilt: real data (PENDING returns) + select-all + bulk "استلام من المنديب" action
+- Returns/deliver page rebuilt: real data (IN_TRANSIT returns) + bulk "تسليم للعميل" action
+- New shipment form: conditional "سبب الإرجاع" textarea shown when type=RETURN
+- Schema: Shipment.invoiceId String? + relation to Invoice (onDelete SetNull) + index; migration 20260823130000_shipment_invoice_link applied to Neon
+- GET /api/admin/invoices returns shipmentCount per invoice; GET /api/admin/invoices/[id] returns full invoice with shipments list; POST creates invoice from {clientId, shipmentIds[]} (total = sum shippingCost+codFee, single-client constraint, blocks already-linked shipments); PATCH [id] {addShipmentIds[], removeShipmentIds[]} re-links + recomputes totals; DELETE [id] (only UNPAID) unlinks shipments and removes
+- GET /api/shipments supports ?uninvoiced=1 filter + returns invoiceId on each shipment
+- Invoices page: "فاتورة جديدة من أوردرات" button (CreateInvoiceDialog: client picker + multi-select uninvoiced orders + total preview + create); new "أوردرات" column shows count badge per invoice; "تحرير الأوردرات" button per row (EditInvoiceShipmentsDialog: two-pane remove/add with running changes indicator)
+- E2E verified with isolated ZTEST2 data: return record created → received (PENDING→IN_TRANSIT, condition GOOD) → delivered (→RETURNED_TO_CLIENT); invoice created from 3 orders (amount 93 EGP) → shipmentCount shown → edited (add 1 + remove 1, total recomputed to 94, count stays 3) → shipment invoiceId linked; then fully cleaned up
+
+Stage Summary:
+- Returns workflow now end-to-end: create RETURN shipment → استلام → تسليم → disposed
+- Invoices now contain orders; admin can build, edit, count, then settle via سداد العملاء
+- Lint passes (0 errors)

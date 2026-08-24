@@ -283,11 +283,14 @@ model Shipment {
   returns         Return[]
   labels          ShippingLabel[]
   insuranceClaims InsuranceClaim[]
+  invoiceId       String?
+  invoice         Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
 
   @@index([clientId])
   @@index([driverId])
   @@index([status])
   @@index([paymentStatus])
+  @@index([invoiceId])
 }
 
 model ShipmentStatus {
@@ -408,6 +411,7 @@ model Invoice {
   paidAt        DateTime?
   period        String?
   paymentId     String?
+  shipments    Shipment[]
   createdAt     DateTime  @default(now())
 }
 

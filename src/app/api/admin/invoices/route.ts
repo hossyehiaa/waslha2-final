@@ -22,7 +22,10 @@ export async function GET(req: NextRequest) {
     const [invoices, clientsRaw] = await Promise.all([
       db.invoice.findMany({
         where,
-        include: { client: { select: { id: true, companyName: true } } },
+        include: {
+          client: { select: { id: true, companyName: true } },
+          shipments: { select: { id: true }, orderBy: { createdAt: 'desc' } },
+        },
         orderBy: { createdAt: 'desc' },
       }),
       db.invoice.groupBy({
@@ -60,11 +63,80 @@ export async function GET(req: NextRequest) {
         dueDate: i.dueDate,
         paidAt: i.paidAt,
         paymentId: i.paymentId,
+        shipmentCount: i.shipments.length,
         createdAt: i.createdAt,
       })),
       clients,
     })
   } catch {
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
+
+// POST /api/admin/invoices — create a new invoice from a set of client orders.
+// Body: { clientId, shipmentIds: string[], note? }
+// The invoice amount/total is the sum of shippingCost + codFee of those shipments.
+export async function POST(req: NextRequest) {
+  try {
+    const user = await getCurrentUser()
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const clientId = String(body.clientId || '')
+    const shipmentIds: string[] = Array.isArray(body.shipmentIds) ? body.shipmentIds.map(String) : []
+
+    if (!clientId) return NextResponse.json({ error: 'العميل مطلوب' }, { status: 400 })
+    if (shipmentIds.length === 0) return NextResponse.json({ error: 'اختر شحنة واحدة على الأقل' }, { status: 400 })
+
+    const shipments = await db.shipment.findMany({
+      where: { id: { in: shipmentIds }, clientId },
+      select: { id: true, shippingCost: true, codFee: true, invoiceId: true },
+    })
+
+    if (shipments.length === 0) return NextResponse.json({ error: 'لا توجد شحنات صالحة' }, { status: 400 })
+
+    const alreadyLinked = shipments.filter((s) => s.invoiceId).length
+    if (alreadyLinked > 0) {
+      return NextResponse.json({ error: `${alreadyLinked} من الشحنات مضافة لفاتورة أخرى — أزِلها أولاً` }, { status: 400 })
+    }
+
+    const amount = shipments.reduce((s, x) => s + (x.shippingCost || 0) + (x.codFee || 0), 0)
+    const reference = `INV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+
+    const invoice = await db.$transaction(async (tx) => {
+      const created = await tx.invoice.create({
+        data: {
+          invoiceNumber: reference,
+          clientId,
+          type: 'SHIPPING',
+          amount,
+          tax: 0,
+          total: amount,
+          status: 'UNPAID',
+        },
+      })
+      await tx.shipment.updateMany({
+        where: { id: { in: shipments.map((s) => s.id) } },
+        data: { invoiceId: created.id },
+      })
+      return created
+    })
+
+    await db.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'CREATE',
+        entity: 'Invoice',
+        entityId: invoice.id,
+        afterData: JSON.stringify({ reference, clientId, shipments: shipments.length, amount }),
+      },
+    })
+
+    return NextResponse.json({ ok: true, id: invoice.id, invoiceNumber: reference, amount, shipmentCount: shipments.length }, { status: 201 })
+  } catch (e: any) {
+    console.error('Invoice create error:', e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

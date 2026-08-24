@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const clientId = searchParams.get('clientId')
     const search = searchParams.get('search')
+    const uninvoiced = searchParams.get('uninvoiced')
     const limit = Math.min(100, Number(searchParams.get('limit') || 50))
     const page = Number(searchParams.get('page') || 1)
     const skip = (page - 1) * limit
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
         { recipientPhone: { contains: search } },
       ]
     }
+    if (uninvoiced === '1') where.invoiceId = null
 
     // Role-based filtering
     if (user.role === 'CLIENT') {
@@ -75,6 +77,7 @@ export async function GET(req: NextRequest) {
         codAmount: s.codAmount,
         shippingCost: s.shippingCost,
         description: s.description,
+        invoiceId: s.invoiceId,
         driver: s.driver ? { name: s.driver.user.fullName, code: s.driver.driverCode } : null,
         createdAt: s.createdAt,
         deliveredAt: s.deliveredAt,
@@ -170,6 +173,18 @@ export async function POST(req: NextRequest) {
       await tx.shipmentStatus.create({
         data: { shipmentId: created.id, status: 'PENDING', note: 'Shipment created', createdBy: user.id },
       })
+      // Return orders also create a Return record so the returns workflow
+      // (استلام / تسليم) can pick them up.
+      if (shipmentType === 'RETURN') {
+        const returnReason = (body.returnReason as string) || (body.description as string) || 'Return shipment created'
+        await tx.return.create({
+          data: {
+            shipmentId: created.id,
+            reason: String(returnReason).slice(0, 500),
+            status: 'PENDING',
+          },
+        })
+      }
       await tx.client.update({
         where: { id: clientId },
         data: { totalShipments: { increment: 1 }, activeShipments: { increment: 1 } },

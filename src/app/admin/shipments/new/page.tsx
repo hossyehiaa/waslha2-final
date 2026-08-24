@@ -31,6 +31,7 @@ export default function NewShipmentPage() {
     type: 'DELIVERY', serviceType: 'STANDARD', priority: 'NORMAL',
     weight: '0.5', pieces: '1', description: '',
     codAmount: '0', shippingCost: '25', driverId: '',
+    returnReason: '',
   })
 
   useEffect(() => {
@@ -139,6 +140,18 @@ export default function NewShipmentPage() {
                 </SelectContent>
               </Select>
             </div>
+            {form.type === 'RETURN' && (
+              <div className="space-y-2 md:col-span-2">
+                <Label>سبب الإرجاع / Return Reason *</Label>
+                <Textarea
+                  value={form.returnReason}
+                  onChange={(e) => setField('returnReason', e.target.value)}
+                  placeholder="مثال: العميل رفض الاستلام، عنوان خاطئ، المنتج معطوب..."
+                  rows={2}
+                  required
+                />
+              </div>
+            )}
           </div>
         </Card>
 
