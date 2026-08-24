@@ -76,8 +76,9 @@ export function CreateInvoiceDialog({
     const q = search.toLowerCase()
     return shipments.filter(s =>
       s.trackingNumber.toLowerCase().includes(q) ||
-      s.senderCity.toLowerCase().includes(q) ||
-      s.recipientCity.toLowerCase().includes(q)
+      (s.senderCity || '').toLowerCase().includes(q) ||
+      (s.recipientCity || '').toLowerCase().includes(q) ||
+      (s.route || '').toLowerCase().includes(q)
     )
   }, [shipments, search])
 
@@ -175,7 +176,7 @@ export function CreateInvoiceDialog({
                           <Checkbox checked={checked} onCheckedChange={() => setSelected(prev => checked ? prev.filter(x => x !== s.id) : [...prev, s.id])} />
                           <div className="flex-1 min-w-0">
                             <div className="font-mono text-xs font-medium truncate">{s.trackingNumber}</div>
-                            <div className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</div>
+                            <div className="text-xs text-muted-foreground">{s.senderCity || ''} → {s.recipientCity || ''}</div>
                           </div>
                           <div className="text-xs font-bold text-amber-600 whitespace-nowrap">
                             {formatCurrency(s.shippingCost + s.codAmount)}
