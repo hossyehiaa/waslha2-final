@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { PackageCheck, ArrowDownToLine } from 'lucide-react'
+import { PackageCheck, ArrowDownToLine, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
@@ -41,18 +41,20 @@ export default function Page() {
 
   useEffect(() => { load() }, [load])
 
-  async function receive() {
+  async function applyAction(action: 'receive' | 'dispose') {
     if (selectedIds.length === 0) return
     setActing(true)
     try {
       const res = await fetch('/api/admin/returns', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedIds, action: 'receive' }),
+        body: JSON.stringify({ ids: selectedIds, action }),
       })
       const d = await res.json()
       if (!res.ok) { toast.error(d.error || (isRTL ? 'فشل' : 'Failed')); return }
-      toast.success(isRTL ? `تم استلام ${d.updated} مرتجع من المنديب` : `${d.updated} returns received`)
+      toast.success(action === 'receive'
+        ? (isRTL ? `تم استلام ${d.updated} مرتجع من المنديب — انتقل الآن لتسليم المرتجعات` : `${d.updated} returns received`)
+        : (isRTL ? `تم التصرف في ${d.updated} مرتجع` : `${d.updated} returns disposed`))
       setSelectedIds([])
       load()
     } catch {
@@ -75,9 +77,17 @@ export default function Page() {
     <div className="space-y-6">
       <PageHeader
         title={isRTL ? 'استلام المرتجعات' : 'Receive Returns'}
-        subtitle={isRTL ? 'استلام المرتجعات من المناديب — حدد المرتجعات واضغط استلام' : 'Receive returns from drivers — select and click Receive'}
+        subtitle={isRTL ? 'المرحلة الأولى — استلام المرتجعات من المناديب قبل تسليمها للعملاء' : 'Stage 1 — receive returns from drivers before delivering them back to clients'}
         icon={PackageCheck}
       />
+
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+        {isRTL ? (
+          <>💡 أي شحنة <b>ملغية أو مرتجعة أو العميل رفض استلامها</b> تظهر هنا أولاً — استلمها من المنديب لتنتقل إلى <b>تسليم المرتجعات</b>، وبعد تسليمها للعميل تُأرشف في <b>إدارة المرتجعات</b>.</>
+        ) : (
+          <>💡 Any <b>cancelled / returned / refused</b> shipment appears here first — receive it from the driver to move it to <b>Deliver Returns</b>; after client delivery it is archived in <b>Returns Management</b>.</>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="p-4">
@@ -101,12 +111,18 @@ export default function Page() {
         onSelectionChange={setSelectedIds}
         selectionLabel={isRTL ? 'مرتجع محدد' : 'selected'}
         bulkBar={
-          <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={acting} onClick={receive}>
-            <ArrowDownToLine className="w-3.5 h-3.5 mr-1.5" />
-            {acting ? (isRTL ? 'جاري الاستلام...' : 'Receiving...') : (isRTL ? 'استلام من المنديب' : 'Receive from driver')}
-          </Button>
+          <>
+            <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={acting} onClick={() => applyAction('receive')}>
+              <ArrowDownToLine className="w-3.5 h-3.5 mr-1.5" />
+              {acting ? (isRTL ? 'جاري الاستلام...' : 'Receiving...') : (isRTL ? 'استلام من المنديب' : 'Receive from driver')}
+            </Button>
+            <Button size="sm" variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/5" disabled={acting} onClick={() => applyAction('dispose')}>
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              {isRTL ? 'تصرف' : 'Dispose'}
+            </Button>
+          </>
         }
-        emptyMessage={isRTL ? 'لا توجد مرتجعات بانتظار الاستلام — تظهر هنا تلقائياً عند رفض العميل الاستلام أو إلغاء شحنة في الطريق' : 'No returns awaiting receipt — refused/cancelled shipments appear here automatically'}
+        emptyMessage={isRTL ? 'لا توجد مرتجعات بانتظار الاستلام — أي شحنة ملغية أو مرتجعة أو رفض العميل استلامها ستظهر هنا تلقائياً' : 'No returns awaiting receipt — cancelled / returned / refused shipments appear here automatically'}
         pageSize={10}
       />
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { RotateCcw, Send } from 'lucide-react'
+import { RotateCcw, Send, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/dashboard/page-header'
 import { DataTable, Column } from '@/components/dashboard/data-table'
 import { StatusBadge } from '@/components/dashboard/status-badge'
@@ -41,18 +41,20 @@ export default function Page() {
 
   useEffect(() => { load() }, [load])
 
-  async function deliver() {
+  async function applyAction(action: 'deliver' | 'dispose') {
     if (selectedIds.length === 0) return
     setActing(true)
     try {
       const res = await fetch('/api/admin/returns', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedIds, action: 'deliver' }),
+        body: JSON.stringify({ ids: selectedIds, action }),
       })
       const d = await res.json()
       if (!res.ok) { toast.error(d.error || (isRTL ? 'فشل' : 'Failed')); return }
-      toast.success(isRTL ? `تم تسليم ${d.updated} مرتجع للعميل` : `${d.updated} returns delivered to clients`)
+      toast.success(action === 'deliver'
+        ? (isRTL ? `تم تسليم ${d.updated} مرتجع للعميل — تمت الأرشفة في إدارة المرتجعات` : `${d.updated} returns delivered to clients`)
+        : (isRTL ? `تم التصرف في ${d.updated} مرتجع` : `${d.updated} returns disposed`))
       setSelectedIds([])
       load()
     } catch {
@@ -75,9 +77,17 @@ export default function Page() {
     <div className="space-y-6">
       <PageHeader
         title={isRTL ? 'تسليم المرتجعات' : 'Deliver Returns'}
-        subtitle={isRTL ? 'تسليم المرتجعات للعملاء — حدد المرتجعات واضغط تسليم' : 'Deliver returns to clients — select and click Deliver'}
+        subtitle={isRTL ? 'المرحلة الثانية — تسليم المرتجعات المستلمة للعملاء' : 'Stage 2 — deliver received returns back to clients'}
         icon={RotateCcw}
       />
+
+      <div className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-xs leading-relaxed text-cyan-800 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300">
+        {isRTL ? (
+          <>💡 تظهر هنا المرتجعات التي <b>تم استلامها من المنديب</b> — بعد تسليمها للعميل تُؤرشف تلقائياً في <b>إدارة المرتجعات</b>. لو مرتجع مش موجود هنا، استلمه أولاً من <b>استلام المرتجعات</b>.</>
+        ) : (
+          <>💡 Returns already <b>received from the driver</b> appear here — after client delivery they are archived in <b>Returns Management</b>. If a return is missing, receive it first from <b>Receive Returns</b>.</>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="p-4">
@@ -101,10 +111,16 @@ export default function Page() {
         onSelectionChange={setSelectedIds}
         selectionLabel={isRTL ? 'مرتجع محدد' : 'selected'}
         bulkBar={
-          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" disabled={acting} onClick={deliver}>
-            <Send className="w-3.5 h-3.5 mr-1.5" />
-            {acting ? (isRTL ? 'جاري التسليم...' : 'Delivering...') : (isRTL ? 'تسليم للعميل' : 'Deliver to client')}
-          </Button>
+          <>
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" disabled={acting} onClick={() => applyAction('deliver')}>
+              <Send className="w-3.5 h-3.5 mr-1.5" />
+              {acting ? (isRTL ? 'جاري التسليم...' : 'Delivering...') : (isRTL ? 'تسليم للعميل' : 'Deliver to client')}
+            </Button>
+            <Button size="sm" variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/5" disabled={acting} onClick={() => applyAction('dispose')}>
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              {isRTL ? 'تصرف' : 'Dispose'}
+            </Button>
+          </>
         }
         emptyMessage={isRTL ? 'لا توجد مرتجعات جاهزة للتسليم — استلمها أولاً من صفحة استلام المرتجعات' : 'No returns ready to deliver — receive them first'}
         pageSize={10}

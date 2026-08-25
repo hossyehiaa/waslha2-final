@@ -3,18 +3,15 @@ import { db } from '@/lib/db'
 /**
  * Automatic returns pipeline.
  *
- * Business rule (per operations request):
- * - A shipment whose delivery FAILED (customer refused to receive it) immediately
- *   becomes a return and shows up in Returns Management (status PENDING = the
- *   package is still with the driver, waiting to be received back).
- * - A shipment that gets CANCELLED while already in flight (picked up / in transit /
- *   out for delivery) also becomes a return immediately.
- *   Cancelling a shipment that was never picked up does NOT create a return —
- *   there is no physical package to bring back.
- * - Marking a shipment RETURNED directly completes its return record
- *   (or creates a completed one) so returns history stays complete.
+ * Business rule (per operations request — updated flow):
+ * - EVERY shipment that becomes FAILED (customer refused), CANCELLED or
+ *   RETURNED immediately opens a Return record with status PENDING —
+ *   i.e. it shows up in «استلام المرتجعات» waiting to be received back
+ *   from the driver. It does NOT appear in Returns Management yet.
+ * - Lifecycle: استلام المرتجعات (PENDING) → تسليم المرتجعات (IN_TRANSIT)
+ *   → إدارة المرتجعات (RETURNED_TO_CLIENT = archived / delivered to client).
  * - When a failed shipment is retried and finally DELIVERED (or goes back
- *   OUT_FOR_DELIVERY), its open return record is removed automatically.
+ *   to any active delivery status), its open return record is removed.
  */
 
 export const OPEN_RETURN_STATUSES = ['PENDING', 'IN_TRANSIT']
@@ -129,6 +126,7 @@ export async function syncReturnForStatusChange(opts: {
   try {
     if (newStatus === 'FAILED') {
       // Customer refused / delivery failed — the package must come back.
+      // Opens at PENDING → shows in «استلام المرتجعات».
       const reason = opts.failureReason
         ? `فشل التسليم: ${opts.failureReason}`
         : 'فشل التسليم — العميل رفض الاستلام'
@@ -142,31 +140,46 @@ export async function syncReturnForStatusChange(opts: {
     }
 
     if (newStatus === 'CANCELLED') {
-      // Only in-flight cancellations produce a physical return.
+      // Every cancelled shipment opens a return at PENDING so it flows through
+      // استلام المرتجعات → تسليم المرتجعات → إدارة المرتجعات.
       const inFlight = opts.pickupAt ? true : shipmentWasInFlight({ status: previousStatus })
-      if (!inFlight) return 'none'
       return await ensureReturnForShipment({
         shipmentId,
         reason: opts.failureReason
           ? `إلغاء الشحنة: ${opts.failureReason}`
-          : 'تم إلغاء الشحنة — بانتظار الاستلام من المنديب',
+          : inFlight
+            ? 'تم إلغاء الشحنة — بانتظار الاستلام من المنديب'
+            : 'تم إلغاء الشحنة قبل الاستلام — بانتظار الاستلام من المنديب',
         status: 'PENDING',
         changedBy: opts.changedBy,
-        note: 'Auto-return: in-flight shipment cancelled',
+        note: 'Auto-return: shipment cancelled',
       })
     }
 
     if (newStatus === 'RETURNED') {
+      // Marking a shipment RETURNED (مرتجع) does NOT complete the return —
+      // it only opens/keeps it at PENDING so the admin receives it from the
+      // driver (استلام المرتجعات) then delivers it back (تسليم المرتجعات).
+      // Completion (RETURNED_TO_CLIENT) happens exclusively via the
+      // «تسليم المرتجعات» action, after which it is archived in
+      // «إدارة المرتجعات».
+      const existing = await db.return.findUnique({ where: { shipmentId } })
+      if (existing && !OPEN_RETURN_STATUSES.includes(existing.status)) {
+        // Already completed/archived — leave as is.
+        return 'exists'
+      }
       return await ensureReturnForShipment({
         shipmentId,
-        reason: 'تم إرجاع الشحنة للعميل',
-        status: 'RETURNED_TO_CLIENT',
+        reason: 'تم تحويل الشحنة لمرتجع — بانتظار الاستلام من المنديب',
+        status: 'PENDING',
         changedBy: opts.changedBy,
-        note: 'Auto-return: shipment marked RETURNED',
+        note: 'Auto-return: shipment marked RETURNED — awaiting receipt from driver',
       })
     }
 
-    if (newStatus === 'DELIVERED' || newStatus === 'OUT_FOR_DELIVERY') {
+    // Any active delivery status voids an open return (re-dispatch / success).
+    const ACTIVE_DELIVERY_STATUSES = ['DELIVERED', 'OUT_FOR_DELIVERY', 'PICKED_UP', 'IN_TRANSIT', 'PENDING']
+    if (ACTIVE_DELIVERY_STATUSES.includes(newStatus)) {
       const voided = await voidOpenReturn(shipmentId)
       return voided ? 'voided' : 'none'
     }

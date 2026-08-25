@@ -15,9 +15,13 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
+    const scope = searchParams.get('scope')
 
     const where: any = {}
     if (status && status !== 'all') where.status = status
+    // scope=archive → only completed returns (for «إدارة المرتجعات» archive page).
+    // Open returns (PENDING / IN_TRANSIT) live in استلام/تسليم المرتجعات pages.
+    if (scope === 'archive') where.status = { in: ['RETURNED_TO_CLIENT', 'DISPOSED'] }
 
     const returns = await db.return.findMany({
       where,
@@ -35,7 +39,13 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
+    // Stage counters (always returned so pages can show pipeline stats).
+    const grouped = await db.return.groupBy({ by: ['status'], _count: { _all: true } })
+    const counts: Record<string, number> = { PENDING: 0, IN_TRANSIT: 0, RETURNED_TO_CLIENT: 0, DISPOSED: 0 }
+    for (const g of grouped) counts[g.status] = g._count._all
+
     return NextResponse.json({
+      counts,
       returns: returns.map((r) => ({
         id: r.id,
         shipmentId: r.shipmentId,
