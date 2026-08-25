@@ -140,3 +140,17 @@ Stage Summary:
 - Full lifecycle: PENDING (with driver) → استلام من المنديب → تسليم للعميل → shipment RETURNED
 - No need to create RETURN-type shipments anymore (option still available)
 - Lint 0 errors, production build passes
+
+---
+Task ID: 6 (addendum)
+Agent: Main (Super Z)
+Task: Production verification
+
+Work Log:
+- Production runs on a DIFFERENT Neon DB (ep-long-dust-aibu01sd, us-east-1, db "neondb") than the staging URL in session context (ep-quiet-paper-aydwm7zd, us-east-2) — discovered via Vercel build logs
+- Vercel build command runs `prisma migrate deploy` automatically: my migration 20260825100000_return_shipment_unique was applied to PRODUCTION during the deploy (confirmed in build logs: "Applying migration ... All migrations have been successfully applied")
+- Production verified: login 200, /api/admin/returns 200, /api/admin/client-payments 200 — new code live at https://wsalhali.vercel.app
+- No test data created on production (no shipment-delete API exists; real user data must not be polluted) — logic fully E2E-verified on staging Neon with identical schema/migrations
+
+Stage Summary:
+- Auto-returns live on production; future schema changes keep flowing via build-time migrate deploy
