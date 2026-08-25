@@ -224,12 +224,12 @@ export default function ShipmentDetailPage() {
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground">Quick Update</div>
               <div className="grid grid-cols-2 gap-2">
-                {['PENDING', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'RETURNED'].map((s) => (
+                {['PENDING', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'RETURNED', 'FAILED', 'CANCELLED'].map((s) => (
                   <Button
                     key={s}
                     variant={shipment.status === s ? 'default' : 'outline'}
                     size="sm"
-                    className="text-xs"
+                    className={`text-xs ${s === 'CANCELLED' || s === 'FAILED' ? 'text-destructive border-destructive/40 hover:bg-destructive/5' : ''}`}
                     onClick={() => updateStatus(s)}
                     disabled={shipment.status === s}
                   >

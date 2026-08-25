@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth-helpers'
+import { forceShipmentStatus } from '@/lib/shipment-status'
 
 export const runtime = 'nodejs'
 
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
       include: {
         shipment: {
           select: {
-            id: true, trackingNumber: true, type: true, codAmount: true,
+            id: true, trackingNumber: true, type: true, status: true, codAmount: true,
             recipientName: true, recipientPhone: true,
             client: { select: { id: true, companyName: true } },
             senderCity: { select: { name: true } },
@@ -45,6 +46,8 @@ export async function GET(req: NextRequest) {
         recipient: r.shipment.recipientName,
         phone: r.shipment.recipientPhone,
         codAmount: r.shipment.codAmount,
+        shipmentStatus: r.shipment.status,
+        shipmentType: r.shipment.type,
         reason: r.reason,
         status: r.status,
         condition: r.condition,
@@ -108,14 +111,38 @@ export async function PATCH(req: NextRequest) {
         if (condition) data.condition = condition
         if (notes) data.notes = notes
         await db.return.update({ where: { id: r.id }, data })
-        await db.shipmentStatus.create({
-          data: {
-            shipmentId: r.shipmentId,
-            status: newStatus,
-            note: `Return ${action} by ${user.fullName}`,
-            createdBy: user.id,
-          },
-        })
+
+        if (action === 'deliver') {
+          // Sync the shipment lifecycle: the package is back with the client,
+          // so the shipment becomes RETURNED (history, counters, notification).
+          const shipment = await db.shipment.findUnique({
+            where: { id: r.shipmentId },
+            select: {
+              id: true, trackingNumber: true, clientId: true, status: true,
+              paymentStatus: true, codAmount: true, codFee: true, driverId: true,
+              pickupAt: true, client: { select: { userId: true } },
+            },
+          })
+          if (shipment && shipment.status !== 'RETURNED' && shipment.status !== 'DELIVERED') {
+            const res = await forceShipmentStatus({
+              shipment,
+              status: 'RETURNED',
+              note: `Return delivered to client by ${user.fullName}`,
+              changedBy: user.id,
+              withWebhooks: items.length <= 100,
+            })
+            if (!res.ok) errors.push(`${r.shipment.trackingNumber}: shipment sync ${res.error}`)
+          }
+        } else {
+          await db.shipmentStatus.create({
+            data: {
+              shipmentId: r.shipmentId,
+              status: newStatus,
+              note: `Return ${action} by ${user.fullName}`,
+              createdBy: user.id,
+            },
+          })
+        }
         updated++
       } catch (e: any) {
         errors.push(`${r.shipment.trackingNumber}: ${e?.message || 'failed'}`)

@@ -106,7 +106,7 @@ export default function Page() {
             {acting ? (isRTL ? 'جاري الاستلام...' : 'Receiving...') : (isRTL ? 'استلام من المنديب' : 'Receive from driver')}
           </Button>
         }
-        emptyMessage={isRTL ? 'لا توجد مرتجعات بانتظار الاستلام' : 'No returns awaiting receipt'}
+        emptyMessage={isRTL ? 'لا توجد مرتجعات بانتظار الاستلام — تظهر هنا تلقائياً عند رفض العميل الاستلام أو إلغاء شحنة في الطريق' : 'No returns awaiting receipt — refused/cancelled shipments appear here automatically'}
         pageSize={10}
       />
     </div>

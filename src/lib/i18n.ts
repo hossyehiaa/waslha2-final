@@ -386,6 +386,10 @@ export const translations = {
       APPROVED: 'Approved',
       REJECTED: 'Rejected',
       PENDING_PAYMENT: 'Pending Payment',
+      RETURNED_TO_CLIENT: 'Delivered to Client',
+      DISPOSED: 'Disposed',
+      RETURN_OPENED: 'Return Opened',
+      RETURN_VOIDED: 'Return Cancelled',
     },
 
     // Misc page-specific
@@ -1175,6 +1179,10 @@ export const translations = {
       APPROVED: 'معتمد',
       REJECTED: 'مرفوض',
       PENDING_PAYMENT: 'بانتظار الدفع',
+      RETURNED_TO_CLIENT: 'تم التسليم للعميل',
+      DISPOSED: 'تم التصرف',
+      RETURN_OPENED: 'فتح ملف مرتجع',
+      RETURN_VOIDED: 'إلغاء ملف المرتجع',
     },
 
     pages: {

@@ -327,10 +327,10 @@ export async function createPartnerShipment(input: PartnerShipmentInput, clientI
 
 export const STATUS_TRANSITIONS: Record<string, string[]> = {
   PENDING: ['PICKED_UP', 'CANCELLED'],
-  PICKED_UP: ['IN_TRANSIT', 'FAILED', 'RETURNED'],
-  IN_TRANSIT: ['OUT_FOR_DELIVERY', 'FAILED', 'RETURNED'],
-  OUT_FOR_DELIVERY: ['DELIVERED', 'FAILED'],
-  FAILED: ['PENDING', 'RETURNED'],
+  PICKED_UP: ['IN_TRANSIT', 'FAILED', 'RETURNED', 'CANCELLED'],
+  IN_TRANSIT: ['OUT_FOR_DELIVERY', 'FAILED', 'RETURNED', 'CANCELLED'],
+  OUT_FOR_DELIVERY: ['DELIVERED', 'FAILED', 'IN_TRANSIT', 'CANCELLED'],
+  FAILED: ['PENDING', 'OUT_FOR_DELIVERY', 'RETURNED'],
   DELIVERED: ['RETURNED'],
   RETURNED: [],
   CANCELLED: [],
@@ -373,6 +373,23 @@ export async function updateShipmentStatus(params: {
     await tx.shipmentStatus.create({ data: { shipmentId, status, note: note || null, location: location || null, createdBy: changedBy || null } })
     return next
   })
+
+  // Auto-returns sync (best-effort — never blocks a lifecycle change)
+  try {
+    const { syncReturnForStatusChange } = await import('@/lib/returns')
+    await syncReturnForStatusChange({
+      shipmentId,
+      newStatus: status,
+      previousStatus: shipment.status,
+      pickupAt: shipment.pickupAt,
+      failureReason: failureReason || null,
+      note: note || null,
+      changedBy: changedBy || null,
+    })
+  } catch {
+    // return sync failures must not fail the status update
+  }
+
   return { shipment: updated, previousStatus: shipment.status }
 }
 

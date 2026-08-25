@@ -10,13 +10,14 @@ import { syncShopifyShipmentStatus } from '@/lib/shopify'
 export const runtime = 'nodejs'
 
 // Valid status transitions (business logic from Flash Express)
+// NOTE: enforced inside updateShipmentStatus (STATUS_TRANSITIONS); kept in sync here for reference.
 const VALID_TRANSITIONS: Record<string, string[]> = {
   PENDING: ['PICKED_UP', 'CANCELLED'],
   PICKED_UP: ['IN_TRANSIT', 'RETURNED', 'CANCELLED'],
-  IN_TRANSIT: ['OUT_FOR_DELIVERY', 'RETURNED', 'FAILED'],
-  OUT_FOR_DELIVERY: ['DELIVERED', 'FAILED', 'RETURNED', 'IN_TRANSIT'],
+  IN_TRANSIT: ['OUT_FOR_DELIVERY', 'RETURNED', 'FAILED', 'CANCELLED'],
+  OUT_FOR_DELIVERY: ['DELIVERED', 'FAILED', 'RETURNED', 'IN_TRANSIT', 'CANCELLED'],
   DELIVERED: [], // terminal
-  RETURNED: ['IN_TRANSIT'], // can be re-shipped
+  RETURNED: [], // terminal
   CANCELLED: [], // terminal
   FAILED: ['OUT_FOR_DELIVERY', 'RETURNED'], // can retry or return
 }

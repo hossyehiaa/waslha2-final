@@ -20,6 +20,8 @@ type ReturnItem = {
   recipient: string
   phone: string
   codAmount: number
+  shipmentStatus: string
+  shipmentType: string
   reason: string
   status: string
   condition: string | null
@@ -124,7 +126,15 @@ export default function AdminReturnsPage() {
     {
       key: 'status',
       header: dict.common.status,
-      cell: (r) => <StatusBadge status={r.status} />,
+      cell: (r) => (
+        <div className="flex flex-col gap-1 items-start">
+          <StatusBadge status={r.status} />
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            {isRTL ? 'الشحنة:' : 'Shipment:'}
+            <StatusBadge status={r.shipmentStatus} />
+          </span>
+        </div>
+      ),
     },
     {
       key: 'createdAt',
@@ -147,6 +157,14 @@ export default function AdminReturnsPage() {
         subtitle={isRTL ? 'استلام وتسليم المرتجعات من المناديب للعملاء' : 'Receive and deliver returns from drivers to clients'}
         icon={RotateCcw}
       />
+
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+        {isRTL ? (
+          <>💡 المرتجعات تُسجَّل <b>تلقائياً</b> بمجرد <b>رفض العميل الاستلام</b> (فشل تسليم) أو <b>إلغاء شحنة كانت في الطريق</b> — استلمها من المنديب ثم سلّمها للعميل، ولو الشحنة اتسلمت بنجاح بعد الفشل يتشال ملف المرتجع تلقائياً.</>
+        ) : (
+          <>💡 Returns are recorded <b>automatically</b> whenever the customer refuses delivery or an in-flight shipment is cancelled — receive them from the driver, then hand them back to the client.</>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -192,7 +210,7 @@ export default function AdminReturnsPage() {
             </Button>
           </>
         }
-        emptyMessage={isRTL ? 'لا توجد مرتجعات بعد — أنشئ شحنة بنوع "مرتجع"' : 'No returns yet — create a shipment with type "Return"'}
+        emptyMessage={isRTL ? 'لا توجد مرتجعات — بمجرد رفض العميل الاستلام أو إلغاء شحنة في الطريق ستظهر هنا تلقائياً' : 'No returns yet — refused or cancelled in-flight shipments appear here automatically'}
         pageSize={10}
       />
     </div>

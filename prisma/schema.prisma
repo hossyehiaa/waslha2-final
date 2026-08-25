@@ -354,7 +354,7 @@ model PickupRequest {
 // ============ RETURNS ============
 model Return {
   id         String   @id @default(cuid())
-  shipmentId String
+  shipmentId String   @unique
   shipment   Shipment @relation(fields: [shipmentId], references: [id])
   reason     String
   status     String   @default("PENDING") // PENDING, IN_TRANSIT, RETURNED_TO_CLIENT, DISPOSED

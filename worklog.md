@@ -113,3 +113,30 @@ Stage Summary:
 - Returns workflow now end-to-end: create RETURN shipment → استلام → تسليم → disposed
 - Invoices now contain orders; admin can build, edit, count, then settle via سداد العملاء
 - Lint passes (0 errors)
+
+---
+Task ID: 6
+Agent: Main (Super Z)
+Task: Automatic returns — no manual "return" shipments needed
+
+Work Log:
+- New src/lib/returns.ts: ensureReturnForShipment (idempotent, 1:1 per shipment), voidOpenReturn, syncReturnForStatusChange central hook
+- Auto-Return triggers wired into BOTH status paths — forceShipmentStatus (bulk) and updateShipmentStatus (single):
+  * FAILED (customer refused) → Return PENDING immediately, reason "فشل التسليم: {سبب}"
+  * CANCELLED while in flight (picked up / in transit / out for delivery) → Return PENDING, reason "تم إلغاء الشحنة — بانتظار الاستلام من المنديب"
+  * CANCELLED before pickup → NO return (nothing physical to bring back)
+  * RETURNED set directly → Return completed (RETURNED_TO_CLIENT) for full history
+  * DELIVERED / OUT_FOR_DELIVERY after a failure → open Return voided automatically (retry succeeded)
+- Returns PATCH deliver now syncs shipment status to RETURNED via forceShipmentStatus (history + counters + client notification)
+- Migration 20260825100000_return_shipment_unique: @@unique on Return.shipmentId (applied to Neon, no dupes existed)
+- STATUS_TRANSITIONS: CANCELLED allowed from PICKED_UP/IN_TRANSIT/OUT_FOR_DELIVERY; FAILED → OUT_FOR_DELIVERY retry added
+- Shipment detail page quick-update now includes FAILED + CANCELLED buttons
+- Returns page: auto-behavior banner (Arabic/English), shipment status mini-badge under return status, new empty-state texts
+- i18n + StatusBadge: RETURNED_TO_CLIENT / DISPOSED / RETURN_OPENED / RETURN_VOIDED labels (EN+AR)
+- E2E verified on local dev vs Neon with isolated ZTEST3 data (24/24 checks passed): refused→return, in-flight cancel→return, pre-pickup cancel→no return, fail→retry→deliver→return voided, receive→deliver→shipment RETURNED, idempotency (no duplicates); UI flow verified in browser (Arabic RTL) including bulk receive + deliver; test data fully cleaned (60 shipments / 0 returns baseline)
+
+Stage Summary:
+- Returns Management is now fully automatic: any refused (FAILED) or in-flight-cancelled shipment appears immediately
+- Full lifecycle: PENDING (with driver) → استلام من المنديب → تسليم للعميل → shipment RETURNED
+- No need to create RETURN-type shipments anymore (option still available)
+- Lint 0 errors, production build passes

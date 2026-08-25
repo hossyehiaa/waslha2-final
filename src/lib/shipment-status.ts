@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { dispatchWebhookEvent } from '@/lib/webhooks'
 import { syncShopifyShipmentStatus } from '@/lib/shopify'
 import { sendShipmentNotification } from '@/lib/notification-service'
+import { syncReturnForStatusChange } from '@/lib/returns'
 import type { WebhookEvent } from '@/lib/partner-api'
 
 /**
@@ -99,6 +100,21 @@ export async function forceShipmentStatus(opts: {
           })
           .catch(() => undefined)
       }
+    }
+
+    // Auto-returns: failed/cancelled/returned shipments open (or complete) a
+    // Return record automatically; delivered/re-dispatched shipments drop it.
+    if (status === 'FAILED' || status === 'CANCELLED' || status === 'RETURNED' || status === 'DELIVERED' || status === 'OUT_FOR_DELIVERY') {
+      await syncReturnForStatusChange({
+        shipmentId: shipment.id,
+        newStatus: status,
+        previousStatus: shipment.status,
+        pickupAt: shipment.pickupAt,
+        // user-typed note doubles as the failure reason for FAILED shipments
+        failureReason: failureReason || (status === 'FAILED' ? (opts.note || null) : null),
+        note: note || null,
+        changedBy,
+      }).catch(() => undefined)
     }
 
     // Driver stats on delivery
