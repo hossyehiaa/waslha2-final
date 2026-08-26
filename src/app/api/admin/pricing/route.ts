@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
     const baseWeight = Number(body.baseWeight) || 0.5
     const basePrice = Number(body.basePrice) || 0
     const perKgPrice = Number(body.perKgPrice) || 0
-    const codFeePercent = Number(body.codFeePercent) || 0
+    // 2% COD fee removed system-wide — always stored as 0.
+    const codFeePercent = 0
     const insuranceFeePercent = Number(body.insuranceFeePercent) || 0
 
     if (!name) {

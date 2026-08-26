@@ -28,7 +28,8 @@ export async function PATCH(
     if (body.baseWeight !== undefined) updateData.baseWeight = Number(body.baseWeight)
     if (body.basePrice !== undefined) updateData.basePrice = Number(body.basePrice)
     if (body.perKgPrice !== undefined) updateData.perKgPrice = Number(body.perKgPrice)
-    if (body.codFeePercent !== undefined) updateData.codFeePercent = Number(body.codFeePercent)
+    // 2% COD fee removed system-wide — always stored as 0.
+    if (body.codFeePercent !== undefined) updateData.codFeePercent = 0
     if (body.insuranceFeePercent !== undefined) updateData.insuranceFeePercent = Number(body.insuranceFeePercent)
     if (body.status) updateData.status = body.status
 

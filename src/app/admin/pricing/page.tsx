@@ -80,7 +80,6 @@ export default function AdminPricingPage() {
     { key: 'baseWeight', label: L.kgIncluded, type: 'number' as const, placeholder: '0.5', required: true, defaultValue: 0.5 },
     { key: 'basePrice', label: L.basePrice, type: 'number' as const, placeholder: '80', required: true, defaultValue: 80 },
     { key: 'perKgPrice', label: L.perKg, type: 'number' as const, placeholder: '8', required: true, defaultValue: 8 },
-    { key: 'codFeePercent', label: L.codFee, type: 'number' as const, placeholder: '0', required: true, defaultValue: 0 },
     { key: 'insuranceFeePercent', label: L.insurance, type: 'number' as const, placeholder: '0.5', defaultValue: 0.5 },
   ]
 
@@ -96,7 +95,7 @@ export default function AdminPricingPage() {
       baseWeight: Number(data.baseWeight),
       basePrice: Number(data.basePrice),
       perKgPrice: Number(data.perKgPrice),
-      codFeePercent: Number(data.codFeePercent),
+      codFeePercent: 0,
       insuranceFeePercent: Number(data.insuranceFeePercent),
     }
     const res = await fetch(url, {
@@ -180,11 +179,6 @@ export default function AdminPricingPage() {
                     <div className="text-xs text-muted-foreground">{L.perKg}</div>
                     <div className="font-bold text-lg">{formatCurrency(r.perKgPrice)}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{L.additionalWeight}</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/40">
-                    <div className="text-xs text-muted-foreground">{L.codFee}</div>
-                    <div className="font-bold text-lg">{r.codFeePercent}%</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{L.ofCodAmount}</div>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/40">
                     <div className="text-xs text-muted-foreground">{L.insurance}</div>

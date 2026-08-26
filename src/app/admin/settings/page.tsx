@@ -97,11 +97,7 @@ export default function AdminSettingsPage() {
                 <p className="text-sm text-muted-foreground">{L.pricingDesc}</p>
               </div>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>{L.codFeePercent}</Label>
-                <Input type="number" value={settings.cod_fee_percent || ''} onChange={(e) => setSettings({ ...settings, cod_fee_percent: e.target.value })} />
-              </div>
+            <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{L.insuranceFeePercent}</Label>
                 <Input type="number" value={settings.insurance_fee_percent || ''} onChange={(e) => setSettings({ ...settings, insurance_fee_percent: e.target.value })} />

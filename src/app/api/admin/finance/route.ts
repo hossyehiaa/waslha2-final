@@ -93,7 +93,8 @@ export async function PATCH(req: NextRequest) {
       }
 
       const totalAmount = shipments.reduce((s, x) => s + x.codAmount, 0)
-      const fees = shipments.reduce((s, x) => s + x.codFee, 0)
+      // The 2% COD fee is removed system-wide — settlements carry no fees.
+      const fees = 0
       const netAmount = totalAmount - fees
 
       const reference = `COD-${Date.now().toString(36).toUpperCase()}`

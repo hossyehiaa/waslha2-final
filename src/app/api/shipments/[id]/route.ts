@@ -86,13 +86,12 @@ export async function PATCH(
     if (body.fromBranchId !== undefined) updateData.fromBranchId = body.fromBranchId || null
     if (body.toBranchId !== undefined) updateData.toBranchId = body.toBranchId || null
 
-    // Recalculate pricing if COD changed
+    // Recalculate pricing if COD changed (2% COD fee removed system-wide)
     if (body.codAmount !== undefined) {
       const codAmount = Number(body.codAmount) || 0
-      const codFee = Math.round(codAmount * 0.02 * 100) / 100
       updateData.codAmount = codAmount
-      updateData.codFee = codFee
-      updateData.totalCost = shipment.shippingCost + codFee
+      updateData.codFee = 0
+      updateData.totalCost = shipment.shippingCost
     }
 
 

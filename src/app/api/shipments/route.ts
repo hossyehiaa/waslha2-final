@@ -123,20 +123,33 @@ export async function POST(req: NextRequest) {
     const weight = Math.min(1000, Math.max(0.1, Number(body.weight) || 0.5))
     const pieces = Math.min(1000, Math.max(1, Math.floor(Number(body.pieces) || 1)))
     const codAmount = Math.min(100000000, Math.max(0, Number(body.codAmount) || 0))
-    const quote = await calculateShippingCost({
-      sender: { name: body.senderName, phone: body.senderPhone, address: body.senderAddress || '', cityCode: senderCity.code },
-      recipient: { name: body.recipientName, phone: body.recipientPhone, address: body.recipientAddress, cityCode: recipientCity.code },
-      serviceType,
-      priority,
-      weight,
-      pieces,
-      description: body.description || null,
-      codAmount,
-    }, senderCity.id, recipientCity.id)
+
+    // Pricing: staff may enter their own shipping price (it is honoured as-is);
+    // everyone else gets the configured city tariff. The 2% COD fee is removed
+    // from the whole system — codFee is always 0.
+    const isStaff = user.role === 'ADMIN' || user.role === 'EMPLOYEE'
+    const manualCost = Number(body.shippingCost)
+    let shippingCost: number
+    if (isStaff && body.shippingCost !== undefined && body.shippingCost !== '' && Number.isFinite(manualCost) && manualCost >= 0) {
+      shippingCost = Math.min(1000000, Math.round(manualCost * 100) / 100)
+    } else {
+      const quote = await calculateShippingCost({
+        sender: { name: body.senderName, phone: body.senderPhone, address: body.senderAddress || '', cityCode: senderCity.code },
+        recipient: { name: body.recipientName, phone: body.recipientPhone, address: body.recipientAddress, cityCode: recipientCity.code },
+        serviceType,
+        priority,
+        weight,
+        pieces,
+        description: body.description || null,
+        codAmount,
+      }, senderCity.id, recipientCity.id)
+      shippingCost = quote.shippingCost
+    }
+    const codFee = 0
+    const totalCost = shippingCost
 
     const trackingNumber = generateTrackingNumber()
-    const { shippingCost, codFee, totalCost } = quote
-    const allowOperationalAssignments = user.role === 'ADMIN' || user.role === 'EMPLOYEE'
+    const allowOperationalAssignments = isStaff
     const shipment = await db.$transaction(async (tx) => {
       const created = await tx.shipment.create({
         data: {

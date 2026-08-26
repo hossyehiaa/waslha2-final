@@ -189,7 +189,6 @@ export default function FollowUpShipmentsPage() {
     { key: 'notes', header: 'ملاحظات', width: '120px' },
     { key: 'shippingCost', header: 'الشحن', width: '80px' },
     { key: 'codAmount', header: 'إجمالي الشحنة', width: '100px' },
-    { key: 'codFee', header: 'المستحق للعميل', width: '100px' },
     { key: 'codAmount', header: 'المطلوب تحصيله', width: '100px' },
     { key: 'paymentStatus', header: 'حالة التحصيل', width: '90px' },
     { key: 'paymentStatus', header: 'حالة السداد', width: '90px' },
@@ -347,7 +346,6 @@ export default function FollowUpShipmentsPage() {
                     <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">{s.notes || '-'}</td>
                     <td className="py-2 px-2 whitespace-nowrap">{formatCurrency(s.shippingCost)}</td>
                     <td className="py-2 px-2 font-medium whitespace-nowrap">{formatCurrency(s.codAmount)}</td>
-                    <td className="py-2 px-2 text-emerald-600 whitespace-nowrap">{formatCurrency(s.codAmount - (s.codFee || 0))}</td>
                     <td className="py-2 px-2 font-bold text-amber-600 whitespace-nowrap">{formatCurrency(s.codAmount)}</td>
                     <td className="py-2 px-2"><StatusBadge status={s.paymentStatus} /></td>
                     <td className="py-2 px-2"><StatusBadge status={s.paymentStatus === 'SETTLED' ? 'SETTLED' : 'PENDING'} /></td>
@@ -498,8 +496,8 @@ export default function FollowUpShipmentsPage() {
                     <div className="font-bold text-lg text-amber-600">{formatCurrency(detailModal.codAmount)}</div>
                   </div>
                   <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-                    <div className="text-xs text-muted-foreground">المستحق للعميل</div>
-                    <div className="font-bold text-lg text-emerald-600">{formatCurrency(detailModal.codAmount - detailModal.codFee)}</div>
+                    <div className="text-xs text-muted-foreground">سعر الشحن</div>
+                    <div className="font-bold text-lg text-emerald-600">{formatCurrency(detailModal.shippingCost)}</div>
                   </div>
                 </div>
 

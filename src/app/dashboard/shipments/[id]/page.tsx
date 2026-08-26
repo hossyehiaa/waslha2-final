@@ -68,7 +68,6 @@ export default function ClientShipmentDetailPage() {
             <div className="flex justify-between"><span className="text-muted-foreground">{L.pieces}</span><span className="font-medium">{shipment.pieces}</span></div>
             <div className="pt-3 border-t flex justify-between"><span className="text-muted-foreground">{dict.dashboard.admin.cod}</span><span className="font-bold">{formatCurrency(shipment.codAmount)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">{L.shippingCost}</span><span className="font-medium">{formatCurrency(shipment.shippingCost)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">{L.codFee}</span><span className="font-medium">{formatCurrency(shipment.codFee)}</span></div>
             <div className="pt-3 border-t flex justify-between"><span className="font-medium">{dict.common.total}</span><span className="font-bold text-primary">{formatCurrency(shipment.totalCost)}</span></div>
           </div>
         </Card>

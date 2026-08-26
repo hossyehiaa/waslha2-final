@@ -20,6 +20,7 @@ export default function ClientNewShipmentPage() {
   const [loading, setLoading] = useState(false)
   const [cities, setCities] = useState<any[]>([])
   const [addresses, setAddresses] = useState<any[]>([])
+  const [quote, setQuote] = useState<number | null>(null)
   const [form, setForm] = useState({
     senderName: '', senderPhone: '', senderAddress: '', senderCityId: '',
     recipientName: '', recipientPhone: '', recipientAddress: '', recipientCityId: '',
@@ -41,6 +42,26 @@ export default function ClientNewShipmentPage() {
       }
     })
   }, [])
+
+  // Live shipping quote (2% COD fee removed system-wide — price is the pure tariff)
+  useEffect(() => {
+    if (!form.senderCityId || !form.recipientCityId) { setQuote(null); return }
+    const id = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          senderCityId: form.senderCityId,
+          recipientCityId: form.recipientCityId,
+          serviceType: form.serviceType,
+          priority: form.priority,
+          weight: String(Number(form.weight) || 0.5),
+        })
+        const r = await fetch(`/api/admin/quote?${params}`)
+        const d = await r.json()
+        setQuote(r.ok ? d.shippingCost : null)
+      } catch { setQuote(null) }
+    }, 300)
+    return () => clearTimeout(id)
+  }, [form.senderCityId, form.recipientCityId, form.serviceType, form.priority, form.weight])
 
 
   function set(k: string, v: string) { setForm(prev => ({ ...prev, [k]: v })) }
@@ -217,11 +238,11 @@ export default function ClientNewShipmentPage() {
           </div>
           <div className="mt-4 p-4 rounded-xl bg-muted/40 flex items-center justify-between text-sm">
             <div>
-              <div className="text-muted-foreground">{L.codFee2}</div>
-              <div className="font-bold">{Math.round(Number(form.codAmount) * 0.02 * 100) / 100} {dict.common.currency}</div>
+              <div className="text-muted-foreground">{isRTL ? 'سعر الشحن المتوقع' : 'Estimated shipping cost'}</div>
+              <div className="font-bold">{quote !== null ? `${quote} ${dict.common.currency}` : (isRTL ? 'يظهر بعد اختيار المدن' : 'Shows after choosing cities')}</div>
             </div>
             <div className="text-right text-muted-foreground text-xs max-w-48">
-              Shipping fees are calculated securely by Wslahali after the shipment details are validated.
+              {isRTL ? 'رسوم الشحن تُحسب تلقائياً حسب تسعير المدن — بدون أي رسوم إضافية على التحصيل.' : 'Shipping fees are calculated from city pricing — no extra fees on COD.'}
             </div>
           </div>
         </Card>

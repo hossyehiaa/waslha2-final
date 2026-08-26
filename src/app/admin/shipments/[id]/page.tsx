@@ -251,10 +251,6 @@ export default function ShipmentDetailPage() {
                 <span className="text-muted-foreground">COD Amount</span>
                 <span className="font-medium">{formatCurrency(shipment.codAmount)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">COD Fee (2%)</span>
-                <span className="font-medium">{formatCurrency(shipment.codFee)}</span>
-              </div>
               <div className="pt-3 border-t flex justify-between">
                 <span className="font-medium">Total</span>
                 <span className="font-bold text-primary">{formatCurrency(shipment.totalCost)}</span>
