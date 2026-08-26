@@ -47,7 +47,6 @@ export default function ClientCodPage() {
     { key: 'period', header: L.period, cell: (s) => <span className="text-xs">{s.period}</span> },
     { key: 'shipmentCount', header: L.shipments, sortable: true, cell: (s) => <span className="font-medium">{s.shipmentCount}</span> },
     { key: 'totalAmount', header: L.totalCod, sortable: true, cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.totalAmount)}</span> },
-    { key: 'fees', header: L.fees, hideOnMobile: true, cell: (s) => <span className="text-xs text-rose-600">-{formatCurrency(s.fees)}</span> },
     { key: 'netAmount', header: L.netPayable, sortable: true, cell: (s) => <span className="font-bold text-emerald-600">{formatCurrency(s.netAmount)}</span> },
     { key: 'status', header: dict.common.status, cell: (s) => <StatusBadge status={s.status} /> },
     { key: 'paidAt', header: L.paidDate, hideOnMobile: true, cell: (s) => <span className="text-xs">{s.paidAt ? formatDate(s.paidAt) : '-'}</span> },
