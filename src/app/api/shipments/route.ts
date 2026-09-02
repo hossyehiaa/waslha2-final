@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     const codFee = 0
     const totalCost = shippingCost
 
-    const trackingNumber = generateTrackingNumber()
+    const trackingNumber = await generateTrackingNumber()
     const allowOperationalAssignments = isStaff
     const shipment = await db.$transaction(async (tx) => {
       const created = await tx.shipment.create({

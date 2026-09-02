@@ -302,11 +302,11 @@ export async function createPartnerShipment(input: PartnerShipmentInput, clientI
   const senderCity = await getActiveCityByCode(input.sender.cityCode)
   const recipientCity = await getActiveCityByCode(input.recipient.cityCode)
   const quote = await calculateShippingCost(input, senderCity.id, recipientCity.id)
-  let trackingNumber = generateTrackingNumber()
+  let trackingNumber = await generateTrackingNumber()
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const exists = await db.shipment.findUnique({ where: { trackingNumber }, select: { id: true } })
     if (!exists) break
-    trackingNumber = generateTrackingNumber()
+    trackingNumber = await generateTrackingNumber()
   }
 
   return db.$transaction(async (tx) => {

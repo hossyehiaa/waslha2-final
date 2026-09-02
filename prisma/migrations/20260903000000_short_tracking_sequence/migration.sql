@@ -1,0 +1,3 @@
+-- Short sequential tracking numbers: WS1, WS2, WS3 ...
+-- A dedicated Postgres sequence guarantees uniqueness under concurrency.
+CREATE SEQUENCE IF NOT EXISTS shipment_tracking_seq START WITH 1 INCREMENT BY 1;

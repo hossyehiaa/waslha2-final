@@ -267,7 +267,7 @@ export async function processShopifyOrderCreated(installationId: string, payload
     codAmount,
   }, senderCity.id, recipientCity.id)
 
-  const trackingNumber = generateTrackingNumber()
+  const trackingNumber = await generateTrackingNumber()
   return db.$transaction(async (tx) => {
     const shipment = await tx.shipment.create({ data: {
       trackingNumber,

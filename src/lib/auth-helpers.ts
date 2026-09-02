@@ -19,11 +19,17 @@ export function generateSessionToken(): string {
   return crypto.randomBytes(32).toString('hex')
 }
 
-export function generateTrackingNumber(): string {
-  const prefix = 'WSL'
-  const timestamp = Date.now().toString(36).toUpperCase().slice(-6)
-  const random = crypto.randomBytes(4).toString('hex').toUpperCase()
-  return `${prefix}${timestamp}${random}`
+/**
+ * Short sequential tracking number: WS1, WS2, WS3 ...
+ * Uses a dedicated Postgres sequence (shipment_tracking_seq) so numbers stay
+ * unique even when multiple shipments are created at the same time.
+ */
+export async function generateTrackingNumber(): Promise<string> {
+  const rows: Array<{ next: bigint | number }> = await db.$queryRaw`
+    SELECT nextval('shipment_tracking_seq') AS next
+  `
+  const n = rows[0]?.next ?? 1
+  return `WS${n}`
 }
 
 export function generateReference(prefix: string = 'REF'): string {

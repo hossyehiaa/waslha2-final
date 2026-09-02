@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
           codAmount,
         }, senderCityId, city.id)
         const { shippingCost, codFee, totalCost } = quote
-        const trackingNumber = generateTrackingNumber()
+        const trackingNumber = await generateTrackingNumber()
 
         const shipment = await db.shipment.create({
           data: {
