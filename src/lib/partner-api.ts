@@ -257,6 +257,10 @@ export async function calculateShippingCost(input: PartnerShipmentInput, senderC
     // 2) If cities are unpriced, fall back to the active STANDARD pricing rule
     //    (route-specific or generic) instead of failing — this keeps orders flowing.
     // 3) Only throw when neither cities nor rules can price the route.
+    //
+    // FLAT TARIFF: the published price list (85 / 100 / 110 / 135 + 80 local) is
+    // charged as-is — no weight surcharge and no priority surcharge, so the
+    // price the admin sees is exactly the price the client sees.
     let basePrice: number | null = null
     try {
       basePrice = await calculateConfiguredStandardPrice(senderCityId, recipientCityId)
@@ -265,8 +269,7 @@ export async function calculateShippingCost(input: PartnerShipmentInput, senderC
     }
     if (basePrice === null) {
       if (genericRule) {
-        const extraWeight = Math.max(0, input.weight - genericRule.baseWeight)
-        shippingCost = genericRule.basePrice + Math.ceil(extraWeight) * genericRule.perKgPrice
+        shippingCost = genericRule.basePrice
       } else {
         throw new PartnerApiError(400, 'UNPRICED_CITY', 'This route is not covered by the active tariff yet', {
           senderCityId,
@@ -274,8 +277,7 @@ export async function calculateShippingCost(input: PartnerShipmentInput, senderC
         })
       }
     } else {
-      const extraWeight = Math.max(0, input.weight - 0.5)
-      shippingCost = basePrice + Math.ceil(extraWeight) * 8
+      shippingCost = basePrice
     }
   } else {
     if (genericRule) {
@@ -292,8 +294,8 @@ export async function calculateShippingCost(input: PartnerShipmentInput, senderC
     }
   }
 
-  if (input.priority === 'HIGH' && input.serviceType === 'STANDARD') shippingCost += 10
-  if (input.priority === 'URGENT' && input.serviceType === 'STANDARD') shippingCost += 20
+  // (STANDARD is flat — no priority surcharges. Priority fees only apply to
+  // EXPRESS / SAME_DAY services below.)
   const round = (value: number) => Math.round(value * 100) / 100
   return { shippingCost: round(shippingCost), codFee: round(codFee), totalCost: round(shippingCost + codFee) }
 }
