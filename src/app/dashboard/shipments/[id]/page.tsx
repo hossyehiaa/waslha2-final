@@ -60,8 +60,8 @@ export default function ClientShipmentDetailPage() {
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{L.details}</h3>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">{dict.common.status}</span><StatusBadge status={shipment.status} /></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">{dict.pages.tracking.from}</span><span className="font-medium">{shipment.senderCity?.name}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">{dict.pages.tracking.to}</span><span className="font-medium">{shipment.recipientCity?.name}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{dict.pages.tracking.from}</span><span className="font-medium">{shipment.senderCity?.governorate && shipment.senderCity.governorate !== shipment.senderCity.name ? `${shipment.senderCity.governorate} - ${shipment.senderCity.name}` : shipment.senderCity?.name}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{dict.pages.tracking.to}</span><span className="font-medium">{shipment.recipientCity?.governorate && shipment.recipientCity.governorate !== shipment.recipientCity.name ? `${shipment.recipientCity.governorate} - ${shipment.recipientCity.name}` : shipment.recipientCity?.name}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">{L.recipient}</span><span className="font-medium">{shipment.recipientName}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">{dict.pages.shipments.paymentStatus}</span><span className="font-medium text-xs">{shipment.recipientPhone}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">{L.weight}</span><span className="font-medium">{shipment.weight} kg</span></div>

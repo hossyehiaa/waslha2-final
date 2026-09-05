@@ -18,8 +18,8 @@ export async function GET(
       where: { id },
       include: {
         client: { select: { id: true, companyName: true } },
-        senderCity: { select: { name: true } },
-        recipientCity: { select: { name: true } },
+        senderCity: { select: { name: true, governorate: true } },
+        recipientCity: { select: { name: true, governorate: true } },
         fromBranch: { select: { name: true } },
         toBranch: { select: { name: true } },
         driver: { include: { user: { select: { fullName: true } } } },

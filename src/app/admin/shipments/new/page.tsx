@@ -49,7 +49,7 @@ export default function NewShipmentPage() {
       fetch('/api/admin/drivers').then(r => r.json()),
     ]).then(([c, ci, b, d]) => {
       setClients(c.clients?.map((x: any) => ({ id: x.id, name: x.companyName })) || [])
-      setCities(ci.cities?.map((x: any) => ({ id: x.id, name: x.name })) || [])
+      setCities(ci.cities?.map((x: any) => ({ id: x.id, name: x.governorate && x.governorate !== x.name ? `${x.governorate} - ${x.name}` : x.name })) || [])
       setBranches(b.branches?.map((x: any) => ({ id: x.id, name: x.name })) || [])
       setDrivers(d.drivers?.map((x: any) => ({ id: x.id, name: `${x.user.fullName} (${x.driverCode})` })) || [])
     })

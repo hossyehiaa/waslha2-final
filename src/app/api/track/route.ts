@@ -35,8 +35,12 @@ export async function GET(req: NextRequest) {
       description: shipment.description,
       weight: shipment.weight,
       pieces: shipment.pieces,
-      from: shipment.senderCity.name,
-      to: shipment.recipientCity.name,
+      from: shipment.senderCity.governorate && shipment.senderCity.governorate !== shipment.senderCity.name
+        ? `${shipment.senderCity.governorate} - ${shipment.senderCity.name}`
+        : shipment.senderCity.name,
+      to: shipment.recipientCity.governorate && shipment.recipientCity.governorate !== shipment.recipientCity.name
+        ? `${shipment.recipientCity.governorate} - ${shipment.recipientCity.name}`
+        : shipment.recipientCity.name,
       createdAt: shipment.createdAt,
       deliveredAt: shipment.deliveredAt,
       history: shipment.statusHistory.map((h) => ({

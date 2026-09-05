@@ -47,8 +47,8 @@ export async function GET(req: NextRequest) {
         where,
         include: {
           client: { select: { id: true, companyName: true } },
-          senderCity: { select: { name: true } },
-          recipientCity: { select: { name: true } },
+          senderCity: { select: { name: true, governorate: true } },
+          recipientCity: { select: { name: true, governorate: true } },
           driver: { select: { id: true, driverCode: true, user: { select: { fullName: true } } } },
         },
         orderBy: { createdAt: 'desc' },
@@ -64,8 +64,12 @@ export async function GET(req: NextRequest) {
         trackingNumber: s.trackingNumber,
         client: s.client.companyName,
         clientId: s.client.id,
-        senderCity: s.senderCity.name,
-        recipientCity: s.recipientCity.name,
+        senderCity: s.senderCity.governorate && s.senderCity.governorate !== s.senderCity.name
+          ? `${s.senderCity.governorate} - ${s.senderCity.name}`
+          : s.senderCity.name,
+        recipientCity: s.recipientCity.governorate && s.recipientCity.governorate !== s.recipientCity.name
+          ? `${s.recipientCity.governorate} - ${s.recipientCity.name}`
+          : s.recipientCity.name,
         recipientName: s.recipientName,
         recipientPhone: s.recipientPhone,
         status: s.status,

@@ -174,7 +174,7 @@ export default function ClientNewShipmentPage() {
                 <Select value={form.senderCityId} onValueChange={(v) => set('senderCityId', v)}>
                   <SelectTrigger><SelectValue placeholder={dict.pages.addresses.selectCity} /></SelectTrigger>
                   <SelectContent>
-                    {cities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    {cities.map((c) => <SelectItem key={c.id} value={c.id}>{c.governorate && c.governorate !== c.name ? `${c.governorate} - ${c.name}` : c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -204,7 +204,7 @@ export default function ClientNewShipmentPage() {
                 <Select value={form.recipientCityId} onValueChange={(v) => set('recipientCityId', v)}>
                   <SelectTrigger><SelectValue placeholder={dict.pages.addresses.selectCity} /></SelectTrigger>
                   <SelectContent>
-                    {cities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    {cities.map((c) => <SelectItem key={c.id} value={c.id}>{c.governorate && c.governorate !== c.name ? `${c.governorate} - ${c.name}` : c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
