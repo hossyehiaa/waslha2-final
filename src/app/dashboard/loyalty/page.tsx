@@ -33,7 +33,7 @@ export default function ClientLoyaltyPage() {
       <PageHeader title="My Loyalty" subtitle="Your points and rewards" icon={Star} />
 
       {/* Current tier card */}
-      <Card className="p-8 bg-gradient-to-br from-primary to-emerald-700 text-white relative overflow-hidden">
+      <Card className="p-8 bg-gradient-to-br from-primary to-orange-800 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
@@ -79,14 +79,14 @@ export default function ClientLoyaltyPage() {
           <div className="space-y-2">
             {history.map((h: any) => (
               <div key={h.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/30">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${h.points > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${h.points > 0 ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700'}`}>
                   {h.points > 0 ? '+' : ''}{h.points}
                 </div>
                 <div className="flex-1">
                   <div className="text-sm font-medium">{h.reason}</div>
                   <div className="text-xs text-muted-foreground">{formatDateTime(h.createdAt)}</div>
                 </div>
-                <div className={`font-bold ${h.points > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <div className={`font-bold ${h.points > 0 ? 'text-green-600' : 'text-rose-600'}`}>
                   {h.points > 0 ? '+' : ''}{h.points}
                 </div>
               </div>

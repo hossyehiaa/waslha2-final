@@ -232,7 +232,7 @@ export default function DriverApp() {
                       </Button>
                       <Button
                         size="sm"
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="bg-green-600 hover:bg-green-700"
                         onClick={() => setActionDialog({ shipment: s, action: 'deliver' })}
                       >
                         <CheckCircle className="w-4 h-4 mr-1.5" />
@@ -307,7 +307,7 @@ export default function DriverApp() {
               </Button>
               <Button
                 onClick={handleAction}
-                className={actionDialog?.action === 'deliver' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-destructive'}
+                className={actionDialog?.action === 'deliver' ? 'bg-green-600 hover:bg-green-700' : 'bg-destructive'}
                 disabled={actionDialog?.action === 'fail' && !failureReason}
               >
                 {actionDialog?.action === 'deliver' ? 'Confirm Delivery' : 'Mark Failed'}

@@ -102,8 +102,8 @@ export default function AdminBranchesPage() {
       sortable: true,
       cell: (b) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20 flex items-center justify-center">
-            <Building2 className="w-4 h-4 text-teal-600" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center">
+            <Building2 className="w-4 h-4 text-orange-600" />
           </div>
           <div>
             <div className="font-medium">{b.name}</div>
@@ -159,10 +159,10 @@ export default function AdminBranchesPage() {
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: L.totalBranches, value: branches.length, icon: Building2, color: 'bg-teal-100 text-teal-700' },
-          { label: L.totalClients, value: branches.reduce((s, b) => s + b.clients, 0), icon: Users, color: 'bg-purple-100 text-purple-700' },
-          { label: L.totalDrivers, value: branches.reduce((s, b) => s + b.drivers, 0), icon: Truck, color: 'bg-cyan-100 text-cyan-700' },
-          { label: L.warehouses, value: branches.reduce((s, b) => s + b.warehouses, 0), icon: Boxes, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.totalBranches, value: branches.length, icon: Building2, color: 'bg-orange-100 text-orange-700' },
+          { label: L.totalClients, value: branches.reduce((s, b) => s + b.clients, 0), icon: Users, color: 'bg-stone-200 text-stone-700' },
+          { label: L.totalDrivers, value: branches.reduce((s, b) => s + b.drivers, 0), icon: Truck, color: 'bg-orange-100 text-orange-700' },
+          { label: L.warehouses, value: branches.reduce((s, b) => s + b.warehouses, 0), icon: Boxes, color: 'bg-stone-200 text-stone-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>

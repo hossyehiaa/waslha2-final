@@ -98,7 +98,7 @@ export default function ClientTrackingPage() {
               <div className="space-y-3">
                 {result.history.map((h, i) => (
                   <div key={i} className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${i === result.history.length - 1 ? 'bg-primary animate-pulse' : 'bg-emerald-500'}`} />
+                    <div className={`w-2 h-2 rounded-full mt-2 ${i === result.history.length - 1 ? 'bg-primary animate-pulse' : 'bg-muted-foreground/40'}`} />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <StatusBadge status={h.status} />

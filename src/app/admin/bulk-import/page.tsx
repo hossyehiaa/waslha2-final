@@ -213,9 +213,9 @@ export default function AdminBulkImportPage() {
               <div className="text-2xl font-bold">{results.total}</div>
               <div className="text-xs text-muted-foreground">Total Rows</div>
             </div>
-            <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-center">
-              <CheckCircle className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
-              <div className="text-2xl font-bold text-emerald-600">{results.successCount}</div>
+            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 text-center">
+              <CheckCircle className="w-5 h-5 text-green-600 mx-auto mb-1" />
+              <div className="text-2xl font-bold text-green-600">{results.successCount}</div>
               <div className="text-xs text-muted-foreground">Successful</div>
             </div>
             <div className="p-4 rounded-lg bg-rose-50 dark:bg-rose-950/30 text-center">
@@ -244,12 +244,12 @@ export default function AdminBulkImportPage() {
           {results.results && results.results.length > 0 && (
             <div className="mt-4 space-y-2">
               <h4 className="text-sm font-medium flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-500" />
+                <CheckCircle className="w-4 h-4 text-green-500" />
                 Created Shipments ({results.results.length})
               </h4>
               <div className="max-h-60 overflow-y-auto scrollbar-premium space-y-1">
                 {results.results.map((r: any, i: number) => (
-                  <div key={i} className="text-xs p-2 rounded bg-emerald-50 dark:bg-emerald-950/30">
+                  <div key={i} className="text-xs p-2 rounded bg-green-50 dark:bg-green-950/30">
                     <strong>Row {r.row}:</strong> {r.trackingNumber}
                   </div>
                 ))}

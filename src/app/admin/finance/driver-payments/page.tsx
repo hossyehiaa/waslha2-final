@@ -30,7 +30,7 @@ export default function Page() {
           </Card>
           <Card className="p-4">
             <div className="text-xs text-muted-foreground">إجمالي المدفوع</div>
-            <div className="text-xl font-bold text-emerald-600 mt-1">{formatCurrency(data.drivers.reduce((s: number, d: any) => s + d.totalEarnings, 0))}</div>
+            <div className="text-xl font-bold text-green-600 mt-1">{formatCurrency(data.drivers.reduce((s: number, d: any) => s + d.totalEarnings, 0))}</div>
           </Card>
           <Card className="p-4">
             <div className="text-xs text-muted-foreground">عدد المناديب</div>
@@ -62,8 +62,8 @@ export default function Page() {
                     <td className="py-3 px-4 text-xs font-mono text-muted-foreground">{d.driverCode}</td>
                     <td className="py-3 px-4">{d.totalDeliveries}</td>
                     <td className="py-3 px-4 font-medium text-amber-600">{formatCurrency(d.pendingEarnings)}</td>
-                    <td className="py-3 px-4 font-medium text-emerald-600">{formatCurrency(d.totalEarnings)}</td>
-                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (d.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>{d.status === 'ACTIVE' ? 'نشط' : 'موقوف'}</span></td>
+                    <td className="py-3 px-4 font-medium text-green-600">{formatCurrency(d.totalEarnings)}</td>
+                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (d.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700')}>{d.status === 'ACTIVE' ? 'نشط' : 'موقوف'}</span></td>
                   </tr>
                 ))}
               </tbody>

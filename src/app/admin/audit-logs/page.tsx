@@ -31,10 +31,10 @@ const ACTION_ICONS: Record<string, any> = {
 }
 
 const ACTION_COLORS: Record<string, string> = {
-  CREATE: 'bg-emerald-100 text-emerald-700',
+  CREATE: 'bg-green-100 text-green-700',
   UPDATE: 'bg-amber-100 text-amber-700',
   DELETE: 'bg-rose-100 text-rose-700',
-  LOGIN: 'bg-cyan-100 text-cyan-700',
+  LOGIN: 'bg-stone-200 text-stone-700',
   LOGOUT: 'bg-zinc-100 text-zinc-700',
 }
 

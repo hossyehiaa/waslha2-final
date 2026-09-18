@@ -216,7 +216,7 @@ export default function NewShipmentPage() {
         <div className="grid lg:grid-cols-2 gap-4">
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 flex items-center justify-center">
                 <User className="w-3.5 h-3.5" />
               </div>
               <h3 className="text-sm font-semibold">{t('بيانات المُرسِل', 'Sender')}</h3>
@@ -248,7 +248,7 @@ export default function NewShipmentPage() {
 
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 flex items-center justify-center">
                 <MapPin className="w-3.5 h-3.5" />
               </div>
               <h3 className="text-sm font-semibold">{t('بيانات المُستَلِم', 'Recipient')}</h3>

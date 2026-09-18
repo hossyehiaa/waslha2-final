@@ -61,7 +61,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left - Hero / Branding */}
-      <div className="lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary via-primary to-emerald-700 text-white p-8 lg:p-12 flex flex-col">
+      <div className="lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary via-primary to-orange-900 text-white p-8 lg:p-12 flex flex-col">
         <div className="absolute inset-0 mesh-bg opacity-30" />
         <div className="absolute top-20 right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
@@ -74,6 +74,7 @@ export default function LoginPage() {
         >
           <div className="flex items-center gap-3">
             <img src="/wsalhali-logo.png" alt="Wslahali" className="h-12 w-auto object-contain" />
+            <span className="text-2xl font-bold tracking-tight">{dict.common.appName}</span>
             <p className="text-xs text-white/70">{L.brandTagline}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -157,7 +158,7 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="username" className="text-sm font-medium">{L.username}</Label>
+                <Label htmlFor="password" className="text-sm font-medium">{L.password}</Label>
               </div>
               <div className="relative">
                 <Lock className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />

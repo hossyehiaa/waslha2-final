@@ -127,7 +127,7 @@ export default function Page() {
                   <tr key={item.id || i} className="border-b last:border-0 hover:bg-accent/30 transition-colors">
                     <td className="py-3 px-4">{item.name || '-'}</td>
                     <td className="py-3 px-4">{item.description || '-'}</td>
-                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (item.isActive === true || item.isActive === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>{item.isActive === true || item.isActive === 'ACTIVE' ? 'نشط' : 'موقوف'}</span></td>
+                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (item.isActive === true || item.isActive === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700')}>{item.isActive === true || item.isActive === 'ACTIVE' ? 'نشط' : 'موقوف'}</span></td>
                     <td className="py-3 px-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

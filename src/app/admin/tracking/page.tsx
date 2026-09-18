@@ -69,7 +69,7 @@ const STATUS_TABS = [
   { key: 'PICKED_UP', label: 'في مخزن الشحن', color: 'bg-blue-500' },
   { key: 'IN_TRANSIT', label: 'في الشحن', color: 'bg-indigo-500' },
   { key: 'OUT_FOR_DELIVERY', label: 'خرج للتوصيل', color: 'bg-cyan-500' },
-  { key: 'DELIVERED', label: 'تم التسليم', color: 'bg-emerald-500' },
+  { key: 'DELIVERED', label: 'تم التسليم', color: 'bg-green-500' },
   { key: 'FAILED', label: 'فشل التوصيل', color: 'bg-rose-500' },
   { key: 'POSTPONED', label: 'مؤجلة', color: 'bg-orange-500' },
   { key: 'CANCELLED', label: 'ملغاه', color: 'bg-zinc-500' },
@@ -326,7 +326,7 @@ export default function FollowUpShipmentsPage() {
                     <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">{formatDate(s.createdAt)}</td>
                     <td className="py-2 px-2 whitespace-nowrap">{s.branch || '-'}</td>
                     <td className="py-2 px-2 whitespace-nowrap">
-                      {s.isExchange ? <Badge className="bg-purple-100 text-purple-700">نعم</Badge> : <span className="text-muted-foreground">لا</span>}
+                      {s.isExchange ? <Badge className="bg-amber-100 text-amber-800">نعم</Badge> : <span className="text-muted-foreground">لا</span>}
                     </td>
                     <td className="py-2 px-2 whitespace-nowrap">{s.driver?.name || '-'}</td>
                     <td className="py-2 px-2 whitespace-nowrap">
@@ -376,7 +376,7 @@ export default function FollowUpShipmentsPage() {
                           <DropdownMenuItem onClick={() => updateStatus(s.id, 'OUT_FOR_DELIVERY')}>
                             <User className="w-4 h-4 mr-2" /> خرج للتوصيل
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => updateStatus(s.id, 'DELIVERED')} className="text-emerald-600">
+                          <DropdownMenuItem onClick={() => updateStatus(s.id, 'DELIVERED')} className="text-green-600">
                             <CheckCircle className="w-4 h-4 mr-2" /> تم التسليم
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => updateStatus(s.id, 'FAILED', 'العميل غير موجود')} className="text-rose-600">
@@ -495,9 +495,9 @@ export default function FollowUpShipmentsPage() {
                     <div className="text-xs text-muted-foreground">مبلغ COD</div>
                     <div className="font-bold text-lg text-amber-600">{formatCurrency(detailModal.codAmount)}</div>
                   </div>
-                  <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
+                  <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30">
                     <div className="text-xs text-muted-foreground">سعر الشحن</div>
-                    <div className="font-bold text-lg text-emerald-600">{formatCurrency(detailModal.shippingCost)}</div>
+                    <div className="font-bold text-lg text-green-600">{formatCurrency(detailModal.shippingCost)}</div>
                   </div>
                 </div>
 

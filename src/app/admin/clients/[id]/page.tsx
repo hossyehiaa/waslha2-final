@@ -100,7 +100,7 @@ export default function ClientDetailPage() {
           <Card className="p-6">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">COD Balance</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Available</span><span className="font-bold text-emerald-600">{formatCurrency(client.codBalance)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Available</span><span className="font-bold text-green-600">{formatCurrency(client.codBalance)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Pending</span><span className="font-medium">{formatCurrency(client.codPending)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Collected</span><span className="font-medium">{formatCurrency(client.codCollected)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Paid</span><span className="font-medium">{formatCurrency(client.codPaid)}</span></div>

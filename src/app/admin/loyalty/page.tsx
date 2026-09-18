@@ -132,14 +132,14 @@ export default function AdminLoyaltyPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+          <div className="w-9 h-9 rounded-lg bg-green-100 text-green-700 flex items-center justify-center mb-3">
             <Star className="w-4 h-4" />
           </div>
           <div className="text-xl font-bold">{clients.reduce((s, c) => s + c.totalPoints, 0)}</div>
           <div className="text-xs text-muted-foreground mt-0.5">Total Points Awarded</div>
         </Card>
         <Card className="p-4">
-          <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center mb-3">
+          <div className="w-9 h-9 rounded-lg bg-red-100 text-red-700 flex items-center justify-center mb-3">
             <TrendingUp className="w-4 h-4" />
           </div>
           <div className="text-xl font-bold">{clients.filter(c => c.totalPoints > 0).length}</div>

@@ -54,8 +54,8 @@ export default function ClientInvoicesPage() {
       <PageHeader title={L.title} icon={Receipt} />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
-          { label: L.totalInvoices, value: invoices.length, color: 'bg-purple-100 text-purple-700' },
-          { label: L.paid, value: invoices.filter(i => i.status === 'PAID').length, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.totalInvoices, value: invoices.length, color: 'bg-stone-200 text-stone-700' },
+          { label: L.paid, value: invoices.filter(i => i.status === 'PAID').length, color: 'bg-green-100 text-green-700' },
           { label: L.totalRevenue, value: formatCurrency(invoices.filter(i => i.status !== 'PAID').reduce((s, i) => s + i.total, 0)), color: 'bg-rose-100 text-rose-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">

@@ -91,7 +91,7 @@ export default function AdminInsuranceClaimsPage() {
           )}
           {(c.status === 'PENDING' || c.status === 'UNDER_REVIEW') && (
             <>
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={(e) => { e.stopPropagation(); setActionTarget(c); setActionType('approve'); handleAction('approve') }}>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={(e) => { e.stopPropagation(); setActionTarget(c); setActionType('approve'); handleAction('approve') }}>
                 <CheckCircle className="w-3.5 h-3.5 mr-1" />Approve
               </Button>
               <Button size="sm" variant="outline" className="text-destructive" onClick={(e) => { e.stopPropagation(); setActionTarget(c); setActionType('reject'); handleAction('reject') }}>
@@ -114,10 +114,10 @@ export default function AdminInsuranceClaimsPage() {
       <PageHeader title="Insurance Claims" subtitle="Process damage, loss, and partial damage claims" icon={Shield} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Claims', value: claims.length, color: 'bg-blue-100 text-blue-700' },
+          { label: 'Total Claims', value: claims.length, color: 'bg-stone-200 text-stone-700' },
           { label: 'Pending', value: claims.filter(c => c.status === 'PENDING').length, color: 'bg-amber-100 text-amber-700' },
-          { label: 'Approved', value: claims.filter(c => c.status === 'APPROVED').length, color: 'bg-emerald-100 text-emerald-700' },
-          { label: 'Total Claimed', value: formatCurrency(claims.reduce((s, c) => s + c.claimedAmount, 0)), color: 'bg-purple-100 text-purple-700' },
+          { label: 'Approved', value: claims.filter(c => c.status === 'APPROVED').length, color: 'bg-green-100 text-green-700' },
+          { label: 'Total Claimed', value: formatCurrency(claims.reduce((s, c) => s + c.claimedAmount, 0)), color: 'bg-red-100 text-red-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>

@@ -26,11 +26,11 @@ type Expense = {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  SALARIES: 'bg-purple-100 text-purple-700',
-  FUEL: 'bg-amber-100 text-amber-700',
-  MAINTENANCE: 'bg-blue-100 text-blue-700',
-  RENT: 'bg-cyan-100 text-cyan-700',
-  UTILITIES: 'bg-teal-100 text-teal-700',
+  SALARIES: 'bg-stone-200 text-stone-700',
+  FUEL: 'bg-amber-100 text-amber-800',
+  MAINTENANCE: 'bg-red-100 text-red-700',
+  RENT: 'bg-orange-100 text-orange-700',
+  UTILITIES: 'bg-rose-100 text-rose-700',
   OTHER: 'bg-zinc-100 text-zinc-700',
 }
 
@@ -156,7 +156,7 @@ export default function AdminExpensesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: L.totalExpenses, value: formatCurrency(expenses.reduce((s, e) => s + e.amount, 0)), color: 'bg-rose-100 text-rose-700' },
-          { label: L.salaries, value: formatCurrency(expenses.filter(e => e.category === 'SALARIES').reduce((s, e) => s + e.amount, 0)), color: 'bg-purple-100 text-purple-700' },
+          { label: L.salaries, value: formatCurrency(expenses.filter(e => e.category === 'SALARIES').reduce((s, e) => s + e.amount, 0)), color: 'bg-stone-200 text-stone-700' },
           { label: L.fuel, value: formatCurrency(expenses.filter(e => e.category === 'FUEL').reduce((s, e) => s + e.amount, 0)), color: 'bg-amber-100 text-amber-700' },
           { label: L.other, value: formatCurrency(expenses.filter(e => !['SALARIES', 'FUEL'].includes(e.category)).reduce((s, e) => s + e.amount, 0)), color: 'bg-zinc-100 text-zinc-700' },
         ].map((s) => (

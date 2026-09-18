@@ -21,10 +21,10 @@ type Notification = {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  SHIPMENT: 'bg-emerald-100 text-emerald-700',
+  SHIPMENT: 'bg-green-100 text-green-700',
   PAYMENT: 'bg-amber-100 text-amber-700',
-  SYSTEM: 'bg-purple-100 text-purple-700',
-  PICKUP: 'bg-cyan-100 text-cyan-700',
+  SYSTEM: 'bg-stone-200 text-stone-700',
+  PICKUP: 'bg-amber-100 text-amber-800',
   ALERT: 'bg-rose-100 text-rose-700',
 }
 

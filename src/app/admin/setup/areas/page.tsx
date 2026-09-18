@@ -133,7 +133,7 @@ export default function Page() {
                     <td className="py-3 px-4">{item.name || '-'}</td>
                     <td className="py-3 px-4">{item.code || '-'}</td>
                     <td className="py-3 px-4">{item.cityName || '-'}</td>
-                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (item.status === true || item.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>{item.status === true || item.status === 'ACTIVE' ? 'نشط' : 'موقوف'}</span></td>
+                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (item.status === true || item.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700')}>{item.status === true || item.status === 'ACTIVE' ? 'نشط' : 'موقوف'}</span></td>
                     <td className="py-3 px-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

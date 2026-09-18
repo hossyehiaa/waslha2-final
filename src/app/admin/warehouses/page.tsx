@@ -111,7 +111,7 @@ export default function AdminWarehousesPage() {
               <>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 flex items-center justify-center">
                       <Boxes className="w-5 h-5" />
                     </div>
                     <div>

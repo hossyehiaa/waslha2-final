@@ -47,7 +47,7 @@ export default function ClientCodPage() {
     { key: 'period', header: L.period, cell: (s) => <span className="text-xs">{s.period}</span> },
     { key: 'shipmentCount', header: L.shipments, sortable: true, cell: (s) => <span className="font-medium">{s.shipmentCount}</span> },
     { key: 'totalAmount', header: L.totalCod, sortable: true, cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.totalAmount)}</span> },
-    { key: 'netAmount', header: L.netPayable, sortable: true, cell: (s) => <span className="font-bold text-emerald-600">{formatCurrency(s.netAmount)}</span> },
+    { key: 'netAmount', header: L.netPayable, sortable: true, cell: (s) => <span className="font-bold text-green-600">{formatCurrency(s.netAmount)}</span> },
     { key: 'status', header: dict.common.status, cell: (s) => <StatusBadge status={s.status} /> },
     { key: 'paidAt', header: L.paidDate, hideOnMobile: true, cell: (s) => <span className="text-xs">{s.paidAt ? formatDate(s.paidAt) : '-'}</span> },
   ]
@@ -62,8 +62,8 @@ export default function ClientCodPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
           { label: L.pendingSettlements, value: formatCurrency(totals.pending), icon: Clock, color: 'bg-amber-100 text-amber-700' },
-          { label: L.totalPaid, value: formatCurrency(totals.paid), icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
-          { label: L.totalSettlements, value: settlements.length, icon: Wallet, color: 'bg-purple-100 text-purple-700' },
+          { label: L.totalPaid, value: formatCurrency(totals.paid), icon: CheckCircle2, color: 'bg-green-100 text-green-700' },
+          { label: L.totalSettlements, value: settlements.length, icon: Wallet, color: 'bg-stone-200 text-stone-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>

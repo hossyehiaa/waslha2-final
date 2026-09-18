@@ -220,10 +220,10 @@ export default function AdminEmployeesPage() {
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: L.totalEmployees, value: employees.length, icon: UserCog, color: 'bg-emerald-100 text-emerald-700' },
-          { label: L.managers, value: employees.filter(e => e.position === 'MANAGER').length, icon: Briefcase, color: 'bg-purple-100 text-purple-700' },
+          { label: L.totalEmployees, value: employees.length, icon: UserCog, color: 'bg-green-100 text-green-700' },
+          { label: L.managers, value: employees.filter(e => e.position === 'MANAGER').length, icon: Briefcase, color: 'bg-stone-200 text-stone-700' },
           { label: L.totalSalaries, value: formatCurrency(employees.reduce((s, e) => s + e.salary, 0)), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
-          { label: L.active, value: employees.filter(e => e.status === 'ACTIVE').length, icon: Star, color: 'bg-teal-100 text-teal-700' },
+          { label: L.active, value: employees.filter(e => e.status === 'ACTIVE').length, icon: Star, color: 'bg-orange-100 text-orange-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>

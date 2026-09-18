@@ -33,7 +33,7 @@ function StatCard({ stat, delay = 0 }: { stat: Stat; delay?: number }) {
             </div>
             {stat.trend && (
               <span className={`text-xs font-medium flex items-center gap-0.5 ${
-                stat.trend.startsWith('-') ? 'text-rose-500' : 'text-emerald-500'
+                stat.trend.startsWith('-') ? 'text-rose-500' : 'text-green-500'
               }`}>
                 {stat.trend.startsWith('-') ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
                 {stat.trend}

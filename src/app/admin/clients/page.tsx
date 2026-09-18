@@ -133,10 +133,10 @@ export default function AdminClientsPage() {
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: L.totalClients, value: clients.length, icon: Users, color: 'bg-purple-100 text-purple-700' },
-          { label: L.totalShipments, value: clients.reduce((s, c) => s + c.totalShipments, 0), icon: Package, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.totalClients, value: clients.length, icon: Users, color: 'bg-stone-200 text-stone-700' },
+          { label: L.totalShipments, value: clients.reduce((s, c) => s + c.totalShipments, 0), icon: Package, color: 'bg-green-100 text-green-700' },
           { label: L.codPending, value: formatCurrency(clients.reduce((s, c) => s + c.codPending, 0)), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
-          { label: L.codCollected, value: formatCurrency(clients.reduce((s, c) => s + c.codCollected, 0)), icon: Wallet, color: 'bg-teal-100 text-teal-700' },
+          { label: L.codCollected, value: formatCurrency(clients.reduce((s, c) => s + c.codCollected, 0)), icon: Wallet, color: 'bg-orange-100 text-orange-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>

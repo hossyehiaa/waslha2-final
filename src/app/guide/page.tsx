@@ -440,9 +440,9 @@ const SECTIONS: Section[] = [
 ]
 
 const BADGE_STYLES: Record<string, string> = {
-  'أدمن': 'bg-blue-100 text-blue-700',
-  'عميل': 'bg-emerald-100 text-emerald-700',
-  'مندوب': 'bg-purple-100 text-purple-700',
+  'أدمن': 'bg-red-100 text-red-700',
+  'عميل': 'bg-green-100 text-green-700',
+  'مندوب': 'bg-amber-100 text-amber-800',
   'للكل': 'bg-amber-100 text-amber-700',
 }
 
@@ -456,7 +456,7 @@ export default function GuidePage() {
       <div className="sticky top-0 z-40 bg-primary text-primary-foreground shadow-lg">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/wsalhali-icon.png" alt="Wslahali" className="h-9 w-auto bg-white/90 rounded-lg p-1" />
+            <img src="/wsalhali-icon.png" alt="Wslahali" className="h-10 w-auto rounded-lg" />
             <div>
               <h1 className="text-xl font-bold">دليل وصلهالي الشامل</h1>
               <p className="text-xs text-white/70">شرح تفصيلي لكل ميزة في المنصة</p>
@@ -551,9 +551,9 @@ export default function GuidePage() {
                         <div className="space-y-2 pt-2">
                           {section.notes.map((note, nIdx) => {
                             const styles = {
-                              info: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900',
+                              info: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900',
                               warning: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900',
-                              success: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
+                              success: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900',
                             }
                             const icons = { info: 'ℹ️', warning: '⚠️', success: '✅' }
                             return (

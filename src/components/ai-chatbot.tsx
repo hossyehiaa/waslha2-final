@@ -104,7 +104,7 @@ export function AIChatbot({ scope = 'admin' }: { scope?: ChatScope }) {
               className="h-14 w-14 rounded-full shadow-premium bg-primary hover:bg-primary/90 relative"
             >
               <Bot className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-background animate-pulse" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary border-2 border-background animate-pulse" />
             </Button>
           </motion.div>
         )}
@@ -121,7 +121,7 @@ export function AIChatbot({ scope = 'admin' }: { scope?: ChatScope }) {
             className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-3rem)] flex flex-col rounded-2xl shadow-premium border border-border bg-card overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary to-emerald-700 text-white">
+            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary to-orange-800 text-white">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                   <Bot className="w-5 h-5" />
@@ -132,7 +132,7 @@ export function AIChatbot({ scope = 'admin' }: { scope?: ChatScope }) {
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
                   <div className="text-xs text-white/70 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     {scope === 'client' ? 'Connected to your client dashboard' : 'Connected to admin dashboard'}
                   </div>
                 </div>

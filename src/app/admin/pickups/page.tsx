@@ -145,7 +145,7 @@ export default function AdminPickupsPage() {
             </Button>
           )}
           {p.status === 'ASSIGNED' && (
-            <Button size="sm" onClick={(e) => { e.stopPropagation(); setPickupTarget(p) }} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button size="sm" onClick={(e) => { e.stopPropagation(); setPickupTarget(p) }} className="bg-green-600 hover:bg-green-700">
               <Truck className="w-3 h-3 mr-1" />{dict.statuses.PICKED_UP}
             </Button>
           )}

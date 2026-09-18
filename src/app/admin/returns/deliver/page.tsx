@@ -81,7 +81,7 @@ export default function Page() {
         icon={RotateCcw}
       />
 
-      <div className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-xs leading-relaxed text-cyan-800 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
         {isRTL ? (
           <>💡 تظهر هنا المرتجعات التي <b>تم استلامها من المنديب</b> — بعد تسليمها للعميل تُؤرشف تلقائياً في <b>إدارة المرتجعات</b>. لو مرتجع مش موجود هنا، استلمه أولاً من <b>استلام المرتجعات</b>.</>
         ) : (
@@ -96,7 +96,7 @@ export default function Page() {
         </Card>
         <Card className="p-4">
           <div className="text-xs text-muted-foreground">{isRTL ? 'محدد' : 'Selected'}</div>
-          <div className="text-xl font-bold text-emerald-600 mt-1">{selectedIds.length}</div>
+          <div className="text-xl font-bold text-green-600 mt-1">{selectedIds.length}</div>
         </Card>
       </div>
 
@@ -112,7 +112,7 @@ export default function Page() {
         selectionLabel={isRTL ? 'مرتجع محدد' : 'selected'}
         bulkBar={
           <>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" disabled={acting} onClick={() => applyAction('deliver')}>
+            <Button size="sm" className="bg-green-600 hover:bg-green-700" disabled={acting} onClick={() => applyAction('deliver')}>
               <Send className="w-3.5 h-3.5 mr-1.5" />
               {acting ? (isRTL ? 'جاري التسليم...' : 'Delivering...') : (isRTL ? 'تسليم للعميل' : 'Deliver to client')}
             </Button>

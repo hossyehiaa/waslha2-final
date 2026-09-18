@@ -64,7 +64,7 @@ export default function Page() {
                     <td className="py-3 px-4 text-xs">{o.reason}</td>
                     <td className="py-3 px-4 text-xs">{o.recipient}</td>
                     <td className="py-3 px-4 text-xs text-muted-foreground">{o.account}</td>
-                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (o.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : o.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')}>{o.status === 'APPROVED' ? 'معتمد' : o.status === 'PENDING' ? 'معلق' : 'مرفوض'}</span></td>
+                    <td className="py-3 px-4"><span className={'text-xs px-2 py-1 rounded ' + (o.status === 'APPROVED' ? 'bg-green-100 text-green-700' : o.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')}>{o.status === 'APPROVED' ? 'معتمد' : o.status === 'PENDING' ? 'معلق' : 'مرفوض'}</span></td>
                     <td className="py-3 px-4 text-xs text-muted-foreground hidden md:table-cell">{formatTimeAgo(o.createdAt)}</td>
                   </tr>
                 ))}

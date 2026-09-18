@@ -196,7 +196,7 @@ export function CreateInvoiceDialog({
             <span className="text-muted-foreground">{isRTL ? 'محدد:' : 'Selected:'} </span>
             <span className="font-bold mx-1">{selected.length}</span>
             <span className="text-muted-foreground">{isRTL ? 'أوردر بإجمالي' : 'orders • total'}</span>
-            <span className="font-bold text-emerald-600 mx-1">{formatCurrency(total)}</span>
+            <span className="font-bold text-green-600 mx-1">{formatCurrency(total)}</span>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={creating}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
@@ -341,7 +341,7 @@ export function EditInvoiceShipmentsDialog({
                   {available.map(s => {
                     const checked = addSet.includes(s.id)
                     return (
-                      <label key={s.id} className={cn('flex items-center gap-2 p-2.5 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/20', checked && 'opacity-100')}>
+                      <label key={s.id} className={cn('flex items-center gap-2 p-2.5 cursor-pointer hover:bg-green-50 dark:hover:bg-green-950/20', checked && 'opacity-100')}>
                         <Checkbox checked={checked} onCheckedChange={() => setAddSet(prev => checked ? prev.filter(x => x !== s.id) : [...prev, s.id])} />
                         <div className="flex-1 min-w-0">
                           <div className="font-mono text-xs font-medium truncate">{s.trackingNumber}</div>
@@ -354,13 +354,13 @@ export function EditInvoiceShipmentsDialog({
                 </div>
               )}
             </ScrollArea>
-            <p className="text-xs text-emerald-600">{isRTL ? 'علّم لإضافته للفاتورة' : 'Check to add to invoice'}</p>
+            <p className="text-xs text-green-600">{isRTL ? 'علّم لإضافته للفاتورة' : 'Check to add to invoice'}</p>
           </div>
         </div>
 
         <DialogFooter className="flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-muted-foreground">
-            {isRTL ? 'تغييرات:' : 'Changes:'} <span className="text-emerald-600 font-bold">+{addSet.length}</span> <span className="text-rose-600 font-bold">-{removeSet.length}</span>
+            {isRTL ? 'تغييرات:' : 'Changes:'} <span className="text-green-600 font-bold">+{addSet.length}</span> <span className="text-rose-600 font-bold">-{removeSet.length}</span>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>

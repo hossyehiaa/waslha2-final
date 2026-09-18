@@ -63,7 +63,7 @@ export default function AdminSettingsPage() {
         <>
           <Card className="p-6">
             <div className="mb-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-green-100 text-green-700 flex items-center justify-center">
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
@@ -115,7 +115,7 @@ export default function AdminSettingsPage() {
 
           <Card className="p-6">
             <div className="mb-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-stone-200 text-stone-700 flex items-center justify-center">
                 <Shield className="w-5 h-5" />
               </div>
               <div>

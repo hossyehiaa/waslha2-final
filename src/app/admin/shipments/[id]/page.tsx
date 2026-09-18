@@ -107,7 +107,7 @@ export default function ShipmentDetailPage() {
               width: 4in; height: 6in; display: flex; flex-direction: column;
             }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
-            .logo { font-size: 24px; font-weight: bold; color: #0d9488; }
+            .logo { font-size: 24px; font-weight: bold; color: #C02D01; }
             .tracking { font-size: 14px; font-family: monospace; font-weight: bold; }
             .barcode { text-align: center; margin: 12px 0; }
             .barcode svg { max-width: 100%; height: 60px; }
@@ -294,13 +294,13 @@ export default function ShipmentDetailPage() {
                   <div className="flex flex-col items-center">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                       step.done
-                        ? 'bg-emerald-500 text-white shadow-glow'
+                        ? 'bg-primary text-white shadow-glow'
                         : 'bg-muted text-muted-foreground'
                     }`}>
                       <step.icon className="w-5 h-5" />
                     </div>
                     {i < timeline.length - 1 && (
-                      <div className={`w-0.5 h-12 ${step.done ? 'bg-emerald-500' : 'bg-border'}`} />
+                      <div className={`w-0.5 h-12 ${step.done ? 'bg-primary' : 'bg-border'}`} />
                     )}
                   </div>
                   <div className="flex-1 pb-6">
@@ -314,7 +314,7 @@ export default function ShipmentDetailPage() {
                         </div>
                       </div>
                       {step.done && (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
                       )}
                     </div>
                   </div>
@@ -329,7 +329,7 @@ export default function ShipmentDetailPage() {
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t('المرسل', 'Sender')}</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 flex items-center justify-center">
                     <User className="w-4 h-4" />
                   </div>
                   <div>
@@ -358,7 +358,7 @@ export default function ShipmentDetailPage() {
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t('المستلم', 'Recipient')}</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 flex items-center justify-center">
                     <User className="w-4 h-4" />
                   </div>
                   <div>
@@ -498,7 +498,7 @@ export default function ShipmentDetailPage() {
             <div className="space-y-5">
               {/* Sender */}
               <div>
-                <h4 className="text-sm font-semibold mb-3 text-emerald-600 dark:text-emerald-400">{t('بيانات المرسل', 'Sender')}</h4>
+                <h4 className="text-sm font-semibold mb-3 text-green-600 dark:text-green-400">{t('بيانات المرسل', 'Sender')}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>{t('الاسم', 'Name')}</Label>
@@ -528,7 +528,7 @@ export default function ShipmentDetailPage() {
 
               {/* Recipient */}
               <div>
-                <h4 className="text-sm font-semibold mb-3 text-purple-600 dark:text-purple-400">{t('بيانات المستلم', 'Recipient')}</h4>
+                <h4 className="text-sm font-semibold mb-3 text-amber-700 dark:text-amber-400">{t('بيانات المستلم', 'Recipient')}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>{t('الاسم', 'Name')}</Label>

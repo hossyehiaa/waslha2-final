@@ -117,8 +117,8 @@ export default function AdminTransfersPage() {
         {[
           { label: L.totalTransfers, value: transfers.length, color: 'bg-blue-100 text-blue-700' },
           { label: L.pending, value: transfers.filter(t => t.status === 'PENDING_RECEIPT').length, color: 'bg-amber-100 text-amber-700' },
-          { label: L.received, value: transfers.filter(t => t.status === 'RECEIVED').length, color: 'bg-emerald-100 text-emerald-700' },
-          { label: L.totalValue, value: formatCurrency(transfers.reduce((s, t) => s + t.totalValue, 0)), color: 'bg-purple-100 text-purple-700' },
+          { label: L.received, value: transfers.filter(t => t.status === 'RECEIVED').length, color: 'bg-green-100 text-green-700' },
+          { label: L.totalValue, value: formatCurrency(transfers.reduce((s, t) => s + t.totalValue, 0)), color: 'bg-stone-200 text-stone-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>

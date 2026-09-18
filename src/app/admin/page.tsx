@@ -22,7 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
 import { useLanguage } from '@/components/language-provider'
 
-const PIE_COLORS = ['#0d9488', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#ef4444']
+const PIE_COLORS = ['#C02D01', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#ef4444']
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -54,17 +54,17 @@ export default function AdminDashboard() {
   }
 
   const stats: Stat[] = [
-    { label: L.todaysShipments, value: data.stats.todayShipments, icon: Package, color: 'bg-emerald-100 text-emerald-700', trend: '+12%', link: '/admin/shipments' },
+    { label: L.todaysShipments, value: data.stats.todayShipments, icon: Package, color: 'bg-red-100 text-red-700', trend: '+12%', link: '/admin/shipments' },
     { label: L.readyToCollect, value: data.stats.pendingCod.toLocaleString('en-US', { maximumFractionDigits: 0 }), icon: Wallet, color: 'bg-amber-100 text-amber-700', trend: '+5.2%', link: '/admin/finance' },
-    { label: L.activeDrivers, value: data.stats.activeDrivers, icon: Truck, color: 'bg-cyan-100 text-cyan-700', link: '/admin/drivers' },
-    { label: L.totalClients, value: data.stats.totalClients, icon: Users, color: 'bg-purple-100 text-purple-700', link: '/admin/clients' },
+    { label: L.activeDrivers, value: data.stats.activeDrivers, icon: Truck, color: 'bg-orange-100 text-orange-700', link: '/admin/drivers' },
+    { label: L.totalClients, value: data.stats.totalClients, icon: Users, color: 'bg-stone-200 text-stone-700', link: '/admin/clients' },
   ]
 
   const secondaryStats: Stat[] = [
     { label: L.pendingPickups, value: data.stats.pendingPickups, icon: PackageCheck, color: 'bg-amber-100 text-amber-700', link: '/admin/pickups' },
-    { label: L.pendingTransfers, value: data.stats.pendingTransfers, icon: ArrowLeftRight, color: 'bg-blue-100 text-blue-700', link: '/admin/transfers' },
+    { label: L.pendingTransfers, value: data.stats.pendingTransfers, icon: ArrowLeftRight, color: 'bg-stone-200 text-stone-700', link: '/admin/transfers' },
     { label: L.payoutRequests, value: data.stats.payoutRequests, icon: Wallet, color: 'bg-rose-100 text-rose-700', link: '/admin/finance/payouts' },
-    { label: L.totalBranches, value: data.stats.totalBranches, icon: Building2, color: 'bg-teal-100 text-teal-700', link: '/admin/branches' },
+    { label: L.totalBranches, value: data.stats.totalBranches, icon: Building2, color: 'bg-orange-100 text-orange-700', link: '/admin/branches' },
   ]
 
   return (
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
                 {L.created}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                 {L.delivered}
               </span>
             </div>
@@ -108,8 +108,8 @@ export default function AdminDashboard() {
             <AreaChart data={data.chart.days}>
               <defs>
                 <linearGradient id="colorShip" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0d9488" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#C02D01" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#C02D01" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorDel" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
                   fontSize: '12px',
                 }}
               />
-              <Area type="monotone" dataKey="shipments" stroke="#0d9488" strokeWidth={2} fill="url(#colorShip)" />
+              <Area type="monotone" dataKey="shipments" stroke="#C02D01" strokeWidth={2} fill="url(#colorShip)" />
               <Area type="monotone" dataKey="delivered" stroke="#10b981" strokeWidth={2} fill="url(#colorDel)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -188,13 +188,13 @@ export default function AdminDashboard() {
             <Wallet className="w-5 h-5 text-muted-foreground" />
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-green-50 dark:bg-green-950/30">
               <div>
                 <div className="text-xs text-muted-foreground">{L.paid}</div>
-                <div className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(data.stats.paidCod)}</div>
+                <div className="text-xl font-bold text-green-700 dark:text-green-400">{formatCurrency(data.stats.paidCod)}</div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
-                <Wallet className="w-5 h-5 text-emerald-700" />
+              <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-green-700" />
               </div>
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30">

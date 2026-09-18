@@ -66,7 +66,7 @@ export function downloadExcel(data: Record<string, any>[], filename: string, hea
     <body>
       <table border="1">
         <thead>
-          <tr style="background-color:#0d9488;color:white;font-weight:bold;">
+          <tr style="background-color:#C02D01;color:white;font-weight:bold;">
             ${columns.map(c => `<th>${escapeHTML(c.label)}</th>`).join('')}
           </tr>
         </thead>

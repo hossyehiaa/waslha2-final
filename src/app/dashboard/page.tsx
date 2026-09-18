@@ -45,10 +45,10 @@ export default function ClientDashboard() {
   }
 
   const stats: Stat[] = [
-    { label: L.activeShipments, value: data.stats.activeShipments, icon: Package, color: 'bg-emerald-100 text-emerald-700', link: '/dashboard/shipments' },
+    { label: L.activeShipments, value: data.stats.activeShipments, icon: Package, color: 'bg-red-100 text-red-700', link: '/dashboard/shipments' },
     { label: L.codAvailable, value: formatCurrency(data.stats.codBalance), icon: Wallet, color: 'bg-amber-100 text-amber-700', link: '/dashboard/cod' },
     { label: L.codPending, value: formatCurrency(data.stats.codPending), icon: Clock, color: 'bg-rose-100 text-rose-700', link: '/dashboard/cod' },
-    { label: L.totalShipments, value: data.stats.totalShipments, icon: TrendingUp, color: 'bg-purple-100 text-purple-700', link: '/dashboard/shipments' },
+    { label: L.totalShipments, value: data.stats.totalShipments, icon: TrendingUp, color: 'bg-stone-200 text-stone-700', link: '/dashboard/shipments' },
   ]
 
   return (
@@ -77,15 +77,15 @@ export default function ClientDashboard() {
             <AreaChart data={data.chart.days}>
               <defs>
                 <linearGradient id="colorShip" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0d9488" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#C02D01" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#C02D01" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
               <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} reversed={isRTL} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} orientation={isRTL ? 'right' : 'left'} />
               <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.75rem', fontSize: '12px' }} />
-              <Area type="monotone" dataKey="shipments" stroke="#0d9488" strokeWidth={2} fill="url(#colorShip)" />
+              <Area type="monotone" dataKey="shipments" stroke="#C02D01" strokeWidth={2} fill="url(#colorShip)" />
             </AreaChart>
           </ResponsiveContainer>
         </Card>
@@ -96,9 +96,9 @@ export default function ClientDashboard() {
             <p className="text-sm text-muted-foreground">{L.walletOverview}</p>
           </div>
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-100 dark:border-emerald-900">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40 border border-orange-100 dark:border-orange-900">
               <div className="text-xs text-muted-foreground">{L.availableBalance}</div>
-              <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{formatCurrency(data.stats.codBalance)}</div>
+              <div className="text-2xl font-bold text-primary dark:text-primary mt-1">{formatCurrency(data.stats.codBalance)}</div>
               <Button size="sm" className="mt-3 w-full" onClick={() => router.push('/dashboard/cod')}>
                 <Wallet className="w-3.5 h-3.5 mr-1.5" />
                 {L.requestPayout}
@@ -151,9 +151,9 @@ export default function ClientDashboard() {
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/40 transition-colors cursor-pointer"
               >
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                  s.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-700' :
+                  s.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
                   s.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                  'bg-cyan-100 text-cyan-700'
+                  'bg-orange-100 text-orange-700'
                 }`}>
                   {s.status === 'DELIVERED' ? <CheckCircle2 className="w-5 h-5" /> : <Package className="w-5 h-5" />}
                 </div>
@@ -192,7 +192,7 @@ export default function ClientDashboard() {
                   <div className="text-xs text-muted-foreground">{L.period}: {s.period}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-emerald-600">{formatCurrency(s.netAmount)}</div>
+                  <div className="font-bold text-green-600">{formatCurrency(s.netAmount)}</div>
                   <StatusBadge status={s.status} />
                 </div>
               </div>

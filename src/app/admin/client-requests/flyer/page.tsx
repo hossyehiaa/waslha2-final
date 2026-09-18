@@ -54,7 +54,7 @@ export default function Page() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4"><div className="text-xl font-bold">{requests.length}</div><div className="text-xs text-muted-foreground mt-0.5">إجمالي الطلبات</div></Card>
         <Card className="p-4"><div className="text-xl font-bold text-amber-600">{requests.filter(r => r.status === 'PENDING').length}</div><div className="text-xs text-muted-foreground mt-0.5">معلقة</div></Card>
-        <Card className="p-4"><div className="text-xl font-bold text-emerald-600">{requests.filter(r => r.status === 'APPROVED').length}</div><div className="text-xs text-muted-foreground mt-0.5">معتمدة</div></Card>
+        <Card className="p-4"><div className="text-xl font-bold text-green-600">{requests.filter(r => r.status === 'APPROVED').length}</div><div className="text-xs text-muted-foreground mt-0.5">معتمدة</div></Card>
         <Card className="p-4"><div className="text-xl font-bold">{requests.reduce((s, r) => s + r.quantity, 0)}</div><div className="text-xs text-muted-foreground mt-0.5">إجمالي الكمية</div></Card>
       </div>
 
@@ -93,7 +93,7 @@ export default function Page() {
                       <div className="flex gap-1">
                         {r.status === 'PENDING' && (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => handleAction(r.id, 'approve')} className="text-emerald-600">
+                            <Button size="sm" variant="outline" onClick={() => handleAction(r.id, 'approve')} className="text-green-600">
                               <Check className="w-3.5 h-3.5 mr-1" />اعتماد
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => handleAction(r.id, 'reject')} className="text-destructive">
@@ -102,7 +102,7 @@ export default function Page() {
                           </>
                         )}
                         {r.status === 'APPROVED' && (
-                          <Button size="sm" onClick={() => handleAction(r.id, 'fulfill')} className="bg-emerald-600 hover:bg-emerald-700">
+                          <Button size="sm" onClick={() => handleAction(r.id, 'fulfill')} className="bg-green-600 hover:bg-green-700">
                             <Package className="w-3.5 h-3.5 mr-1" />تسليم
                           </Button>
                         )}

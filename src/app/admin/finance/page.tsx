@@ -230,7 +230,7 @@ export default function AdminFinancePage() {
       header: isRTL ? 'رقم الفاتورة' : 'Invoice #',
       sortable: true,
       cell: (i) => (
-        <span className={cn('font-mono font-medium text-xs', i.status === 'PENDING_PAYMENT' && 'text-purple-600')}>
+        <span className={cn('font-mono font-medium text-xs', i.status === 'PENDING_PAYMENT' && 'text-amber-700')}>
           {i.invoiceNumber}
         </span>
       ),
@@ -278,7 +278,7 @@ export default function AdminFinancePage() {
       key: 'amount',
       header: isRTL ? 'المبلغ' : 'Amount',
       sortable: true,
-      cell: (p) => <span className="font-bold text-emerald-600 text-xs">{formatCurrency(p.amount)}</span>,
+      cell: (p) => <span className="font-bold text-green-600 text-xs">{formatCurrency(p.amount)}</span>,
     },
     {
       key: 'invoiceCount',
@@ -321,7 +321,7 @@ export default function AdminFinancePage() {
     { key: 'period', header: L.period, hideOnMobile: true, cell: (s) => <span className="text-xs">{s.period}</span> },
     { key: 'shipmentCount', header: L.shipments, sortable: true, cell: (s) => <span className="font-medium">{s.shipmentCount}</span> },
     { key: 'totalAmount', header: L.totalCod, sortable: true, cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.totalAmount)}</span> },
-    { key: 'netAmount', header: L.netPayable, sortable: true, cell: (s) => <span className="font-bold text-emerald-600">{formatCurrency(s.netAmount)}</span> },
+    { key: 'netAmount', header: L.netPayable, sortable: true, cell: (s) => <span className="font-bold text-green-600">{formatCurrency(s.netAmount)}</span> },
     { key: 'status', header: dict.common.status, cell: (s) => <StatusBadge status={s.status} /> },
     {
       key: 'actions', header: dict.common.actions,
@@ -333,7 +333,7 @@ export default function AdminFinancePage() {
             </Button>
           )}
           {(s.status === 'PENDING' || s.status === 'APPROVED') && (
-            <Button size="sm" onClick={(e) => { e.stopPropagation(); handleAction(s.id, 'pay') }} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button size="sm" onClick={(e) => { e.stopPropagation(); handleAction(s.id, 'pay') }} className="bg-green-600 hover:bg-green-700">
               <DollarSign className="w-3.5 h-3.5 mr-1" />
               {dict.common.pay}
             </Button>
@@ -360,10 +360,10 @@ export default function AdminFinancePage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: isRTL ? 'فواتير بانتظار السداد' : 'Awaiting payment', value: pendingPaymentInvoices.length, icon: Clock, color: 'bg-purple-100 text-purple-700' },
+          { label: isRTL ? 'فواتير بانتظار السداد' : 'Awaiting payment', value: pendingPaymentInvoices.length, icon: Clock, color: 'bg-amber-100 text-amber-800' },
           { label: isRTL ? 'إجمالي المستحقات' : 'Total dues', value: formatCurrency(totalDue), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
-          { label: isRTL ? 'مدفوعات مسجلة' : 'Recorded payments', value: payments.length, icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
-          { label: isRTL ? 'قيمة المدفوعات' : 'Paid value', value: formatCurrency(paidToday), icon: TrendingUp, color: 'bg-teal-100 text-teal-700' },
+          { label: isRTL ? 'مدفوعات مسجلة' : 'Recorded payments', value: payments.length, icon: CheckCircle2, color: 'bg-green-100 text-green-700' },
+          { label: isRTL ? 'قيمة المدفوعات' : 'Paid value', value: formatCurrency(paidToday), icon: TrendingUp, color: 'bg-orange-100 text-orange-700' },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <Card className="p-5">
@@ -409,7 +409,7 @@ export default function AdminFinancePage() {
               </SelectContent>
             </Select>
             {pendingPaymentInvoices.length > 0 && (
-              <span className="text-xs text-purple-600 bg-purple-100 dark:bg-purple-950 dark:text-purple-300 px-2 py-1 rounded-full">
+              <span className="text-xs text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-300 px-2 py-1 rounded-full">
                 {isRTL ? `${pendingPaymentInvoices.length} فاتورة مرسلة من صفحة الفواتير` : `${pendingPaymentInvoices.length} sent from invoices page`}
               </span>
             )}
@@ -430,7 +430,7 @@ export default function AdminFinancePage() {
               <>
                 <Button
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 shadow-premium"
+                  className="bg-green-600 hover:bg-green-700 shadow-premium"
                   disabled={paying}
                   onClick={() => setPayOpen(true)}
                 >

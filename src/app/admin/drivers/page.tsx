@@ -137,7 +137,7 @@ export default function AdminDriversPage() {
       sortable: true,
       cell: (d) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 flex items-center justify-center font-bold text-sm shrink-0">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500/20 to-amber-500/20 flex items-center justify-center font-bold text-sm shrink-0">
             {(d.fullName || '?').split(' ').map(w => w[0]).slice(0, 2).join('')}
           </div>
           <div>
@@ -218,9 +218,9 @@ export default function AdminDriversPage() {
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: L.totalDrivers, value: drivers.length, icon: Truck, color: 'bg-cyan-100 text-cyan-700' },
-          { label: L.activeNow, value: drivers.filter(d => d.status === 'ACTIVE').length, icon: Star, color: 'bg-emerald-100 text-emerald-700' },
-          { label: L.totalDeliveries, value: drivers.reduce((s, d) => s + d.totalDeliveries, 0), icon: Package, color: 'bg-purple-100 text-purple-700' },
+          { label: L.totalDrivers, value: drivers.length, icon: Truck, color: 'bg-orange-100 text-orange-700' },
+          { label: L.activeNow, value: drivers.filter(d => d.status === 'ACTIVE').length, icon: Star, color: 'bg-red-100 text-red-700' },
+          { label: L.totalDeliveries, value: drivers.reduce((s, d) => s + d.totalDeliveries, 0), icon: Package, color: 'bg-stone-200 text-stone-700' },
           { label: L.pendingEarnings, value: formatCurrency(drivers.reduce((s, d) => s + d.pendingEarnings, 0)), icon: Wallet, color: 'bg-amber-100 text-amber-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">

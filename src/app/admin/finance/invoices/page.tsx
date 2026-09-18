@@ -271,8 +271,8 @@ export default function AdminInvoicesPage() {
               {[
                 { label: isRTL ? 'غير مدفوع' : 'Unpaid', value: stats.unpaidCount, icon: Receipt, color: 'bg-amber-100 text-amber-700' },
                 { label: isRTL ? 'إجمالي المستحق' : 'Total due', value: formatCurrency(stats.unpaidTotal), icon: Wallet, color: 'bg-rose-100 text-rose-700' },
-                { label: isRTL ? 'بانتظار السداد' : 'Sent to payment', value: stats.pendingPayment, icon: Clock, color: 'bg-purple-100 text-purple-700' },
-                { label: isRTL ? 'مدفوعة' : 'Paid', value: stats.paid, icon: BadgeDollarSign, color: 'bg-emerald-100 text-emerald-700' },
+                { label: isRTL ? 'بانتظار السداد' : 'Sent to payment', value: stats.pendingPayment, icon: Clock, color: 'bg-amber-100 text-amber-800' },
+                { label: isRTL ? 'مدفوعة' : 'Paid', value: stats.paid, icon: BadgeDollarSign, color: 'bg-green-100 text-green-700' },
               ].map((s, i) => (
                 <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                   <Card className="p-4">
@@ -313,7 +313,7 @@ export default function AdminInvoicesPage() {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  className="bg-green-600 hover:bg-green-700"
                   disabled={paying}
                   onClick={() => setPayOpen(true)}
                 >

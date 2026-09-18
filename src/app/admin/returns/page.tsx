@@ -157,10 +157,10 @@ export default function AdminReturnsPage() {
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <div className="w-9 h-9 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
               <Send className="w-4 h-4" />
             </div>
-            <a href="/admin/returns/deliver" className="text-[10px] text-cyan-700 hover:underline flex items-center gap-0.5">
+            <a href="/admin/returns/deliver" className="text-[10px] text-amber-700 hover:underline flex items-center gap-0.5">
               <Link2 className="w-3 h-3" />
               {isRTL ? 'اذهب' : 'Go'}
             </a>
@@ -169,14 +169,14 @@ export default function AdminReturnsPage() {
           <div className="text-xs text-muted-foreground mt-0.5">{isRTL ? 'جاهز للتسليم للعميل' : 'Ready to deliver to client'}</div>
         </Card>
         <Card className="p-4">
-          <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2">
+          <div className="w-9 h-9 rounded-lg bg-green-100 text-green-700 flex items-center justify-center mb-2">
             <Archive className="w-4 h-4" />
           </div>
           <div className="text-xl font-bold">{counts.RETURNED_TO_CLIENT}</div>
           <div className="text-xs text-muted-foreground mt-0.5">{isRTL ? 'تم التسليم للعميل (أرشيف)' : 'Delivered to client (archive)'}</div>
         </Card>
         <Card className="p-4">
-          <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center mb-2">
+          <div className="w-9 h-9 rounded-lg bg-red-100 text-red-700 flex items-center justify-center mb-2">
             <RotateCcw className="w-4 h-4" />
           </div>
           <div className="text-xl font-bold">{total}</div>

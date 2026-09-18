@@ -14,7 +14,7 @@ import { formatCurrency } from '@/lib/format'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
 
-const PIE_COLORS = ['#0d9488', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#ef4444']
+const PIE_COLORS = ['#C02D01', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#ef4444']
 
 export default function AdminReportsPage() {
   const { dict, isRTL } = useLanguage()
@@ -69,9 +69,9 @@ export default function AdminReportsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: L.totalRevenue, value: formatCurrency(monthlyData.reduce((s, m) => s + m.revenue, 0)), icon: Wallet, color: 'bg-emerald-100 text-emerald-700', trend: '+12.4%' },
-          { label: L.totalShipments, value: monthlyData.reduce((s, m) => s + m.shipments, 0).toLocaleString(), icon: Package, color: 'bg-purple-100 text-purple-700', trend: '+8.1%' },
-          { label: L.activeClients, value: data.stats.totalClients, icon: Users, color: 'bg-cyan-100 text-cyan-700', trend: '+5.3%' },
+          { label: L.totalRevenue, value: formatCurrency(monthlyData.reduce((s, m) => s + m.revenue, 0)), icon: Wallet, color: 'bg-green-100 text-green-700', trend: '+12.4%' },
+          { label: L.totalShipments, value: monthlyData.reduce((s, m) => s + m.shipments, 0).toLocaleString(), icon: Package, color: 'bg-red-100 text-red-700', trend: '+8.1%' },
+          { label: L.activeClients, value: data.stats.totalClients, icon: Users, color: 'bg-stone-200 text-stone-700', trend: '+5.3%' },
           { label: L.activeDrivers, value: data.stats.activeDrivers, icon: Truck, color: 'bg-amber-100 text-amber-700', trend: '+2.1%' },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -80,7 +80,7 @@ export default function AdminReportsPage() {
                 <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center`}>
                   <s.icon className="w-5 h-5" />
                 </div>
-                <span className="text-xs text-emerald-600 font-medium flex items-center gap-0.5">
+                <span className="text-xs text-green-600 font-medium flex items-center gap-0.5">
                   <TrendingUp className="w-3 h-3" />{s.trend}
                 </span>
               </div>
@@ -102,7 +102,7 @@ export default function AdminReportsPage() {
             <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} reversed={isRTL} />
             <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} orientation={isRTL ? 'right' : 'left'} />
             <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.75rem', fontSize: '12px' }} />
-            <Bar dataKey="shipments" fill="#0d9488" radius={[6, 6, 0, 0]} name={dict.nav.shipments} />
+            <Bar dataKey="shipments" fill="#C02D01" radius={[6, 6, 0, 0]} name={dict.nav.shipments} />
             <Bar dataKey="revenue" fill="#f59e0b" radius={[6, 6, 0, 0]} name={L.totalRevenue} />
           </BarChart>
         </ResponsiveContainer>
@@ -142,15 +142,15 @@ export default function AdminReportsPage() {
             <AreaChart data={data.chart.days}>
               <defs>
                 <linearGradient id="colorShip" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0d9488" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#C02D01" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#C02D01" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
               <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} reversed={isRTL} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} orientation={isRTL ? 'right' : 'left'} />
               <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.75rem', fontSize: '12px' }} />
-              <Area type="monotone" dataKey="shipments" stroke="#0d9488" strokeWidth={2} fill="url(#colorShip)" />
+              <Area type="monotone" dataKey="shipments" stroke="#C02D01" strokeWidth={2} fill="url(#colorShip)" />
             </AreaChart>
           </ResponsiveContainer>
         </Card>

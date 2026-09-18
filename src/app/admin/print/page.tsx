@@ -142,7 +142,7 @@ export default function AdminPrintPage() {
               flex-direction: column;
             }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
-            .logo { font-size: 24px; font-weight: bold; color: #0d9488; }
+            .logo { font-size: 24px; font-weight: bold; color: #C02D01; }
             .tracking { font-size: 14px; font-family: monospace; font-weight: bold; }
             .barcode { text-align: center; margin: 12px 0; }
             .barcode svg { max-width: 100%; height: 60px; }

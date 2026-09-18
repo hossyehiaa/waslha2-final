@@ -83,8 +83,8 @@ export default function AdminPayoutsPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
           { label: L.pendingRequests, value: payouts.filter(p => p.status === 'PENDING').length, icon: Clock, color: 'bg-amber-100 text-amber-700' },
-          { label: L.totalPendingValue, value: formatCurrency(payouts.filter(p => p.status === 'PENDING').reduce((s, p) => s + p.amount, 0)), icon: Wallet, color: 'bg-purple-100 text-purple-700' },
-          { label: L.approved, value: payouts.filter(p => p.status === 'APPROVED').length, icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
+          { label: L.totalPendingValue, value: formatCurrency(payouts.filter(p => p.status === 'PENDING').reduce((s, p) => s + p.amount, 0)), icon: Wallet, color: 'bg-amber-100 text-amber-800' },
+          { label: L.approved, value: payouts.filter(p => p.status === 'APPROVED').length, icon: CheckCircle2, color: 'bg-green-100 text-green-700' },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center mb-3`}>

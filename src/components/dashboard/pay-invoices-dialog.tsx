@@ -70,7 +70,7 @@ export function PayInvoicesDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BadgeDollarSign className="w-4 h-4 text-emerald-600" />
+            <BadgeDollarSign className="w-4 h-4 text-green-600" />
             {isRTL ? 'سداد الفواتير المحددة' : 'Pay selected invoices'}
           </DialogTitle>
           <DialogDescription>
@@ -152,7 +152,7 @@ export function PayInvoicesDialog({
           <Button
             onClick={() => onConfirm({ method, note, proofUrl: proof })}
             disabled={loading}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-green-600 hover:bg-green-700"
           >
             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             <ImageIcon className="w-4 h-4 mr-1.5" />
