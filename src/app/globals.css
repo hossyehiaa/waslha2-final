@@ -180,6 +180,7 @@
   }
 
   .gradient-text {
+    display: inline-block;
     background: linear-gradient(135deg, var(--primary), oklch(0.62 0.15 65));
     -webkit-background-clip: text;
     background-clip: text;
