@@ -181,11 +181,9 @@
 
   .gradient-text {
     display: inline-block;
-    background: linear-gradient(135deg, var(--primary), oklch(0.62 0.15 65));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
+    background: none;
+    color: var(--primary);
+    -webkit-text-fill-color: currentColor;
   }
 
   .gradient-primary {
