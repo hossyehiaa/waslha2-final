@@ -24,7 +24,7 @@ async function main() {
     data: { name: 'Tanta', code: 'TAN', governorate: 'Gharbia', pricingBand: 'IMAGE_85', standardPrice: 85, status: 'ACTIVE' },
   })
   const aswan = await db.city.create({
-    data: { name: 'Aswan', code: 'ASW', governorate: 'Aswan', pricingBand: 'UPPER_EGYPT', standardPrice: 100, status: 'ACTIVE' },
+    data: { name: 'Aswan', code: 'ASW', governorate: 'Aswan', pricingBand: 'UPPER_EGYPT', standardPrice: 105, status: 'ACTIVE' },
   })
 
   const zones = await db.zone.createMany({

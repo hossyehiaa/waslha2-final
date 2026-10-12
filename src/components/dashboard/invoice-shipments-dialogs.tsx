@@ -33,7 +33,7 @@ type Shipment = {
 
 /**
  * Dialog for creating a new invoice by selecting a client's uninvoiced orders.
- * The invoice total = sum(shippingCost + codFee) of selected shipments.
+ * The invoice total = sum(COD - shippingCost - codFee) of selected shipments.
  */
 export function CreateInvoiceDialog({
   open,
@@ -83,7 +83,7 @@ export function CreateInvoiceDialog({
   }, [shipments, search])
 
   const selectedShipments = shipments.filter(s => selected.includes(s.id))
-  const total = selectedShipments.reduce((sum, s) => sum + (s.shippingCost || 0), 0)
+  const total = selectedShipments.reduce((sum, s) => sum + (s.codAmount || 0) - (s.shippingCost || 0), 0)
 
   function toggleAll() {
     if (filtered.length > 0 && filtered.every(s => selected.includes(s.id))) {
@@ -123,7 +123,7 @@ export function CreateInvoiceDialog({
             {isRTL ? 'فاتورة جديدة من أوردرات' : 'New invoice from orders'}
           </DialogTitle>
           <DialogDescription>
-            {isRTL ? 'اختر العميل ثم الأوردرات — الإجمالي = مجموع رسوم الشحن' : 'Pick the client then the orders — total = sum of shipping fees'}
+            {isRTL ? 'اختر العميل ثم الأوردرات — الإجمالي = التحصيل بعد خصم الشحن' : 'Pick the client then the orders — total = COD less shipping fees'}
           </DialogDescription>
         </DialogHeader>
 
@@ -179,7 +179,7 @@ export function CreateInvoiceDialog({
                             <div className="text-xs text-muted-foreground">{s.senderCity || ''} → {s.recipientCity || ''}</div>
                           </div>
                           <div className="text-xs font-bold text-amber-600 whitespace-nowrap">
-                            {formatCurrency(s.shippingCost + s.codAmount)}
+                            {formatCurrency(s.codAmount - s.shippingCost)}
                           </div>
                         </label>
                       )
@@ -316,7 +316,7 @@ export function EditInvoiceShipmentsDialog({
                           <div className="font-mono text-xs font-medium truncate">{s.trackingNumber}</div>
                           <div className="text-xs text-muted-foreground truncate">{s.route}</div>
                         </div>
-                        <div className="text-xs font-bold whitespace-nowrap">{formatCurrency(s.shippingCost + s.codAmount)}</div>
+                        <div className="text-xs font-bold whitespace-nowrap">{formatCurrency(s.codAmount - s.shippingCost)}</div>
                       </label>
                     )
                   })}
@@ -347,7 +347,7 @@ export function EditInvoiceShipmentsDialog({
                           <div className="font-mono text-xs font-medium truncate">{s.trackingNumber}</div>
                           <div className="text-xs text-muted-foreground truncate">{s.route}</div>
                         </div>
-                        <div className="text-xs font-bold whitespace-nowrap">{formatCurrency(s.shippingCost + s.codAmount)}</div>
+                        <div className="text-xs font-bold whitespace-nowrap">{formatCurrency(s.codAmount - s.shippingCost)}</div>
                       </label>
                     )
                   })}

@@ -66,7 +66,7 @@ Content-Type: application/json
 
 The quote request uses the same shipment fields as `POST /shipments`, but it does not create a shipment and does not need an `Idempotency-Key`. It requires `shipments:read` and returns the current net Wslahali price so the merchant can display it during checkout.
 
-For Standard delivery, the current tariff is symmetric by route: Cairo/Giza local routes are 80 EGP; the governorates listed in the approved tariff image are 85 EGP; Upper Egypt is 100 EGP; New Valley and Hurghada are 110 EGP; and Sharm El Sheikh is 135 EGP. When two endpoints belong to different bands, the higher band applies. COD Fee is 0 EGP. The standard included weight is 0.5 kg and the configured additional-weight charge remains 8 EGP per kilogram increment.
+For Standard delivery, the current tariff is symmetric by route: Cairo/Giza local routes are 80 EGP; the governorates listed in the approved tariff image are 85 EGP; Upper Egypt is 105 EGP; New Valley and Hurghada are 110 EGP; and Sharm El Sheikh is 135 EGP. When two endpoints belong to different bands, the higher band applies. COD Fee is 0 EGP. The standard included weight is 0.5 kg and the configured additional-weight charge remains 8 EGP per kilogram increment.
 
 ```json
 {

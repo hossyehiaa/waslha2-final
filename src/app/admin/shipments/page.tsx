@@ -10,6 +10,7 @@ import { BulkStatusDialog } from '@/components/dashboard/bulk-status-dialog'
 import { useBulkStatus } from '@/components/dashboard/use-bulk-status'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatTimeAgo } from '@/lib/format'
+import { downloadExcel } from '@/lib/export-utils'
 import { toast } from 'sonner'
 import { useLanguage } from '@/components/language-provider'
 
@@ -56,6 +57,25 @@ export default function AdminShipmentsPage() {
   useEffect(() => { load() }, [load])
 
   const { selectedIds, setSelectedIds, dialogOpen, setDialogOpen, loading: applying, applyStatus } = useBulkStatus(load)
+
+  function exportShipments() {
+    const rows = selectedIds.length > 0
+      ? shipments.filter((shipment) => selectedIds.includes(shipment.id))
+      : shipments
+    const exportRows = rows.map((shipment) => ({
+      [isRTL ? 'رقم التتبع' : 'Tracking #']: shipment.trackingNumber,
+      [isRTL ? 'العميل' : 'Client']: shipment.client,
+      [isRTL ? 'المسار' : 'Route']: `${shipment.senderCity} → ${shipment.recipientCity}`,
+      [isRTL ? 'المستلم' : 'Recipient']: shipment.recipientName,
+      [isRTL ? 'هاتف المستلم' : 'Recipient phone']: shipment.recipientPhone,
+      [isRTL ? 'الحالة' : 'Status']: shipment.status,
+      [isRTL ? 'حالة التحصيل' : 'Payment status']: shipment.paymentStatus,
+      [isRTL ? 'التحصيل' : 'COD']: shipment.codAmount,
+      [isRTL ? 'سعر الشحن' : 'Shipping cost']: shipment.shippingCost,
+      [isRTL ? 'تاريخ الإنشاء' : 'Created at']: shipment.createdAt,
+    }))
+    downloadExcel(exportRows, 'shipments')
+  }
 
   const columns: Column<Shipment>[] = [
     {
@@ -121,7 +141,7 @@ export default function AdminShipmentsPage() {
         icon={Package}
         actions={
           <>
-            <Button variant="outline">
+            <Button variant="outline" onClick={exportShipments} disabled={loading || shipments.length === 0}>
               <Download className="w-4 h-4 mr-2" />
               {dict.common.export}
             </Button>

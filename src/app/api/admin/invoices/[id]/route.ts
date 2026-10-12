@@ -130,9 +130,9 @@ export async function PATCH(
       // Recompute totals from current set
       const current = await tx.shipment.findMany({
         where: { invoiceId: id },
-        select: { shippingCost: true, codFee: true },
+        select: { codAmount: true, shippingCost: true, codFee: true },
       })
-      const amount = current.reduce((s, x) => s + (x.shippingCost || 0) + (x.codFee || 0), 0)
+      const amount = current.reduce((s, x) => s + (x.codAmount || 0) - (x.shippingCost || 0) - (x.codFee || 0), 0)
       await tx.invoice.update({ where: { id }, data: { amount, total: amount } })
     })
 

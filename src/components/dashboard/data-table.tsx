@@ -116,6 +116,17 @@ export function DataTable<T extends { id: string }>({
     return result
   }, [data, search, searchKeys, sortKey, sortDir])
 
+  function getExportData(): Record<string, any>[] {
+    const rows = effectiveSelected.length > 0
+      ? data.filter((row) => effectiveSelected.includes(row.id))
+      : filtered
+    return rows.map((row) => {
+      const obj: Record<string, any> = {}
+      columns.forEach((col) => { obj[col.header] = getCellValue(row, col.key) })
+      return obj
+    })
+  }
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const currentPage = Math.min(page, totalPages)
   const paged = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
@@ -202,23 +213,13 @@ export function DataTable<T extends { id: string }>({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => {
-                const exportData = filtered.map(row => {
-                  const obj: Record<string, any> = {}
-                  columns.forEach(col => { obj[col.header] = getCellValue(row, col.key) })
-                  return obj
-                })
-                downloadCSV(exportData, exportFilename)
+                downloadCSV(getExportData(), exportFilename)
               }}>
                 <FileText className="w-4 h-4 mr-2" />
                 CSV
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-                const exportData = filtered.map(row => {
-                  const obj: Record<string, any> = {}
-                  columns.forEach(col => { obj[col.header] = getCellValue(row, col.key) })
-                  return obj
-                })
-                downloadExcel(exportData, exportFilename)
+                downloadExcel(getExportData(), exportFilename)
               }}>
                 <FileSpreadsheet className="w-4 h-4 mr-2" />
                 Excel

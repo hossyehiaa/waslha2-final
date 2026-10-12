@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/invoices — create a new invoice from a set of client orders.
 // Body: { clientId, shipmentIds: string[], note? }
-// The invoice amount/total is the sum of shippingCost + codFee of those shipments.
+// The invoice amount/total is the net COD payable to the client after shipping and COD fees.
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     const shipments = await db.shipment.findMany({
       where: { id: { in: shipmentIds }, clientId },
-      select: { id: true, shippingCost: true, codFee: true, invoiceId: true },
+      select: { id: true, codAmount: true, shippingCost: true, codFee: true, invoiceId: true },
     })
 
     if (shipments.length === 0) return NextResponse.json({ error: 'لا توجد شحنات صالحة' }, { status: 400 })
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `${alreadyLinked} من الشحنات مضافة لفاتورة أخرى — أزِلها أولاً` }, { status: 400 })
     }
 
-    const amount = shipments.reduce((s, x) => s + (x.shippingCost || 0) + (x.codFee || 0), 0)
+    const amount = shipments.reduce((s, x) => s + (x.codAmount || 0) - (x.shippingCost || 0) - (x.codFee || 0), 0)
     const reference = `INV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
 
     const invoice = await db.$transaction(async (tx) => {

@@ -205,7 +205,7 @@ export type ShippingQuote = { shippingCost: number; codFee: number; totalCost: n
 export const STANDARD_TARIFF = {
   LOCAL: 80,
   IMAGE_85: 85,
-  UPPER_EGYPT: 100,
+  UPPER_EGYPT: 105,
   NEW_VALLEY_HURGHADA: 110,
   SHARM_EL_SHEIKH: 135,
 } as const
@@ -258,7 +258,7 @@ export async function calculateShippingCost(input: PartnerShipmentInput, senderC
     //    (route-specific or generic) instead of failing — this keeps orders flowing.
     // 3) Only throw when neither cities nor rules can price the route.
     //
-    // FLAT TARIFF: the published price list (85 / 100 / 110 / 135 + 80 local) is
+    // FLAT TARIFF: the published price list (85 / 105 / 110 / 135 + 80 local) is
     // charged as-is — no weight surcharge and no priority surcharge, so the
     // price the admin sees is exactly the price the client sees.
     let basePrice: number | null = null
