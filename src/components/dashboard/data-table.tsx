@@ -21,6 +21,8 @@ export type Column<T> = {
   key: string
   header: string
   cell: (row: T) => React.ReactNode
+  exportValue?: (row: T) => unknown
+  exportData?: (row: T) => Record<string, unknown>
   sortable?: boolean
   className?: string
   hideOnMobile?: boolean
@@ -80,8 +82,8 @@ export function DataTable<T extends { id: string }>({
   const headerCheckboxRef = useRef<HTMLButtonElement>(null)
 
   // Helper to extract a cell value for export
-  function getCellValue(row: T, key: string): string {
-    const value = (row as any)[key]
+  function getCellValue(row: T, key: string, exportValue?: (row: T) => unknown): string {
+    const value = exportValue ? exportValue(row) : (row as any)[key]
     if (value === null || value === undefined) return ''
     if (typeof value === 'object') return JSON.stringify(value)
     return String(value)
@@ -119,10 +121,13 @@ export function DataTable<T extends { id: string }>({
   function getExportData(): Record<string, any>[] {
     const rows = effectiveSelected.length > 0
       ? data.filter((row) => effectiveSelected.includes(row.id))
-      : filtered
+      : paged
     return rows.map((row) => {
       const obj: Record<string, any> = {}
-      columns.forEach((col) => { obj[col.header] = getCellValue(row, col.key) })
+      columns.forEach((col) => {
+        if (col.exportData) Object.assign(obj, col.exportData(row))
+        else obj[col.header] = getCellValue(row, col.key, col.exportValue)
+      })
       return obj
     })
   }
@@ -132,11 +137,6 @@ export function DataTable<T extends { id: string }>({
   const paged = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   // ---- Selection derivations (must come after filtered/paged) ----
-  const selectableRows = useMemo(
-    () => (enableSelection ? (selectable ? filtered.filter(selectable) : filtered) : []),
-    [enableSelection, selectable, filtered]
-  )
-
   const pageSelectableIds = useMemo(
     () => paged.filter((r) => !selectable || selectable(r)).map((r) => r.id),
     [paged, selectable]
@@ -151,10 +151,10 @@ export function DataTable<T extends { id: string }>({
     }
   }, [allPageSelected, somePageSelected])
 
-  function toggleSelectAllFiltered() {
-    const ids = selectableRows.map((r) => r.id)
+  function toggleSelectAllPage() {
+    const ids = pageSelectableIds
     const allSelected = ids.length > 0 && ids.every((id) => effectiveSelected.includes(id))
-    // Keep selections from other search/filter contexts, toggle only currently visible
+    // Preserve selections on other pages; toggle only selectable rows on this page.
     const others = effectiveSelected.filter((id) => !ids.includes(id))
     setEffectiveSelected(allSelected ? others : [...new Set([...others, ...ids])])
   }
@@ -240,8 +240,8 @@ export function DataTable<T extends { id: string }>({
                     <Checkbox
                       ref={headerCheckboxRef}
                       checked={allPageSelected || (somePageSelected && 'indeterminate')}
-                      onCheckedChange={toggleSelectAllFiltered}
-                      aria-label="Select all"
+                      onCheckedChange={toggleSelectAllPage}
+                      aria-label={isRTL ? 'تحديد الصفحة الحالية' : 'Select current page'}
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>

@@ -40,7 +40,7 @@ export default function ClientShipmentsPage() {
 
   const columns: Column<Shipment>[] = [
     { key: 'trackingNumber', header: dict.dashboard.admin.tracking, sortable: true, cell: (s) => <span className="font-mono font-medium text-xs">{s.trackingNumber}</span> },
-    { key: 'route', header: dict.dashboard.admin.route, hideOnMobile: true, cell: (s) => <span className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</span> },
+    { key: 'route', header: dict.dashboard.admin.route, exportData: (s) => ({ [dict.dashboard.admin.route]: `${s.senderCity} → ${s.recipientCity}` }), hideOnMobile: true, cell: (s) => <span className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</span> },
     { key: 'recipientName', header: L.recipient, cell: (s) => <span className="text-sm">{s.recipientName}</span> },
     { key: 'status', header: dict.common.status, cell: (s) => <StatusBadge status={s.status} /> },
     { key: 'codAmount', header: dict.dashboard.admin.cod, sortable: true, cell: (s) => <span className="font-medium text-xs">{formatCurrency(s.codAmount)}</span> },

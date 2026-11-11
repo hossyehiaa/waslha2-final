@@ -93,12 +93,20 @@ export default function AdminShipmentsPage() {
     {
       key: 'route',
       header: L.route || 'Route',
+      exportData: (s) => ({
+        [isRTL ? 'محافظة/مدينة المرسل' : 'Sender governorate/city']: s.senderCity,
+        [isRTL ? 'محافظة/مدينة المستلم' : 'Recipient governorate/city']: s.recipientCity,
+      }),
       hideOnMobile: true,
       cell: (s) => <span className="text-xs text-muted-foreground">{s.senderCity} → {s.recipientCity}</span>,
     },
     {
       key: 'recipient',
       header: L.recipient || 'Recipient',
+      exportData: (s) => ({
+        [isRTL ? 'اسم المستلم' : 'Recipient name']: s.recipientName,
+        [isRTL ? 'هاتف المستلم' : 'Recipient phone']: s.recipientPhone,
+      }),
       hideOnMobile: true,
       cell: (s) => (
         <div>
